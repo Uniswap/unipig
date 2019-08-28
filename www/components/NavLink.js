@@ -1,11 +1,17 @@
-import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 import Button from './Button'
 
 export default function NavLink({ href, children, ...rest }) {
+  const router = useRouter()
+
+  function navigate() {
+    router.push(href)
+  }
+
   return (
-    <Link href={href} passHref>
-      <Button {...rest}>{children}</Button>
-    </Link>
+    <Button onClick={navigate} {...rest}>
+      {children}
+    </Button>
   )
 }

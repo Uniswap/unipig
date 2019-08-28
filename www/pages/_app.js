@@ -1,5 +1,7 @@
 import App from 'next/app'
-import { ThemeProvider as SCThemeProvider, createGlobalStyle } from 'styled-components'
+import Head from 'next/head'
+import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
+import { darken, rgba } from 'polished'
 
 import { getCookie, redirect } from '../utils'
 import CookieContext, { Updater as CookieContextUpdater } from '../contexts/Cookie'
@@ -7,16 +9,45 @@ import Layout from '../components/Layout'
 
 const BLACK = '#000000'
 const WHITE = '#FFFFFF'
-const PINK = '#DC6BE5'
+
+const FADE_LEFT = '#FE6DDE'
+const FADE_RIGHT = '#FE6D6D'
+const FADE_BACKGROUND = css`
+  background-image: linear-gradient(to right, ${FADE_LEFT}, ${FADE_RIGHT});
+`
+
+const TRANSPARENT = rgba(0, 0, 0, 0)
+
+const TRANSPARENT_BACKGROUND = css`
+  background-color: ${TRANSPARENT};
+`
+
+const UNISWAP = '#DC6BE5'
+const PLASMA_GROUP = '#CE2039'
+
+const UNI = '#DC6BE5'
+const PIG = '#FAC4B6'
 
 const theme = {
   colors: {
     black: BLACK,
     white: WHITE,
+    greys: Array.from(Array(10).keys()).reduce(
+      (accumulator, currentValue) => Object.assign({ [currentValue]: darken(currentValue / 10, WHITE) }, accumulator),
+      {}
+    ),
+    uniswap: UNISWAP,
+    plasmaGroup: PLASMA_GROUP,
+    UNI,
+    PIG,
     textColor: BLACK,
     backgroundColor: WHITE,
-    pink: PINK
-  }
+    fadeLeft: FADE_LEFT,
+    fadeRight: FADE_RIGHT,
+    transparent: TRANSPARENT
+  },
+  fadeBackground: FADE_BACKGROUND,
+  transparentBackground: TRANSPARENT_BACKGROUND
 }
 
 const GlobalStyle = createGlobalStyle`
@@ -35,8 +66,8 @@ const GlobalStyle = createGlobalStyle`
 
   html {
     font-family: 'Roboto', sans-serif;
-    color: ${({ theme }) => theme.colors.text};
-    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.white};
+    background-color: ${({ theme }) => theme.colors.greys[8]};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -71,7 +102,9 @@ export default class MyApp extends App {
 
     return (
       <>
-        <title>Unipig Exchange</title>
+        <Head>
+          <title>Unipig Exchange</title>
+        </Head>
         <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
           <CookieContextUpdater />
           <SCThemeProvider theme={theme}>

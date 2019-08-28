@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 
 import Emoji from './Emoji'
+import Chip from './Chip'
 
 const Title = styled.div`
   display: flex;
@@ -8,36 +9,32 @@ const Title = styled.div`
   margin: 1rem;
 `
 
-const TitleEmoji = styled(Emoji)`
-  margin-right: 0.5rem;
-`
-
-const TitleText = styled.h2`
+const Uniswap = styled.h4`
   margin: 0;
-  font-size: 1rem;
+  color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
+  margin: 0 0.5rem 0 0.5rem;
 `
 
-const Uniswap = styled.span`
-  color: ${({ theme }) => theme.colors.pink};
+const L2 = styled(Chip)`
+  font-weight: 700;
+  font-style: oblique;
+  padding: 0.1rem 0.5rem 0.1rem 0.5rem;
+  border-radius: 1rem;
 `
 
-const X = styled.span`
-  color: ${({ theme }) => theme.colors.pink};
-`
-
-const L2 = styled.span`
-  color: red;
+const L2Text = styled.h4`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.white};
 `
 
 export default function Header() {
   return (
     <Title>
-      <TitleEmoji label="unicorn">🦄</TitleEmoji>
-      <TitleText>
-        <Uniswap>Uniswap </Uniswap>
-        <X>x </X>
-        <L2>L2</L2>
-      </TitleText>
+      <Emoji label="unicorn">🦄</Emoji>
+      <Uniswap>Uniswap</Uniswap>
+      <L2>
+        <L2Text>L2</L2Text>
+      </L2>
     </Title>
   )
 }
