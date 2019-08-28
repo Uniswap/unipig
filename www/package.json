@@ -1,0 +1,44 @@
+{
+  "name": "unipig",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "engines": {
+    "node": "10.x"
+  },
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "now-build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@ethersproject/wallet": "^5.0.0-beta.129",
+    "js-cookie": "^2.2.1",
+    "next": "^9.0.5",
+    "next-cookies": "^1.1.2",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "styled-components": "^5.0.0-beta.8"
+  },
+  "devDependencies": {
+    "@types/js-cookie": "^2.2.2",
+    "@types/node": "^12.7.2",
+    "@types/react": "^16.9.2",
+    "@typescript-eslint/eslint-plugin": "1.x",
+    "@typescript-eslint/parser": "1.x",
+    "babel-eslint": "10.x",
+    "babel-plugin-styled-components": "^1.10.6",
+    "eslint": "6.x",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-config-react-app": "^5.0.1",
+    "eslint-plugin-flowtype": "3.x",
+    "eslint-plugin-import": "2.x",
+    "eslint-plugin-jsx-a11y": "6.x",
+    "eslint-plugin-react": "7.x",
+    "eslint-plugin-react-hooks": "1.x",
+    "prettier": "^1.18.2",
+    "react-is": "^16.8.0",
+    "stylis": "^3.5.0",
+    "typescript": "^3.5.3"
+  }
+}

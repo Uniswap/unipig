@@ -1,0 +1,15 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": ["plugin:@typescript-eslint/recommended", "react-app", "prettier", "prettier/@typescript-eslint"],
+  "rules": {
+    "react/react-in-jsx-scope": 0,
+    "jsx-a11y/accessible-emoji": 0,
+    "@typescript-eslint/no-explicit-any": 0
+  }
+}
