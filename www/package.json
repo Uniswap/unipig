@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ethersproject/wallet": "^5.0.0-beta.129",
+    "@tanem/react-nprogress": "^2.0.5",
     "js-cookie": "^2.2.1",
     "next": "^9.0.5",
     "next-cookies": "^1.1.2",

@@ -46,26 +46,23 @@ const GlobalStyle = createGlobalStyle`
 
 export default class MyApp extends App {
   static async getInitialProps({ Component, ctx: context }) {
-    const { req, res, pathname } = context
-    const serverSide = !!req && !!res
+    const { res, pathname } = context
+    const serverSide = !!res
+
     const cookie = getCookie(serverSide, context)
+    const { mnemonic, team } = cookie
 
-    // on the server, if a mnemonic or team doesn't exist, and we're not rendering /splash, we _have_ to redirect
-    // note: we don't protect against non-existence in client-side nav because our implementation guarantees it
-    if (serverSide && (!cookie.mnemonic || !cookie.team) && pathname !== '/splash') {
-      redirect('/splash', res)
-      return
+    if (serverSide && (!mnemonic || !team) && ['/'].some(p => p === pathname)) {
+      redirect('/welcome', res)
+      return {}
     }
-
-    const mnemonic = cookie.mnemonic
-    const team = cookie.team
 
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
     return {
       mnemonic,
       team,
-      ...pageProps
+      pageProps
     }
   }
 

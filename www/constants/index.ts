@@ -1,8 +1,8 @@
 export const COOKIE_NAME = 'UNIPIG'
 
 export enum Team {
-  Unicorn = 1,
-  Pig = 2
+  UNI = 1,
+  PIG = 2
 }
 
 export interface Cookie {
