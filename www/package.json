@@ -14,6 +14,7 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.0.0-beta.129",
     "@tanem/react-nprogress": "^2.0.5",
+    "@uniswap/sdk": "^1.0.0-beta.4",
     "js-cookie": "^2.2.1",
     "next": "^9.0.5",
     "next-cookies": "^1.1.2",
@@ -26,6 +27,7 @@
     "@types/js-cookie": "^2.2.2",
     "@types/node": "^12.7.2",
     "@types/react": "^16.9.2",
+    "@types/styled-components": "^4.1.18",
     "@typescript-eslint/eslint-plugin": "1.x",
     "@typescript-eslint/parser": "1.x",
     "babel-eslint": "10.x",

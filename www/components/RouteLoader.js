@@ -8,6 +8,7 @@ const Loader = styled.div`
   height: 0.2rem;
   margin-bottom: -0.2rem;
   background-color: ${({ theme }) => theme.colors.greys[5]};
+
   opacity: ${({ isFinished, progress }) => (isFinished || progress === 0 ? 0 : 1)};
   margin-right: ${({ progress }) => `${(1 - progress) * 100}%`};
   transition: ${({ animationDuration }) => `margin-right ${animationDuration}ms linear`};
