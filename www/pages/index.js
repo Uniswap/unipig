@@ -1,19 +1,12 @@
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
 import styled from 'styled-components'
 
 import { Team } from '../constants'
-import { useTeam, useWallet, useReset } from '../contexts/Cookie'
+import { useTeam, useWallet } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
-import { GradientButton } from '../components/Button'
-import { TransparentNavLink, SolidNavLink } from '../components/NavLink'
+import NavButton from '../components/NavButton'
 
 const Header = styled.h1`
   color: ${({ color }) => color};
-`
-
-const H2 = styled.h2`
-  margin: 0;
 `
 
 const BoostWrapper = styled.div`
@@ -22,102 +15,69 @@ const BoostWrapper = styled.div`
   width: 75%;
 `
 
-const FlexSolidNavLink = styled(SolidNavLink)`
+const FlexNavLink = styled(NavButton)`
   flex-grow: ${({ flex }) => flex};
 `
 
-const FlexTransparentNavLink = styled(TransparentNavLink)`
-  flex-grow: ${({ flex }) => flex};
-`
-
-function Home({ UNIBalance, PIGBalance }) {
-  const team = useTeam()
-  const wallet = useWallet()
+function Home({ balances, reserves }) {
+  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIG])
 
   const theme = useStyledTheme()
 
-  const UNIDominance = UNIBalance / (UNIBalance + PIGBalance)
-
-  // reset
-  const reset = useReset()
-  function resetApp() {
-    reset()
-  }
-
-  // handle redirect
-  const router = useRouter()
-  useEffect(() => {
-    if (!wallet || !team) {
-      router.push('/welcome')
-    }
-  })
-  if (!wallet || !team) {
-    return null
-  }
+  const team = useTeam()
+  const wallet = useWallet()
 
   return (
     <>
-      <Header color={UNIDominance >= 0.5 ? theme.colors.UNI : theme.colors.PIG}>
+      <Header color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
         {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
       </Header>
       <p>
         {UNIDominance >= 0.5
-          ? `Unicorn Dominance: ${Math.round(UNIDominance * 100, 0)}%`
-          : `Pig Dominance: ${Math.round((1 - UNIDominance) * 100, 0)}%`}
+          ? `Unicorn Dominance: ${Math.round(UNIDominance * 100, 2)}%`
+          : `Pig Dominance: ${Math.round((1 - UNIDominance) * 100, 2)}%`}
       </p>
-      <p>Team: {team === Team.UNI ? 'UNI' : 'PIG'}</p>
+      <p>Team: {Team[team]}</p>
       <p>Address: {wallet.address}</p>
 
+      <p>UNI: {balances[Team.UNI]}</p>
+      <p>PIG: {balances[Team.PIG]}</p>
+
       <BoostWrapper>
-        {team === Team.UNI ? (
-          <FlexSolidNavLink
-            flex={Math.round(UNIDominance * 100, 0)}
-            href="/trade?recieve=UNI"
-            color={theme.colors.UNI}
-            textColor={theme.colors.white}
-          >
-            <H2>Boost UNI</H2>
-          </FlexSolidNavLink>
-        ) : (
-          <FlexTransparentNavLink
-            flex={Math.round(UNIDominance * 100, 0)}
-            href="/trade?recieve=UNI"
-            color={theme.colors.UNI}
-          >
-            <H2>Boost UNI</H2>
-          </FlexTransparentNavLink>
-        )}
+        <FlexNavLink
+          flex={Math.round(UNIDominance * 100, 0)}
+          href={`/trade?buy=${Team[Team.UNI]}`}
+          color={'primary'}
+          variant={team === Team.UNI ? 'contained' : 'outlined'}
+        >
+          Boost UNI
+        </FlexNavLink>
 
-        {team === Team.PIG ? (
-          <FlexSolidNavLink
-            flex={Math.round((1 - UNIDominance) * 100, 0)}
-            href="/trade?recieve=PIG"
-            color={theme.colors.PIG}
-            textColor={theme.colors.white}
-          >
-            <H2>Boost PIG</H2>
-          </FlexSolidNavLink>
-        ) : (
-          <FlexTransparentNavLink
-            flex={Math.round((1 - UNIDominance) * 100, 0)}
-            href="/trade?recieve=PIG"
-            color={theme.colors.PIG}
-          >
-            <H2>Boost PIG</H2>
-          </FlexTransparentNavLink>
-        )}
+        <FlexNavLink
+          flex={Math.round((1 - UNIDominance) * 100, 0)}
+          href={`/trade?buy=${Team[Team.PIG]}`}
+          color={'secondary'}
+          variant={team === Team.PIG ? 'contained' : 'outlined'}
+        >
+          Boost PIG
+        </FlexNavLink>
       </BoostWrapper>
-
-      <GradientButton onClick={resetApp}>Reset</GradientButton>
     </>
   )
 }
 
+// TODO add PG API and deal with decimals
 Home.getInitialProps = async () => {
-  const random = Math.random()
+  const random = Math.round(Math.random() * 100, 0)
   return {
-    UNIBalance: random * 100,
-    PIGBalance: (1 - random) * 100
+    balances: {
+      [Team.UNI]: 5,
+      [Team.PIG]: 5
+    },
+    reserves: {
+      [Team.UNI]: random,
+      [Team.PIG]: 100 - random
+    }
   }
 }
 

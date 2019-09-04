@@ -1,33 +1,27 @@
-import styled, { css } from 'styled-components'
+import { Chip } from '@material-ui/core'
+import styled from 'styled-components'
 
-import { GradientButton, TransparentButton, SolidButton } from './Button'
-
-const ChipCSS = css`
-  min-width: 0rem;
-  min-height: 0rem;
-  padding: 0rem 0.5rem 0rem 0.5rem;
+const StyledChip = styled(Chip)`
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `
 
-const StyledGradientButton = styled(GradientButton)`
-  ${ChipCSS}
+const StyledGradientChip = styled(StyledChip)`
+  ${({ theme }): string => theme.gradientBackground};
+  color: ${({ theme }): string => theme.colors.white};
 `
 
-const StyledTransparentButton = styled(TransparentButton)`
-  ${ChipCSS}
-`
+export default function BaseChip({ children, ...rest }: any): JSX.Element {
+  const { variant, ...restExGradient } = rest
 
-const StyledSolidButton = styled(SolidButton)`
-  ${ChipCSS}
-`
-
-export function GradientChip(props: any): JSX.Element {
-  return <StyledGradientButton forwardedAs="div" {...props} />
-}
-
-export function TransparentChip(props: any): JSX.Element {
-  return <StyledTransparentButton forwardedAs="div" {...props} />
-}
-
-export function SolidChip(props: any): JSX.Element {
-  return <StyledSolidButton forwardedAs="div" {...props} />
+  if (variant === 'gradient') {
+    return (
+      <StyledGradientChip variant="default" {...restExGradient}>
+        {children}
+      </StyledGradientChip>
+    )
+  } else {
+    return <StyledChip {...rest}>{children}</StyledChip>
+  }
 }

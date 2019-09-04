@@ -3,8 +3,9 @@ import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { Wallet } from '@ethersproject/wallet'
 
+import { Team } from '../constants'
 import { useTeam, useWallet, useAddMnemonic } from '../contexts/Cookie'
-import { GradientNavLink } from '../components/NavLink'
+import NavButton from '../components/NavButton'
 
 const Title = styled.h1`
   margin: 0;
@@ -16,11 +17,11 @@ const Body = styled.p`
 `
 
 const UNI = styled.span`
-  color: ${({ theme }) => theme.colors.UNI};
+  color: ${({ theme }) => theme.colors[Team.UNI]};
 `
 
 const PIG = styled.span`
-  color: ${({ theme }) => theme.colors.PIG};
+  color: ${({ theme }) => theme.colors[Team.PIG]};
 `
 
 const H2 = styled.h2`
@@ -28,38 +29,42 @@ const H2 = styled.h2`
 `
 
 function Welcome({ mnemonic }) {
-  const team = useTeam()
   const wallet = useWallet()
+  const team = useTeam()
 
-  // save mnemonic
+  // if a wallet doesn't exist, save the mnemonic
   const addMnemonic = useAddMnemonic()
   useEffect(() => {
-    addMnemonic(mnemonic)
-  }, [addMnemonic, mnemonic])
+    if (!wallet) {
+      addMnemonic(mnemonic)
+    }
+  }, [wallet, addMnemonic, mnemonic])
 
-  // clear mnemonic from url
+  // once a wallet exists, clear mnemonic from url if it's there
   const router = useRouter()
   useEffect(() => {
-    if (router.query && router.query.mnemonic && wallet) {
+    if (wallet && router.query && router.query.mnemonic) {
       router.push('/welcome', '/welcome', { shallow: true })
     }
   })
 
   return (
-    <div>
+    <>
       <Title>Welcome to the Devcon 5 Trading Game</Title>
       <Body>
         Who will win? <UNI>UNI</UNI> vs <PIG>PIG</PIG>
       </Body>
       <Body>Experience Layer 2 UX with a Uniswap-based trading game.</Body>
-      <GradientNavLink disabled={!wallet} href={team && wallet ? '/' : '/join-team'}>
+      <NavButton variant="gradient" href={wallet && team ? '/' : '/join-team'} disabled={!wallet}>
         <H2>Get Started</H2>
-      </GradientNavLink>
-    </div>
+      </NavButton>
+    </>
   )
 }
 
-Welcome.getInitialProps = async ({ query }) => {
+// TODO figure out Sybil
+Welcome.getInitialProps = async context => {
+  const { query } = context
   const { mnemonic } = query || {}
 
   if (mnemonic) {
@@ -70,7 +75,6 @@ Welcome.getInitialProps = async ({ query }) => {
     } catch {}
   }
 
-  // in reality this might be some twitter auth scenario
   return { mnemonic: Wallet.createRandom().mnemonic }
 }
 

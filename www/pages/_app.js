@@ -1,8 +1,12 @@
 import App from 'next/app'
 import Head from 'next/head'
+import { StylesProvider } from '@material-ui/styles'
+import { createMuiTheme } from '@material-ui/core/styles'
+import { ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
-import { darken, rgba } from 'polished'
+import { darken } from 'polished'
 
+import { Team } from '../constants'
 import { getCookie } from '../utils'
 import CookieContext, { Updater as CookieContextUpdater } from '../contexts/Cookie'
 import Layout from '../components/Layout'
@@ -16,18 +20,6 @@ const GRADIENT_BACKGROUND = css`
   background: linear-gradient(45deg, ${GRADIENT_LEFT}, ${GRADIENT_RIGHT});
 `
 
-const TRANSPARENT = rgba(0, 0, 0, 0)
-const TRANSPARENT_BACKGROUND = css`
-  background: ${TRANSPARENT};
-`
-
-const COLOR_BACKGROUND = color => css`
-  background: ${color};
-`
-
-const UNISWAP = '#DC6BE5'
-const PLASMA_GROUP = '#CE2039'
-
 const UNI = '#DC6BE5'
 const PIG = '#FAC4B6'
 
@@ -39,22 +31,31 @@ const theme = {
       (accumulator, currentValue) => Object.assign({ [currentValue]: darken(currentValue / 10, WHITE) }, accumulator),
       {}
     ),
+
+    error: '#FF9494',
+
     textColor: BLACK,
     backgroundColor: WHITE,
-    uniswap: UNISWAP,
-    plasmaGroup: PLASMA_GROUP,
-    UNI,
-    PIG,
+
+    uniswap: '#DC6BE5',
+    plasmaGroup: '#CE2039',
+
+    [Team.UNI]: UNI,
+    [Team.PIG]: PIG,
+
     gradientLeft: GRADIENT_LEFT,
-    gradientRight: GRADIENT_RIGHT,
-    transparent: TRANSPARENT
+    gradientRight: GRADIENT_RIGHT
   },
-  gradientBackground: GRADIENT_BACKGROUND,
-  transparentBackground: TRANSPARENT_BACKGROUND,
-  colorBackground: COLOR_BACKGROUND
+
+  gradientBackground: GRADIENT_BACKGROUND
 }
 
 const GlobalStyle = createGlobalStyle`
+  @import url('https://rsms.me/inter/inter.css');
+  @supports (font-variation-settings: normal) {
+    html { font-family: 'Inter var', sans-serif; }
+  }
+
   html,
   body {
     margin: 0;
@@ -66,10 +67,11 @@ const GlobalStyle = createGlobalStyle`
   *::after {
     box-sizing: border-box;
     outline-width: thin;
+    outline-color: ${({ theme }) => theme.colors.white};
   }
 
   html {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', sans-serif;
     color: ${({ theme }) => theme.colors.white};
     background-color: ${({ theme }) => theme.colors.greys[8]};
     -webkit-font-smoothing: antialiased;
@@ -79,13 +81,47 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
+const defaultMUITheme = createMuiTheme({
+  typography: {
+    fontFamily: "'Inter', sans-serif"
+  },
+  palette: {
+    primary: {
+      main: UNI
+    },
+    secondary: {
+      main: PIG
+    }
+  }
+})
+
+// https://github.com/MarchWorks/nextjs-with-material-ui-and-styled-components
+// https://stackoverflow.com/questions/55109497/how-to-integrate-nextjs-styled-components-with-material-ui
 export default class MyApp extends App {
+  componentDidMount() {
+    const jssStyles = document.querySelector('#jss-server-side')
+    if (jssStyles) {
+      jssStyles.parentNode.removeChild(jssStyles)
+    }
+  }
+
   static async getInitialProps({ Component, ctx: context }) {
-    const { res } = context
+    const { res, pathname } = context
     const serverSide = !!res
 
     const cookie = getCookie(serverSide, context)
     const { mnemonic, team } = cookie
+
+    // on the server, redirect all non-onboarding requests without cookies to '/welcome'
+    if (
+      serverSide &&
+      (!mnemonic || !team) &&
+      !['/welcome', '/join-team', '/confirm-wallet'].some(p => p === pathname)
+    ) {
+      res.writeHead(302, { Location: '/welcome' })
+      res.end()
+      return {}
+    }
 
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
@@ -101,18 +137,22 @@ export default class MyApp extends App {
 
     return (
       <>
-        <Head>
-          <title>Unipig Exchange</title>
-        </Head>
-        <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
-          <CookieContextUpdater />
-          <SCThemeProvider theme={theme}>
-            <GlobalStyle />
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </SCThemeProvider>
-        </CookieContext>
+        <StylesProvider injectFirst>
+          <Head>
+            <title>Unipig Exchange</title>
+          </Head>
+          <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
+            <CookieContextUpdater />
+            <MUIThemeProvider theme={defaultMUITheme}>
+              <SCThemeProvider theme={theme}>
+                <GlobalStyle />
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              </SCThemeProvider>
+            </MUIThemeProvider>
+          </CookieContext>
+        </StylesProvider>
       </>
     )
   }

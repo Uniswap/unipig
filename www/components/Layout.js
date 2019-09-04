@@ -2,6 +2,7 @@ import styled from 'styled-components'
 
 import RouteLoader from './RouteLoader'
 import Header from './Header'
+import { useRouter } from 'next/router'
 
 const Root = styled.div`
   display: flex;
@@ -14,20 +15,23 @@ const Root = styled.div`
 
 const Element = styled.div`
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: ${({ direction }) => direction || 'column'};
+  justify-content: ${({ justify }) => justify || 'center'};
   align-items: ${({ align }) => align};
   flex: ${({ grow }) => (grow ? '1 1 auto' : '0 1 auto')};
 `
 
 export default function Layout({ children }) {
+  const { pathname } = useRouter()
+  const showWallet = pathname === '/'
+
   return (
     <Root>
       <Element align="flex-end">
         <RouteLoader />
       </Element>
-      <Element align="flex-start">
-        <Header />
+      <Element align="flex-start" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
+        <Header showWallet={showWallet} />
       </Element>
       <Element align="center" grow={true}>
         {children}

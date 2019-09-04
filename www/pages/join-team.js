@@ -1,17 +1,9 @@
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import styled from 'styled-components'
-
 import { Team } from '../constants'
-import { useJoinTeam, useTeam, useWallet } from '../contexts/Cookie'
+import { useJoinTeam, useTeam } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import Emoji from '../components/Emoji'
-import { TransparentButton, SolidButton } from '../components/Button'
-import { GradientNavLink } from '../components/NavLink'
-
-const H2 = styled.h2`
-  margin: 0;
-`
+import Button from '../components/Button'
+import NavButton from '../components/NavButton'
 
 export default function JoinTeam() {
   const team = useTeam()
@@ -21,52 +13,24 @@ export default function JoinTeam() {
       joinTeam(team)
     }
   }
-  const wallet = useWallet()
 
   const theme = useStyledTheme()
-
-  // handle redirect
-  const router = useRouter()
-  useEffect(() => {
-    if (!wallet) {
-      router.push('/welcome')
-    }
-  })
-  if (!wallet) {
-    return null
-  }
 
   return (
     <>
       <h1>Choose a team.</h1>
 
-      {team === Team.UNI ? (
-        <SolidButton color={theme.colors.UNI} textColor={theme.colors.white}>
-          <Emoji emoji="🦄" label="unicorn" />
-          <H2>UNI</H2>
-        </SolidButton>
-      ) : (
-        <TransparentButton onClick={join(Team.UNI)} color={theme.colors.UNI}>
-          <Emoji emoji="🦄" label="unicorn" />
-          <H2>UNI</H2>
-        </TransparentButton>
-      )}
+      <Button variant={team === Team.UNI ? 'contained' : 'outlined'} color="primary" onClick={join(Team.UNI)}>
+        <Emoji emoji="🦄" label="unicorn" />
+      </Button>
 
-      {team === Team.PIG ? (
-        <SolidButton color={theme.colors.PIG} textColor={theme.colors.white}>
-          <Emoji emoji="🐷" label="pig" />
-          <H2>PIG</H2>
-        </SolidButton>
-      ) : (
-        <TransparentButton onClick={join(Team.PIG)} color={theme.colors.PIG}>
-          <Emoji emoji="🐷" label="pig" />
-          <H2>PIG</H2>
-        </TransparentButton>
-      )}
+      <Button variant={team === Team.PIG ? 'contained' : 'outlined'} color="secondary" onClick={join(Team.PIG)}>
+        <Emoji emoji="🐷" label="pig" />
+      </Button>
 
-      <GradientNavLink disabled={!team} href={'/confirm-wallet'}>
-        <H2>I pledge allegiance.</H2>
-      </GradientNavLink>
+      <NavButton variant="gradient" disabled={!team} href={'/confirm-wallet'}>
+        I pledge allegiance
+      </NavButton>
     </>
   )
 }

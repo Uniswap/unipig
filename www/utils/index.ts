@@ -1,7 +1,7 @@
 import Cookies from 'js-cookie'
 import nextCookies from 'next-cookies'
 
-import { COOKIE_NAME, Cookie } from '../constants'
+import { COOKIE_NAME } from '../constants'
 
 export function formatCookie(o: object): string {
   const stringified = JSON.stringify(o || {})
@@ -23,6 +23,6 @@ function getCookieClient(): string {
   return Cookies.get(COOKIE_NAME)
 }
 
-export function getCookie(serverSide: boolean, context: any): Cookie | object {
+export function getCookie(serverSide: boolean, context: any): object {
   return parseCookie(serverSide ? getCookieServer(context) : getCookieClient())
 }
