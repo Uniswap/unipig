@@ -9,7 +9,10 @@ import NavButton from '../components/NavButton'
 
 const Title = styled.h1`
   margin: 0;
-  color: ${({ theme }) => theme.colors.uniswap};
+  /* color: ${({ theme }) => theme.colors.uniswap}; */
+  font-size: 48px;
+  background: linear-gradient(to right, #fe6dde 0%, #fe6d6d 100%);
+  background-clip: text;
 `
 
 const Body = styled.p`
