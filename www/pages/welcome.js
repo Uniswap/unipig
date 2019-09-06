@@ -12,7 +12,7 @@ const Title = styled.h1`
   /* color: ${({ theme }) => theme.colors.uniswap}; */
   font-size: 48px;
   background: linear-gradient(to right, #fe6dde 0%, #fe6d6d 100%);
-  background-clip: text;
+  -webkit-text-fill-color: transparent;
 `
 
 const Body = styled.p`
@@ -53,7 +53,9 @@ function Welcome({ mnemonic }) {
 
   return (
     <>
-      <Title>Welcome to the Devcon 5 Trading Game</Title>
+      <Title style={{ backgroundClip: 'text', WebkitBackgroundClip: 'text' }}>
+        Welcome to the Devcon 5 Trading Game
+      </Title>
       <Body>
         Who will win? <UNI>UNI</UNI> vs <PIG>PIG</PIG>
       </Body>

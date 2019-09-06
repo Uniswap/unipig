@@ -50,7 +50,7 @@ const Element = styled.div`
   justify-content: ${({ justify }) => justify || 'center'};
   align-items: ${({ align }) => align};
   flex: ${({ grow }) => (grow ? '1 1 auto' : '0 1 auto')};
-  width: ${({ elWidth }) => elWidth || '100vw'}};
+  width: ${({ width }) => width || '100vw'};
 `
 
 export default function Layout({ children }) {
@@ -70,7 +70,7 @@ export default function Layout({ children }) {
       <Element align="flex-start" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
         <Header showWallet={showWallet} />
       </Element>
-      <Element align="center" grow={true} elWidth={'450px'}>
+      <Element align="center" grow={true} width={'450px'}>
         {children}
       </Element>
     </Root>
