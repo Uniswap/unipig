@@ -1,5 +1,4 @@
 import { NowRequest, NowResponse } from '@now/node'
-import console = require('console')
 const crypto = require('crypto')
 
 export default function(request: NowRequest, response: NowResponse): NowResponse {
