@@ -16,6 +16,7 @@
     "@material-ui/core": "^4.4.0",
     "@tanem/react-nprogress": "^2.0.5",
     "@uniswap/sdk": "^1.0.0-beta.4",
+    "crypto": "^1.0.1",
     "js-cookie": "^2.2.1",
     "next": "^9.0.5",
     "next-cookies": "^1.1.2",
@@ -25,6 +26,7 @@
     "styled-components": "^5.0.0-beta.8"
   },
   "devDependencies": {
+    "@now/node": "^1.0.0",
     "@types/js-cookie": "^2.2.2",
     "@types/node": "^12.7.2",
     "@types/react": "^16.9.2",

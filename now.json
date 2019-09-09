@@ -3,5 +3,8 @@
   "name": "unipig",
   "alias": "unipig.exchange",
   "builds": [{ "src": "www/next.config.js", "use": "@now/next" }],
-  "routes": [{ "src": "/(.*)", "dest": "/www/$1" }]
+  "routes": [{ "src": "/(.*)", "dest": "/www/$1" }],
+  "env": {
+    "customsecretkey": "@customsecretkey"
+  }
 }

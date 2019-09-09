@@ -118,6 +118,7 @@ export default class MyApp extends App {
       (!mnemonic || !team) &&
       !['/welcome', '/join-team', '/confirm-wallet'].some(p => p === pathname)
     ) {
+      console.log(pathname)
       res.writeHead(302, { Location: '/welcome' })
       res.end()
       return {}
