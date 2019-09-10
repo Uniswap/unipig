@@ -91,17 +91,27 @@ export default function TwitterFaucet() {
     }
   })
 
+  function metaInformation() {
+    if (faucetData === null) {
+      return <p>error</p>
+    } else if (faucetData === undefined) {
+      return <p>loading...</p>
+    } else if (faucetData.canFaucet && !twitterLoaded) {
+      return <p>loading...</p>
+    } else if (faucetData.canFaucet && polling) {
+      return <p>waiting...</p>
+    }
+  }
+
   return (
     <>
       <h1>tweet your support to get tokens</h1>
 
-      {(faucetData === undefined || !twitterLoaded) && <p>loading</p>}
-
-      {faucetData === null && <p>error</p>}
+      {metaInformation()}
 
       {faucetData && !faucetData.canFaucet && (
         <>
-          <p>Coming through loud and clear {faucetData.twitterHandle}!</p>
+          <p>Coming through loud and clear @{faucetData.twitterHandle}!</p>
           <NavButton variant="gradient" href="/" disabled={source !== WalletSource.TWITTER}>
             Dope
           </NavButton>

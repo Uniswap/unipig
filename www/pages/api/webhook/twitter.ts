@@ -5,7 +5,7 @@ import faunadb from 'faunadb'
 import { FAUCET_TIMEOUT } from '../../../constants'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
-const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-f]{40})/)
+const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
 
 const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
@@ -37,9 +37,8 @@ export default async function(request: NowRequest, response: NowResponse): Promi
 
     // ignore non-mentions
     if (!body.tweet_create_events) {
-      const errorString = 'Invalid tweet event.'
-      console.error(errorString)
-      return response.status(400).json({ message: errorString })
+      console.log('Ignoring unmatched activity.')
+      return response.status(200).send('')
     }
 
     // get the first tweet and parse
@@ -47,6 +46,8 @@ export default async function(request: NowRequest, response: NowResponse): Promi
     const userHandle = tweetObject.user.screen_name
     const userId = tweetObject.user.id
     const matchedAddress = tweetObject.text.match(addressRegex) && tweetObject.text.match(addressRegex).groups.address
+
+    console.log(`Begin parsing tweet '${tweetObject.text}' by ${userHandle} (${userId}).`)
 
     // if account is too new return error
     const now = Date.now()
@@ -60,17 +61,17 @@ export default async function(request: NowRequest, response: NowResponse): Promi
 
     // if there wasn't an address in the tweet return error
     if (!matchedAddress) {
-      const errorString = `Tweet by ${userHandle} does not contain a valid Ethereum address.`
+      const errorString = `Tweet does not contain a valid Ethereum address.`
       console.error(errorString)
       return response.status(400).json({ message: errorString })
     }
 
-    console.log(`Parsing tweet by ${userHandle} with Ethereum address ${matchedAddress}.`)
+    console.log(`Parsed Ethereum address ${matchedAddress}.`)
 
     // ensure that the address exists in our db
     const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_twitter'), matchedAddress)))
     if (addressRef.data.length === 0) {
-      const errorString = `Account ${matchedAddress} is not recognized.`
+      const errorString = `Address ${matchedAddress} is not recognized.`
       console.error(errorString)
       return response.status(400).json({ message: errorString })
     }
@@ -79,7 +80,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
     const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
     const canFaucet = addressData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
     if (!canFaucet) {
-      const errorString = `Account ${matchedAddress} cannot faucet yet.`
+      const errorString = `Address ${matchedAddress} cannot faucet yet.`
       console.error(errorString)
       return response.status(400).json({ message: errorString })
     }
@@ -90,7 +91,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
       const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
       const canFaucet = idData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
       if (!canFaucet) {
-        const errorString = `Account ${userId} (${userHandle}) cannot faucet yet.`
+        const errorString = `Account ${userHandle} (${userId}) cannot faucet yet.`
         console.error(errorString)
         return response.status(400).json({ message: errorString })
       }
@@ -107,6 +108,8 @@ export default async function(request: NowRequest, response: NowResponse): Promi
       }
     }
 
+    // faucet here
+
     // all has gone well, update db
     await client.query(
       q.Update(q.Ref(q.Collection('twitter'), addressRef.data[0].id), {
@@ -117,8 +120,6 @@ export default async function(request: NowRequest, response: NowResponse): Promi
         }
       })
     )
-
-    // faucet here
 
     return response.status(200).send('')
   }
