@@ -6,9 +6,8 @@ import { ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
 
-import { Team } from '../constants'
 import { getCookie } from '../utils'
-import CookieContext, { Updater as CookieContextUpdater } from '../contexts/Cookie'
+import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
 import Layout from '../components/Layout'
 
 const BLACK = '#000000'
@@ -110,22 +109,29 @@ export default class MyApp extends App {
     const serverSide = !!res
 
     const cookie = getCookie(serverSide, context)
-    const { mnemonic, team } = cookie
+    const { source, mnemonic, team } = cookie
 
-    // on the server, redirect all non-onboarding requests without cookies to '/welcome'
-    if (
-      serverSide &&
-      (!mnemonic || !team) &&
-      !['/welcome', '/join-team', '/confirm-wallet'].some(p => p === pathname)
-    ) {
-      res.writeHead(302, { Location: '/welcome' })
-      res.end()
-      return {}
+    // on the server...
+    if (serverSide) {
+      // redirect all requests without source/mnemonic cookies that aren't on '/welcome' to '/welcome'
+      if ((!source || !mnemonic) && pathname !== '/welcome') {
+        res.writeHead(302, { Location: '/welcome' })
+        res.end()
+        return {}
+      }
+
+      // redirect all requests without team cookies that aren't on '/welcome' or '/join-team' to '/welcome'
+      if (!team && !(pathname === '/welcome' || pathname === '/join-team')) {
+        res.writeHead(302, { Location: source && mnemonic ? '/join-team' : '/welcome' })
+        res.end()
+        return {}
+      }
     }
 
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
     return {
+      source,
       mnemonic,
       team,
       pageProps
@@ -133,7 +139,7 @@ export default class MyApp extends App {
   }
 
   render() {
-    const { mnemonic, team, Component, pageProps } = this.props
+    const { source, mnemonic, team, Component, pageProps } = this.props
 
     return (
       <>
@@ -141,7 +147,7 @@ export default class MyApp extends App {
           <Head>
             <title>Unipig Exchange</title>
           </Head>
-          <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
+          <CookieContext sourceInitial={source} mnemonicInitial={mnemonic} teamInitial={team}>
             <CookieContextUpdater />
             <MUIThemeProvider theme={defaultMUITheme}>
               <SCThemeProvider theme={theme}>

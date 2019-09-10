@@ -1,11 +1,3 @@
-export const COOKIE_NAME = 'UNIPIG'
+export const FAUCET_TIMEOUT = 1000 * 60 * 60 * 24 // 1 day in ms
 
-export enum Team {
-  UNI = 1,
-  PIG = 2
-}
-
-export interface Cookie {
-  mnemonic: string
-  team: Team
-}
+export const SIGNATURE_TIMEOUT = 1000 * 60 * 60 * 24 // 1 day in ms

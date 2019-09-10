@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
-import { Team } from '../constants'
-import { useTeam, useWallet } from '../contexts/Cookie'
+import { Team, useTeam, useWallet, useSource, WalletSource } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import NavButton from '../components/NavButton'
 
@@ -24,8 +23,9 @@ function Home({ balances, reserves }) {
 
   const theme = useStyledTheme()
 
-  const team = useTeam()
+  const source = useSource()
   const wallet = useWallet()
+  const team = useTeam()
 
   return (
     <>
@@ -42,6 +42,12 @@ function Home({ balances, reserves }) {
 
       <p>UNI: {balances[Team.UNI]}</p>
       <p>PIG: {balances[Team.PIG]}</p>
+
+      {source === WalletSource.GENERATED && (
+        <NavButton href={`/twitter-faucet`} variant={'gradient'}>
+          Get Tokens from Twitter
+        </NavButton>
+      )}
 
       <BoostWrapper>
         <FlexNavLink

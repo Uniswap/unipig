@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
-import { Team } from '../constants'
-import { useWallet, useTeam } from '../contexts/Cookie'
+import { Team, useWallet, useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 
 const TeamHeader = styled.h1`
