@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import fetch from 'isomorphic-unfetch'
 import styled from 'styled-components'
 import { Wallet } from '@ethersproject/wallet'
 
-import { Team } from '../constants'
-import { useTeam, useWallet, useAddMnemonic } from '../contexts/Cookie'
+import { getHost } from '../utils'
+import { WalletSource, Team, useAddSource, useAddMnemonic, useSource, useWallet, useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
 import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
@@ -21,11 +22,20 @@ const PIG = styled.span`
   font-weight: 600;
 `
 
-function Welcome({ mnemonic }) {
+function Welcome({ mnemonic, fromPaper }) {
+  const source = useSource()
   const wallet = useWallet()
   const team = useTeam()
 
-  // if a wallet doesn't exist, save the mnemonic
+  // save the source of the wallet
+  const addSource = useAddSource()
+  useEffect(() => {
+    if (!source) {
+      addSource(fromPaper ? WalletSource.PAPER : WalletSource.GENERATED)
+    }
+  }, [source, fromPaper, addSource])
+
+  // if a wallet doesn't exist, save the mnemonic (guaranteed to be correct from getInitialProps)
   const addMnemonic = useAddMnemonic()
   useEffect(() => {
     if (!wallet) {
@@ -35,8 +45,9 @@ function Welcome({ mnemonic }) {
 
   // once a wallet exists, clear mnemonic from url if it's there
   const router = useRouter()
+  const { query } = router
   useEffect(() => {
-    if (wallet && router.query && router.query.mnemonic) {
+    if (query && query.mnemonic && wallet) {
       router.push('/welcome', '/welcome', { shallow: true })
     }
   })
@@ -64,20 +75,38 @@ function Welcome({ mnemonic }) {
   )
 }
 
-// TODO figure out Sybil
 Welcome.getInitialProps = async context => {
-  const { query } = context
+  const { query, req } = context
   const { mnemonic } = query || {}
 
+  // validate the mnemonic if it exists
+  let wallet
   if (mnemonic) {
     try {
       const parsedMnemonic = mnemonic.replace(/-/g, ' ')
-      Wallet.fromMnemonic(parsedMnemonic)
-      return { mnemonic: parsedMnemonic }
+      wallet = Wallet.fromMnemonic(parsedMnemonic)
     } catch {}
   }
 
-  return { mnemonic: Wallet.createRandom().mnemonic }
+  // check if the address is whitelisted
+  let walletIsValid
+  if (wallet) {
+    walletIsValid = await fetch(`${getHost(req)}/api/validate-paper-wallet`, {
+      method: 'POST',
+      body: JSON.stringify({ address: wallet.address })
+    })
+      .then(response => response.ok || false)
+      .catch(error => {
+        console.error(error)
+        return false
+      })
+  }
+
+  if (!wallet || !walletIsValid) {
+    return { mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic, fromPaper: false }
+  }
+
+  return { mnemonic: wallet.mnemonic, fromPaper: true }
 }
 
 export default Welcome

@@ -10,7 +10,7 @@ import {
   formatSignificantDecimals
 } from '@uniswap/sdk'
 
-import { Team } from '../constants'
+import { Team } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'

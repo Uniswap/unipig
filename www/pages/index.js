@@ -1,18 +1,13 @@
 import styled from 'styled-components'
 
-import { Team } from '../constants'
-import { useTeam } from '../contexts/Cookie'
+import { Team, useTeam, WalletSource, useSource } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import NavButton from '../components/NavButton'
 import Wallet from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 
-import { Heading, Title, ButtonText, Body } from '../components/Type'
-
-const Header = styled.h1`
-  color: ${({ color }) => color};
-`
+import { Title, ButtonText, Body } from '../components/Type'
 
 const BoostWrapper = styled.div`
   display: flex;
@@ -34,6 +29,7 @@ function Home({ balances, reserves }) {
 
   const theme = useStyledTheme()
 
+  const source = useSource()
   const team = useTeam()
 
   return (
@@ -60,6 +56,12 @@ function Home({ balances, reserves }) {
       </Body>
 
       <Shim size={32} />
+
+      {source === WalletSource.GENERATED && (
+        <NavButton href={`/twitter-faucet`} variant={'gradient'}>
+          Get Tokens from Twitter
+        </NavButton>
+      )}
 
       <BoostWrapper>
         <FlexNavLink

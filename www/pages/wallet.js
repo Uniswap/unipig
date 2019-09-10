@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 
-import { Team } from '../constants'
-import { useReset, useWallet, useTeam } from '../contexts/Cookie'
+import { Team, useWallet, useTeam, useReset } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import QRCode from '../components/QR'

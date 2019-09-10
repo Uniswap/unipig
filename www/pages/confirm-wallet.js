@@ -1,7 +1,6 @@
 import styled from 'styled-components'
 
-import { Team } from '../constants'
-import { useTeam } from '../contexts/Cookie'
+import { Team, useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Wallet from '../components/MiniWallet'
 import Shim from '../components/Shim'

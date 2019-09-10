@@ -1,8 +1,6 @@
-import { Team } from '../constants'
-import { useJoinTeam, useTeam } from '../contexts/Cookie'
-import { useStyledTheme } from '../hooks'
 import styled from 'styled-components'
 
+import { Team, useAddTeam, useTeam } from '../contexts/Cookie'
 import Emoji from '../components/Emoji'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
@@ -17,14 +15,12 @@ const StyledButton = styled(Button)`
 
 export default function JoinTeam() {
   const team = useTeam()
-  const joinTeam = useJoinTeam()
+  const addTeam = useAddTeam()
   function join(team) {
     return () => {
-      joinTeam(team)
+      addTeam(team)
     }
   }
-
-  const theme = useStyledTheme()
 
   return (
     <>
