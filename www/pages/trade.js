@@ -19,7 +19,7 @@ import Emoji from '../components/Emoji'
 
 import { transparentize } from 'polished'
 
-import Wallet from '../components/Wallet'
+import Wallet from '../components/MiniWallet'
 
 const DECIMALS = 4
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
