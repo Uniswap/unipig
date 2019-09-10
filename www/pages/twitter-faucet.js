@@ -91,19 +91,15 @@ export default function TwitterFaucet() {
     }
   })
 
-  if (faucetData === undefined) {
-    return <p>loading</p>
-  }
-
-  if (faucetData === null) {
-    return <p>error</p>
-  }
-
   return (
     <>
       <h1>tweet your support to get tokens</h1>
 
-      {!faucetData.canFaucet && (
+      {(faucetData === undefined || !twitterLoaded) && <p>loading</p>}
+
+      {faucetData === null && <p>error</p>}
+
+      {faucetData && !faucetData.canFaucet && (
         <>
           <p>Coming through loud and clear {faucetData.twitterHandle}!</p>
           <NavButton variant="gradient" href="/" disabled={source !== WalletSource.TWITTER}>
@@ -112,22 +108,20 @@ export default function TwitterFaucet() {
         </>
       )}
 
-      {faucetData.canFaucet && (
+      <div>
         <Tweet
-          loaded={faucetData.canFaucet && twitterLoaded}
+          loaded={faucetData && faucetData.canFaucet && twitterLoaded}
           className="twitter-share-button"
           href="https://twitter.com/intent/tweet"
           data-size="large"
-          data-text={`It's 🦄 ⚔️ 🐷!
-
-༼ つ ◕_◕ ༽つ @UnipigExchange give L2 faucet funds to ${wallet.address} ༼ つ ◕_◕ ༽つ`}
+          data-text={`🙏 @UnipigExchange please send some 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
           data-url="https://unipig.exchange"
           data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
           data-dnt="true"
         >
           Tweet
         </Tweet>
-      )}
+      </div>
     </>
   )
 }
