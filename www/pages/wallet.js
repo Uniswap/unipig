@@ -2,16 +2,22 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
+import { QRCode } from 'react-qrcode-logo'
+import dynamic from 'next/dynamic'
 
+import { useStyledTheme } from '../hooks'
 import { Team, useWallet, useTeam, useReset } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
-import QRCode from '../components/QR'
 import Shim from '../components/Shim'
-
 import { TokenInfo, WalletInfo } from '../components/MiniWallet'
 
 //WORK IN PROGRESS
+
+const QRReader = dynamic({
+  loader: () => import('../components/QRReader'),
+  ssr: false
+})
 
 const StyledWallet = styled.span`
   background-color: ${({ team, theme }) =>
@@ -22,9 +28,12 @@ const StyledWallet = styled.span`
   width: 100%;
 `
 
-const StyledQRCode = styled(QRCode)`
+const QRCodeWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  margin: 2rem 0;
+  margin-bottom: 1rem;
 `
 
 const WalletTitle = styled.span`
@@ -74,6 +83,8 @@ function Overview({ balances }) {
   const reset = useReset()
   const [resetPressed, setResetPressed] = useState(false)
 
+  const theme = useStyledTheme()
+
   const router = useRouter()
   function onReset() {
     setResetPressed(true)
@@ -87,6 +98,10 @@ function Overview({ balances }) {
     }
   }, [wallet, router])
 
+  if (!wallet) {
+    return null
+  }
+
   return (
     <StyledWallet team={team}>
       <WalletTitle>
@@ -94,10 +109,21 @@ function Overview({ balances }) {
       </WalletTitle>
       <WalletInfo team={team} wallet={wallet} />
 
-      <StyledQRCode />
+      <QRCodeWrapper>
+        <QRCode
+          value={`https://unipig.exchange?referrer=${wallet.address}`}
+          ecLevel="M"
+          size="250"
+          quietZone="0"
+          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}
+          fgColor={theme.colors.black}
+          logoImage={'static/blob_2.svg'}
+          qrStyle="squares"
+        />
+      </QRCodeWrapper>
 
-      <WalletButton variant="">Copy Address</WalletButton>
-      <NavButton variant="" href="/wallet?scan=true">
+      <WalletButton variant="text">Copy Address</WalletButton>
+      <NavButton variant="text" href="/wallet?scan=true">
         Scan
       </NavButton>
       <Shim size={24} />
@@ -107,12 +133,12 @@ function Overview({ balances }) {
       <TokenInfo balances={balances} />
       <Shim size={8} />
       <SendWrapper>
-        <SendButton variant="">Send</SendButton>
+        <SendButton variant="text">Send</SendButton>
         <SendShim />
-        <SendButton variant="">Send</SendButton>
+        <SendButton variant="text">Send</SendButton>
       </SendWrapper>
       <Shim size={24} />
-      <WalletButton disabled={resetPressed} variant="" onClick={onReset}>
+      <WalletButton disabled={resetPressed} variant="text" onClick={onReset}>
         Discard Account
       </WalletButton>
     </StyledWallet>
@@ -120,7 +146,7 @@ function Overview({ balances }) {
 }
 
 function Scan() {
-  return <p>scanning...</p>
+  return <QRReader />
 }
 
 function Manager({ balances }) {

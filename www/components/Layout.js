@@ -1,5 +1,4 @@
 import styled, { keyframes } from 'styled-components'
-import { transparentize, darken } from 'polished'
 
 import RouteLoader from './RouteLoader'
 import Header from './Header'
@@ -47,6 +46,7 @@ const rotate = keyframes`
 
 const AnimatedImg = styled.img`
   animation: ${rotate} ${({ time }) => time} linear infinite;
+  user-select: none;
 `
 
 const Element = styled.div`
@@ -56,7 +56,7 @@ const Element = styled.div`
   align-items: ${({ align }) => align};
   flex: ${({ grow }) => (grow ? '1 1 auto' : '0 1 auto')};
   width: ${({ width }) => width || '100vw'};
-]`
+`
 
 export default function Layout({ children }) {
   const { pathname } = useRouter()

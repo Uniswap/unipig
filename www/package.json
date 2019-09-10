@@ -24,6 +24,8 @@
     "polished": "^3.4.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-qr-reader": "^2.2.1",
+    "react-qrcode-logo": "^2.2.0",
     "scriptjs": "^2.5.9",
     "styled-components": "^5.0.0-beta.8"
   },
