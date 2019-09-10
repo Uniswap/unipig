@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
-import { Team } from '../constants'
-import { useReset, useWallet } from '../contexts/Cookie'
+import { Team, useWallet, useReset } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 

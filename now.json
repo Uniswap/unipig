@@ -2,9 +2,10 @@
   "version": 2,
   "name": "unipig",
   "alias": "unipig.exchange",
-  "builds": [{ "src": "www/next.config.js", "use": "@now/next" }],
-  "routes": [{ "src": "/(.*)", "dest": "/www/$1" }],
   "env": {
-    "customsecretkey": "@customsecretkey"
-  }
+    "FAUNADB_SERVER_SECRET": "@unipig_faunadb_server_secret",
+    "TWITTER_CONSUMER_SECRET": "@unipig_twitter_consumer_secret"
+  },
+  "builds": [{ "src": "www/next.config.js", "use": "@now/next" }],
+  "routes": [{ "src": "/(.*)", "dest": "/www/$1" }]
 }
