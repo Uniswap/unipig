@@ -13,6 +13,13 @@ import {
 import { Team } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
+import Shim from '../components/Shim'
+import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
+import Emoji from '../components/Emoji'
+
+import { transparentize } from 'polished'
+
+import Wallet from '../components/MiniWallet'
 
 const DECIMALS = 4
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
@@ -26,8 +33,73 @@ const DUMMY_TOKEN_AMOUNT = amount => ({
   amount
 })
 
+const TradeWrapper = styled.span`
+  width: 100%;
+  height: 100%;
+  display: grid;
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+`
+const StyledInputWrapper = styled.label`
+  width: 100%;
+  position: relative;
+`
+
 const Input = styled.input`
-  border: ${({ error, theme }) => error && `2px solid ${theme.colors.error}`};
+  border: ${({ error, theme, inputColor }) =>
+    error ? `1px solid ${theme.colors.error}` : `1px solid ${theme.colors[inputColor]}`};
+  background: #202124;
+  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
+  box-sizing: border-box;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 24px;
+  width: 100%;
+  height: 56px;
+  padding-left: 24px;
+  padding-right: 24px;
+`
+
+const MaxButton = styled(Button)`
+  position: absolute;
+  top: 16px;
+  right: 80px;
+  padding: 0;
+  width: 56px;
+  height: 24px;
+  min-height: 24px;
+  background: ${({ theme, inputColor }) => transparentize(0.95, theme.colors[inputColor])};
+  border: ${({ error, theme, inputColor }) =>
+    error ? `1px solid ${theme.colors.error}` : `1px solid ${theme.colors[inputColor]}`};
+  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
+  box-sizing: border-box;
+  border-radius: 20px;
+`
+
+const StyledEmoji = styled(Emoji)`
+  color: ${({ theme, inputColor }) => theme.colors[inputColor]};
+  font-weight: 500;
+  position: absolute;
+  top: 14px;
+  right: 24px;
+`
+
+const ArrowDown = styled.span`
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  padding: 1rem 0px;
+`
+
+const HelperText = styled(Desc)`
+  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors.textColor)};
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  font-size: 16px;
 `
 
 function Buy({ balances, reserves }) {
@@ -120,33 +192,70 @@ function Buy({ balances, reserves }) {
 
   return (
     <>
-      <p>
-        Boost {Team[outputToken]} by selling {Team[inputToken]}.
-      </p>
-      <label>
-        Sell {Team[inputToken]}:
-        <Input
-          required
-          error={!!inputError}
-          type="number"
-          min="0"
-          step="0.0001"
-          value={inputAmount.raw}
-          onChange={onInputAmount}
-        />
-        <Button onClick={onMaxInputValue}>Max</Button>
-      </label>
-      <label>
-        Buy {Team[outputToken]}:
-        <Input error={!!outputError} type="number" min="0" step="0.0001" value={outputAmount.raw} readOnly={true} />
-      </label>
-      {(inputError || outputError) && <p>{inputError || outputError}</p>}
-      <p>
-        1 {Team[outputToken]} / {marketDetails.marketRate.rate.toString()} {Team[inputToken]}
-      </p>
-      <NavButton variant="gradient" href="/trade?confirmed=true">
-        Swap
-      </NavButton>
+      <Body textStyle="gradient">
+        <b>
+          Boost {Team[outputToken]} by selling {Team[inputToken]}.
+        </b>
+      </Body>
+      <TradeWrapper>
+        <StyledInputWrapper>
+          {/* Sell {Team[inputToken]}: */}
+          <Input
+            required
+            error={!!inputError}
+            type="number"
+            min="0"
+            step="0.0001"
+            placeholder="0"
+            value={inputAmount.raw}
+            onChange={onInputAmount}
+            inputColor={inputToken}
+          />
+          {!inputError && (
+            <MaxButton inputColor={inputToken} onClick={onMaxInputValue}>
+              Max
+            </MaxButton>
+          )}
+          <StyledEmoji
+            inputColor={inputToken}
+            // emoji={Team[inputToken] === 'UNI' ? '🦄' : '🐷'}
+            emoji={Team[inputToken] === 'UNI' ? 'UNI' : 'PIG'}
+            label={Team[inputToken] === 'UNI' ? 'unicorn' : 'pig'}
+          />
+        </StyledInputWrapper>
+        <ArrowDown>↓</ArrowDown>
+        <StyledInputWrapper>
+          {/* Buy {Team[outputToken]}: */}
+          <Input
+            error={!!outputError}
+            type="number"
+            min="0"
+            step="0.0001"
+            value={outputAmount.raw}
+            readOnly={true}
+            placeholder="0"
+            inputColor={outputToken}
+          />
+          <StyledEmoji
+            inputColor={outputToken}
+            emoji={Team[outputToken] === 'UNI' ? 'UNI' : 'PIG'}
+            label={Team[outputToken] === 'UNI' ? 'unicorn' : 'pig'}
+          />
+        </StyledInputWrapper>
+        {(inputError || outputError) && <HelperText error={!!inputError}>{inputError || outputError}</HelperText>}
+        {!inputError && !outputError && (
+          <HelperText error={!!inputError}>
+            <b>
+              {1 / marketDetails.marketRate.rate.toString()} {Team[inputToken]} = 1 {Team[outputToken]}
+            </b>
+          </HelperText>
+        )}
+        <NavButton variant="gradient" stretch href="/trade?confirmed=true">
+          <ButtonText>Swap</ButtonText>
+        </NavButton>
+      </TradeWrapper>
+      <Shim size={32} />
+      <Wallet balances={balances} />
     </>
   )
 }

@@ -4,7 +4,13 @@ import styled from 'styled-components'
 const StyledChip = styled(Chip)`
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  margin-top: 4px;
+  height: 16px;
+
+  span:first-child {
+    padding: 0 0.25rem 0 0.25rem;
+  }
 `
 
 const StyledGradientChip = styled(StyledChip)`

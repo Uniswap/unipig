@@ -33,8 +33,8 @@ const theme = {
 
     error: '#FF9494',
 
-    textColor: BLACK,
-    backgroundColor: WHITE,
+    textColor: WHITE,
+    backgroundColor: BLACK,
 
     uniswap: '#DC6BE5',
     plasmaGroup: '#CE2039',
@@ -72,7 +72,7 @@ const GlobalStyle = createGlobalStyle`
   html {
     font-family: 'Inter', sans-serif;
     color: ${({ theme }) => theme.colors.white};
-    background-color: ${({ theme }) => theme.colors.greys[8]};
+    background-color: ${({ theme }) => theme.colors.greys[9]};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);

@@ -1,25 +1,42 @@
 import styled from 'styled-components'
 
-import { Team, useWallet, useTeam } from '../contexts/Cookie'
+import { Team, useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
+import Wallet from '../components/MiniWallet'
+import Shim from '../components/Shim'
 
-const TeamHeader = styled.h1`
-  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG])};
+import { Heading, Title, ButtonText, Body } from '../components/Type'
+
+const TeamHeader = styled(Title)`
+  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG])} !important;
 `
 
 function ConfirmWallet({ balances }) {
   const team = useTeam()
-  const wallet = useWallet()
 
   return (
     <>
-      <TeamHeader team={team}>Welcome to team {team === Team.UNI ? 'UNI' : 'PIG'}.</TeamHeader>
-      <p>Address: {wallet.address}</p>
-      <p>UNI: {balances[Team.UNI]}</p>
-      <p>PIG: {balances[Team.PIG]}</p>
+      <TeamHeader textStyle="gradient" team={team}>
+        Welcome to team {team === Team.UNI ? 'UNI' : 'PIG'}.
+      </TeamHeader>
+      <Heading>Here’s a wallet and some tokens!</Heading>
 
-      <NavButton variant="gradient" href="/">
-        Let's go
+      <Wallet balances={balances} />
+
+      <Shim size={24} />
+
+      <Body textStyle="gradient">
+        Dump <b>{team === Team.UNI ? 'PIG' : 'UNI'}</b> for <b>{team === Team.UNI ? 'UNI' : 'PIG'}</b> to help your team
+        gain price{' '}
+        <b>
+          <i>dominance.</i>
+        </b>
+      </Body>
+
+      <Shim size={32} />
+
+      <NavButton variant="gradient" href="/" stretch>
+        <ButtonText>Let's play.</ButtonText>
       </NavButton>
     </>
   )
