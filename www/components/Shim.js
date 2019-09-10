@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-const StyledShim = styled.span`
+const StyledShim = styled.div`
   width: 100%;
   height: ${({ size }) => size + 'px'};
 `

@@ -73,7 +73,7 @@ const TokenShim = styled.span`
   height: 8px;
 `
 
-const OpenWalletLink = styled.span`
+export const OpenWalletLink = styled.span`
   text-decoration: none;
   color: white;
   font-weight: 500;
