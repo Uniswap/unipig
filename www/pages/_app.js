@@ -34,8 +34,8 @@ const theme = {
 
     error: '#FF9494',
 
-    textColor: BLACK,
-    backgroundColor: WHITE,
+    textColor: WHITE,
+    backgroundColor: BLACK,
 
     uniswap: '#DC6BE5',
     plasmaGroup: '#CE2039',

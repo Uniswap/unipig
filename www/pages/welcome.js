@@ -6,29 +6,19 @@ import { Wallet } from '@ethersproject/wallet'
 import { Team } from '../constants'
 import { useTeam, useWallet, useAddMnemonic } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
-
-const Title = styled.h1`
-  margin: 0;
-  /* color: ${({ theme }) => theme.colors.uniswap}; */
-  font-size: 48px;
-  background: linear-gradient(to right, #fe6dde 0%, #fe6d6d 100%);
-  -webkit-text-fill-color: transparent;
-`
-
-const Body = styled.p`
-  color: ${({ theme }) => theme.colors.uniswap};
-`
+import Progress from '../components/Progress'
+import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
 
 const UNI = styled.span`
-  color: ${({ theme }) => theme.colors[Team.UNI]};
+  color: ${({ theme }) => theme.colors[Team.UNI]} !important;
+  width: 100%;
+  font-weight: 600;
 `
 
 const PIG = styled.span`
-  color: ${({ theme }) => theme.colors[Team.PIG]};
-`
-
-const H2 = styled.h2`
-  margin: 0;
+  color: ${({ theme }) => theme.colors[Team.PIG]} !important;
+  width: 100%;
+  font-weight: 600;
 `
 
 function Welcome({ mnemonic }) {
@@ -53,15 +43,22 @@ function Welcome({ mnemonic }) {
 
   return (
     <>
-      <Title style={{ backgroundClip: 'text', WebkitBackgroundClip: 'text' }}>
-        Welcome to the Devcon 5 Trading Game
-      </Title>
-      <Body>
-        Who will win? <UNI>UNI</UNI> vs <PIG>PIG</PIG>
+      <Heading>Hello friend.</Heading>
+      <Title textStyle="gradient">Welcome to the Devcon 5 Trading Game</Title>
+      <Body textStyle="gradient">
+        Who will win? <br></br>
+        <UNI>UNI</UNI> vs <PIG>PIG</PIG>
       </Body>
-      <Body>Experience Layer 2 UX with a Uniswap-based trading game.</Body>
-      <NavButton variant="gradient" href={wallet && team ? '/' : '/join-team'} disabled={!wallet}>
-        <H2>Get Started</H2>
+      <Desc>
+        Experience{' '}
+        <b>
+          <i>L2</i>
+        </b>{' '}
+        UX with a Uniswap-based trading game.
+      </Desc>
+      <Progress progress="30%" />
+      <NavButton variant="gradient" href={wallet && team ? '/' : '/join-team'} disabled={!wallet} stretch>
+        <ButtonText>Let me in!</ButtonText>
       </NavButton>
     </>
   )

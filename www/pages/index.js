@@ -1,9 +1,14 @@
 import styled from 'styled-components'
 
 import { Team } from '../constants'
-import { useTeam, useWallet } from '../contexts/Cookie'
+import { useTeam } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import NavButton from '../components/NavButton'
+import Wallet from '../components/Wallet'
+import Dominance from '../components/Dominance'
+import Shim from '../components/Shim'
+
+import { Heading, Title, ButtonText, Body } from '../components/Type'
 
 const Header = styled.h1`
   color: ${({ color }) => color};
@@ -12,7 +17,12 @@ const Header = styled.h1`
 const BoostWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  width: 75%;
+  width: 100%;
+`
+
+const BoostShim = styled.span`
+  width: 16px;
+  height: 16px;
 `
 
 const FlexNavLink = styled(NavButton)`
@@ -25,23 +35,31 @@ function Home({ balances, reserves }) {
   const theme = useStyledTheme()
 
   const team = useTeam()
-  const wallet = useWallet()
 
   return (
     <>
-      <Header color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
-        {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
-      </Header>
-      <p>
+      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
         {UNIDominance >= 0.5
-          ? `Unicorn Dominance: ${Math.round(UNIDominance * 100, 2)}%`
-          : `Pig Dominance: ${Math.round((1 - UNIDominance) * 100, 2)}%`}
-      </p>
-      <p>Team: {Team[team]}</p>
-      <p>Address: {wallet.address}</p>
+          ? `UNI dominance is at ${Math.round(UNIDominance * 100, 2)}%`
+          : `PIG dominance is at ${Math.round((1 - UNIDominance) * 100, 2)}%`}
+      </Title>
 
-      <p>UNI: {balances[Team.UNI]}</p>
-      <p>PIG: {balances[Team.PIG]}</p>
+      <Dominance
+        color={UNIDominance >= 0.5 ? 'UNI' : 'PIG'}
+        percent={UNIDominance >= 0.5 ? Math.round(UNIDominance * 100, 2) : Math.round((1 - UNIDominance) * 100, 2)}
+      />
+
+      <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+        {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
+      </Body>
+
+      <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} size={18}>
+        <i>
+          Dump your <b>{team === Team.UNI ? 'PIG' : 'UNI'}</b> tokens to help your team gain dominance.
+        </i>
+      </Body>
+
+      <Shim size={32} />
 
       <BoostWrapper>
         <FlexNavLink
@@ -50,8 +68,10 @@ function Home({ balances, reserves }) {
           color={'primary'}
           variant={team === Team.UNI ? 'contained' : 'outlined'}
         >
-          Boost UNI
+          <ButtonText>Buy UNI</ButtonText>
         </FlexNavLink>
+
+        <BoostShim />
 
         <FlexNavLink
           flex={Math.round((1 - UNIDominance) * 100, 0)}
@@ -59,9 +79,13 @@ function Home({ balances, reserves }) {
           color={'secondary'}
           variant={team === Team.PIG ? 'contained' : 'outlined'}
         >
-          Boost PIG
+          <ButtonText>Buy PIG</ButtonText>
         </FlexNavLink>
       </BoostWrapper>
+
+      <Shim size={36} />
+
+      <Wallet walletType={'rest'} balances={balances} />
     </>
   )
 }

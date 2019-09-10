@@ -26,3 +26,7 @@ function getCookieClient(): string {
 export function getCookie(serverSide: boolean, context: any): object {
   return parseCookie(serverSide ? getCookieServer(context) : getCookieClient())
 }
+
+export function truncateAddress(address: string, length: number): string {
+  return `${address.substring(0, length + 2)}...${address.substring(address.length - length, address.length)}`
+}
