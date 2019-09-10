@@ -20,7 +20,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
       const token = query['crc_token']
       const hmac = crypto
         .createHmac('sha256', secret)
-        .update(token as any)
+        .update(token as string, 'utf8')
         .digest('base64')
 
       // eslint-disable-next-line @typescript-eslint/camelcase
