@@ -1,10 +1,18 @@
 import { NowRequest, NowResponse } from '@now/node'
 import crypto from 'crypto'
+import faunadb from 'faunadb'
+
+import { FAUCET_TIMEOUT } from '../../../constants'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
 const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-f]{40})/)
 
-export default function(request: NowRequest, response: NowResponse): NowResponse {
+const client = new faunadb.Client({
+  secret: process.env.FAUNADB_SERVER_SECRET
+})
+const q = faunadb.query
+
+export default async function(request: NowRequest, response: NowResponse): Promise<NowResponse> {
   // CRC token auth handling
   if (request.method === 'GET') {
     const { query } = request
@@ -37,6 +45,7 @@ export default function(request: NowRequest, response: NowResponse): NowResponse
     // get the first tweet and parse
     const tweetObject = body.tweet_create_events[0]
     const userHandle = tweetObject.user.screen_name
+    const userId = tweetObject.user.id
     const matchedAddress = tweetObject.text.match(addressRegex) && tweetObject.text.match(addressRegex).groups.address
 
     // if account is too new return error
@@ -57,8 +66,59 @@ export default function(request: NowRequest, response: NowResponse): NowResponse
     }
 
     console.log(`Parsing tweet by ${userHandle} with Ethereum address ${matchedAddress}.`)
-    // check db for existing address
-    // if exists - check timestamp and handle (update if needed) - send faucet if valid
+
+    // ensure that the address exists in our db
+    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_twitter'), matchedAddress)))
+    if (addressRef.data.length === 0) {
+      const errorString = `Account ${matchedAddress} is not recognized.`
+      console.error(errorString)
+      return response.status(400).json({ message: errorString })
+    }
+
+    // ensure that the address hasn't used the faucet recently
+    const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
+    const canFaucet = addressData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
+    if (!canFaucet) {
+      const errorString = `Account ${matchedAddress} cannot faucet yet.`
+      console.error(errorString)
+      return response.status(400).json({ message: errorString })
+    }
+
+    // ensure that if the twitter id exists in our db, it isn't timed out
+    const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_twitter'), userId)))
+    if (idRef.data.length > 0) {
+      const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
+      const canFaucet = idData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
+      if (!canFaucet) {
+        const errorString = `Account ${userId} (${userHandle}) cannot faucet yet.`
+        console.error(errorString)
+        return response.status(400).json({ message: errorString })
+      }
+      // update the db to ensure uniqueness
+      else {
+        await client.query(
+          q.Update(q.Ref(q.Collection('twitter'), idRef.data[0].id), {
+            data: {
+              twitterHandle: null,
+              twitterId: null
+            }
+          })
+        )
+      }
+    }
+
+    // all has gone well, update db
+    await client.query(
+      q.Update(q.Ref(q.Collection('twitter'), addressRef.data[0].id), {
+        data: {
+          twitterHandle: userHandle,
+          twitterId: userId,
+          lastFaucetTime: now
+        }
+      })
+    )
+
+    // faucet here
 
     return response.status(200).send('')
   }
