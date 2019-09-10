@@ -45,7 +45,9 @@ export default async function(request: NowRequest, response: NowResponse): Promi
     const tweetObject = body.tweet_create_events[0]
     const userHandle = tweetObject.user.screen_name
     const userId = tweetObject.user.id
-    const matchedAddress = tweetObject.text.match(addressRegex) && tweetObject.text.match(addressRegex).groups.address
+    const matchedAddress =
+      tweetObject.extended_tweet.full_text.match(addressRegex) &&
+      tweetObject.extended_tweet.full_text.match(addressRegex).groups.address
 
     console.log(tweetObject)
     console.log(tweetObject.truncated)

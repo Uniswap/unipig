@@ -125,7 +125,7 @@ export default function TwitterFaucet() {
           href="https://twitter.com/intent/tweet"
           data-size="large"
           data-text={`༼ つ ◕_◕ ༽つ
-@UnipigExchange please give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet ${wallet.address}`}
+@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
           data-url="https://unipig.exchange"
           data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
           data-dnt="true"
