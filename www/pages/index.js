@@ -4,7 +4,7 @@ import { Team } from '../constants'
 import { useTeam } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import NavButton from '../components/NavButton'
-import Wallet from '../components/Wallet'
+import Wallet from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Team } from '../constants'
 import { useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
-import Wallet from '../components/Wallet'
+import Wallet from '../components/MiniWallet'
 import Shim from '../components/Shim'
 
 import { Heading, Title, ButtonText, Body } from '../components/Type'

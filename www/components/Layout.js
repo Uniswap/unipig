@@ -25,7 +25,7 @@ const BackroundElement = styled.div`
   left: 0px;
   z-index: -1;
   overflow: hidden;
-  filter: brightness(20%);
+  filter: brightness(30%);
   transform: scale(1.2);
 
   img {
