@@ -2,8 +2,7 @@ import styled from 'styled-components'
 import { transparentize } from 'polished'
 
 import { truncateAddress } from '../utils'
-import { Team } from '../constants'
-import { useWallet, useTeam } from '../contexts/Cookie'
+import { Team, useWallet, useTeam } from '../contexts/Cookie'
 
 const StyledWallet = styled.a`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG])} !important;

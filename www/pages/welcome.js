@@ -57,7 +57,7 @@ function Welcome({ mnemonic, fromPaper }) {
       <Heading>Hello friend.</Heading>
       <Title textStyle="gradient">Welcome to the Devcon 5 Trading Game</Title>
       <Body textStyle="gradient">
-        Who will win? <br></br>
+        Who will win? <br />
         <UNI>UNI</UNI> vs <PIG>PIG</PIG>
       </Body>
       <Desc>

@@ -5,8 +5,9 @@ import Link from 'next/link'
 
 import Button from './Button'
 
-const StyledNavButton = styled(Button)`
-  width: ${({ stretch }) => (stretch ? '100%' : 'initial')};
+const FilteredButton = ({ stretch, ...rest }): JSX.Element => <Button {...rest} />
+const StyledNavButton = styled(FilteredButton)`
+  width: ${({ stretch }): string => (stretch ? '100%' : 'initial')};
 `
 
 const LinkButton = forwardRef(

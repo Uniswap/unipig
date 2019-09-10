@@ -1,7 +1,7 @@
 import React from 'react'
-import { Team } from '../constants'
+import styled from 'styled-components'
 
-import styled, { css } from 'styled-components'
+import { Team } from '../contexts/Cookie'
 
 const StyledLine = styled.span`
   width: 100%;
