@@ -47,6 +47,9 @@ export default async function(request: NowRequest, response: NowResponse): Promi
     const userId = tweetObject.user.id
     const matchedAddress = tweetObject.text.match(addressRegex) && tweetObject.text.match(addressRegex).groups.address
 
+    console.log(tweetObject)
+    console.log(tweetObject.truncated)
+
     console.log(`Begin parsing tweet '${tweetObject.text}' by ${userHandle} (${userId}).`)
 
     // if account is too new return error
