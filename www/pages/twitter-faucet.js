@@ -133,7 +133,9 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
 
       {(!addressData.canFaucet || (updatedData && !updatedData.canFaucet)) && (
         <>
-          <Body textStyle="gradient">Coming through loud and clear @{addressData.twitterHandle}!</Body>
+          <Body textStyle="gradient">
+            Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
+          </Body>
           <Shim size={32} />
           <NavButton variant="gradient" href="/">
             Dope
