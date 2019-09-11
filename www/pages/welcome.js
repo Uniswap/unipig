@@ -8,6 +8,9 @@ import { getHost } from '../utils'
 import { WalletSource, Team, useAddSource, useAddMnemonic, useSource, useWallet, useTeam } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
+import Emoji from '../components/Emoji'
+import Shim from '../components/Shim'
+
 import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
 
 const UNI = styled.span`
@@ -20,6 +23,19 @@ const PIG = styled.span`
   color: ${({ theme }) => theme.colors[Team.PIG]} !important;
   width: 100%;
   font-weight: 600;
+`
+
+const CopyWrapper = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+`
+
+const OpacityWrapper = styled.span`
+  /* filter: brightness(50); */
+  color: rgba(254, 109, 222, 0.4);
+  /* width: 100%; */
+  -webkit-text-fill-color: initial;
 `
 
 function Welcome({ mnemonic, fromPaper }) {
@@ -55,19 +71,41 @@ function Welcome({ mnemonic, fromPaper }) {
   return (
     <>
       <Heading>Hello friend.</Heading>
-      <Title textStyle="gradient">Welcome to the Devcon 5 Trading Game</Title>
-      <Body textStyle="gradient">
-        Who will win? <br />
-        <UNI>UNI</UNI> vs <PIG>PIG</PIG>
-      </Body>
+      <Shim size={1} />
+      <Title textStyle="gradient">Welcome to Unipig.</Title>
+      <Shim size={4} />
       <Desc>
-        Experience{' '}
+        A gamified demo of Uniswap on Ethereum Layer 2.{' '}
         <b>
-          <i>L2</i>
-        </b>{' '}
-        UX with a Uniswap-based trading game.
+          <a href="">Learn more ↗</a>
+        </b>
       </Desc>
-      <Progress progress="30%" />
+      <Shim size={2} />
+      <span>
+        <CopyWrapper>
+          <Emoji emoji="⚡" label="unicorn" />
+          <pre> </pre>
+          <Body textStyle="gradient">Instant.</Body>
+          <pre> </pre>
+          <OpacityWrapper>No gas and instant UX</OpacityWrapper>
+        </CopyWrapper>
+        <CopyWrapper>
+          <Emoji emoji="🌐" label="unicorn" />
+          <pre> </pre>
+          <Body textStyle="gradient">Scalable.</Body>
+          <pre> </pre>
+          <OpacityWrapper>~ 2000 tps</OpacityWrapper>
+        </CopyWrapper>
+        <CopyWrapper>
+          <Emoji emoji="🔗" label="unicorn" />
+          <pre> </pre>
+          <Body textStyle="gradient">Secure.</Body>
+          <pre> </pre>
+          <OpacityWrapper>Optimistic rollup architecture</OpacityWrapper>
+        </CopyWrapper>
+      </span>
+      <Shim size={24} />
+      {/* <Progress progress="30%" /> */}
       <NavButton variant="gradient" href={wallet && team ? '/' : '/join-team'} disabled={!wallet} stretch>
         <ButtonText>Let me in!</ButtonText>
       </NavButton>

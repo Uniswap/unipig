@@ -27,7 +27,7 @@ export default function JoinTeam() {
       <Heading>Oink or Horn.</Heading>
       <Title textStyle="gradient">Choose a team.</Title>
 
-      <Shim />
+      <Shim size={32} />
 
       <StyledButton variant={team === Team.UNI ? 'contained' : 'outlined'} color="primary" onClick={join(Team.UNI)}>
         <Emoji emoji="🦄" label="unicorn" />
@@ -37,7 +37,7 @@ export default function JoinTeam() {
         <Emoji emoji="🐷" label="pig" />
       </StyledButton>
 
-      <Shim size={56} />
+      <Shim size={24} />
 
       <Progress progress="60%" />
 

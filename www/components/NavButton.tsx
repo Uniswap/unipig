@@ -1,8 +1,6 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-
 import Link from 'next/link'
-
 import Button from './Button'
 
 const FilteredButton = ({ stretch, ...rest }): JSX.Element => <Button {...rest} />

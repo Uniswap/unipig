@@ -32,6 +32,14 @@ const BackroundElement = styled.div`
     top: -30%;
     right: -400px;
   }
+
+  @media only screen and (max-width: 480px) {
+    transform: scale(1);
+    img {
+      top: -50%;
+      right: -600px;
+    }
+  }
 `
 
 const rotate = keyframes`
@@ -56,6 +64,10 @@ const Element = styled.div`
   align-items: ${({ align }) => align};
   flex: ${({ grow }) => (grow ? '1 1 auto' : '0 1 auto')};
   width: ${({ width }) => width || '100vw'};
+
+  @media only screen and (max-width: 480px) {
+    width: calc(100% - 32px);
+  }
 `
 
 export default function Layout({ children }) {
@@ -72,7 +84,7 @@ export default function Layout({ children }) {
       <Element align="flex-end">
         <RouteLoader />
       </Element>
-      <Element align="flex-start" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
+      <Element align="center" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
         <Header showWallet={showWallet} />
       </Element>
       <Element align="flex-start" grow={false} width={'448px'}>

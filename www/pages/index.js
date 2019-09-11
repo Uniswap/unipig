@@ -20,6 +20,14 @@ const BoostShim = styled.span`
   height: 16px;
 `
 
+const TwitterButton = styled(NavButton)`
+  color: white;
+  background-color: #1da1f2;
+  :hover {
+    background-color: rgba(29, 161, 242, 0.6);
+  }
+`
+
 const FlexNavLink = styled(NavButton)`
   flex-grow: ${({ flex }) => flex};
 `
@@ -34,11 +42,13 @@ function Home({ balances, reserves }) {
 
   return (
     <>
-      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+      {/* <Shim size={32} /> */}
+      <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
         {UNIDominance >= 0.5
           ? `UNI dominance is at ${Math.round(UNIDominance * 100, 2)}%`
           : `PIG dominance is at ${Math.round((1 - UNIDominance) * 100, 2)}%`}
       </Title>
+      <Shim size={12} />
 
       <Dominance
         color={UNIDominance >= 0.5 ? 'UNI' : 'PIG'}
@@ -49,41 +59,47 @@ function Home({ balances, reserves }) {
         {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
       </Body>
 
+      <Shim size={12} />
+
       <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} size={18}>
-        <i>
-          Dump your <b>{team === Team.UNI ? 'PIG' : 'UNI'}</b> tokens to help your team gain dominance.
-        </i>
+        {source === WalletSource.GENERATED ? (
+          <i>You still need to grab some tokens to play. Use the Twitter faucet below to get some.</i>
+        ) : (
+          <i>
+            Dump your <b>${team === Team.UNI ? 'PIG' : 'UNI'}</b> tokens to help your team gain dominance.
+          </i>
+        )}
       </Body>
 
       <Shim size={32} />
 
-      {source === WalletSource.GENERATED && (
-        <NavButton href={`/twitter-faucet`} variant={'gradient'}>
-          Get Tokens from Twitter
-        </NavButton>
+      {source === WalletSource.GENERATED ? (
+        <TwitterButton href={`/twitter-faucet`} stretch>
+          <ButtonText>Get Tokens from Twitter</ButtonText>
+        </TwitterButton>
+      ) : (
+        <BoostWrapper>
+          <FlexNavLink
+            flex={Math.round(UNIDominance * 100, 0)}
+            href={`/trade?buy=${Team[Team.UNI]}`}
+            color={'primary'}
+            variant={team === Team.UNI ? 'contained' : 'outlined'}
+          >
+            <ButtonText>Buy UNI</ButtonText>
+          </FlexNavLink>
+
+          <BoostShim />
+
+          <FlexNavLink
+            flex={Math.round((1 - UNIDominance) * 100, 0)}
+            href={`/trade?buy=${Team[Team.PIG]}`}
+            color={'secondary'}
+            variant={team === Team.PIG ? 'contained' : 'outlined'}
+          >
+            <ButtonText>Buy PIG</ButtonText>
+          </FlexNavLink>
+        </BoostWrapper>
       )}
-
-      <BoostWrapper>
-        <FlexNavLink
-          flex={Math.round(UNIDominance * 100, 0)}
-          href={`/trade?buy=${Team[Team.UNI]}`}
-          color={'primary'}
-          variant={team === Team.UNI ? 'contained' : 'outlined'}
-        >
-          <ButtonText>Buy UNI</ButtonText>
-        </FlexNavLink>
-
-        <BoostShim />
-
-        <FlexNavLink
-          flex={Math.round((1 - UNIDominance) * 100, 0)}
-          href={`/trade?buy=${Team[Team.PIG]}`}
-          color={'secondary'}
-          variant={team === Team.PIG ? 'contained' : 'outlined'}
-        >
-          <ButtonText>Buy PIG</ButtonText>
-        </FlexNavLink>
-      </BoostWrapper>
 
       <Shim size={36} />
 

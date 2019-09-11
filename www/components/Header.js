@@ -9,6 +9,14 @@ import { QRIcon, StatsIcon, ShareIcon } from './NavIcons'
 
 const HomeButton = styled(NavButton)`
   padding: 0 1rem;
+  @media only screen and (max-width: 480px) {
+    padding: 0;
+    /* padding-top: 1.5rem; */
+    margin: 0;
+    margin-left: 1rem;
+    text-align: left;
+    max-width: 100px;
+  }
 `
 
 const Uniswap = styled.span`
@@ -26,10 +34,18 @@ const L2Text = styled.span`
 `
 
 const HeaderWrapper = styled.span`
-  padding: 1rem 2rem;
-  width: 100%;
+  padding: 1rem 1.5rem;
+  /* width: 100vw; */
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+
+  @media only screen and (max-width: 480px) {
+    padding: 0;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+  }
 `
 
 const LinkWrapper = styled.span`
@@ -49,6 +65,10 @@ const LinkButton = styled(NavButton)`
   padding: 0px;
   transition: scale 0.3s ease;
 
+  @media only screen and (max-width: 480px) {
+    min-width: 50px;
+  }
+
   :hover {
     transform: scale(0.99);
   }
@@ -65,7 +85,7 @@ export default function Header({ showWallet }) {
         <Uniswap>Uniswap</Uniswap>
         <Chip variant="gradient" label={<L2Text>L2</L2Text>} />
       </HomeButton>
-      {showWallet && (
+      {showWallet ? (
         <LinkWrapper>
           <LinkButton href="/wallet">
             <ShareIcon></ShareIcon>
@@ -77,6 +97,8 @@ export default function Header({ showWallet }) {
             <QRIcon></QRIcon>
           </LinkButton>
         </LinkWrapper>
+      ) : (
+        <span>{''}</span>
       )}
     </HeaderWrapper>
   )
