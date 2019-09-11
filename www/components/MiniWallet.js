@@ -98,8 +98,8 @@ export function WalletInfo({ team, wallet }) {
     <StyledWalletInfo>
       <Badge team={team}></Badge>
       <span>
-        <WalletAddress>{truncateAddress(wallet.address, 8)}</WalletAddress>
-        <TeamDesc>Team {team === Team.UNI ? 'UNI' : 'PIG'} </TeamDesc>
+        <WalletAddress>{truncateAddress(wallet.address, 4)}</WalletAddress>
+        <TeamDesc>Team {team === Team.UNI ? 'UNI' : 'PIGI'} </TeamDesc>
       </span>
     </StyledWalletInfo>
   )

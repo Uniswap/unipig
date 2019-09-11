@@ -16,15 +16,16 @@ const Line = styled.div`
   border-radius: 20px;
   top: 12px;
   left: 4px;
-  background-color: ${({ theme, color }) => (color === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])};
+  background-color: ${({ theme, dominantTeam }) =>
+    dominantTeam === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]};
   transition: width 0.5s ease;
 `
 
-const Dominance = props => (
-  <StyledLine>
-    <Line percent="100%" color={props.color === 'UNI' ? 'PIG' : 'UNI'} />
-    <Line percent={props.percent + '%'} color={props.color === 'UNI' ? 'UNI' : 'PIG'} />
-  </StyledLine>
-)
-
-export default Dominance
+export default function Dominance({ dominantTeam, percent }) {
+  return (
+    <StyledLine>
+      <Line percent="100%" dominantTeam={dominantTeam === Team.UNI ? Team.PIGI : Team.UNI} />
+      <Line percent={`${percent}%`} dominantTeam={dominantTeam} />
+    </StyledLine>
+  )
+}

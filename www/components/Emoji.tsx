@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 const EmojiSpan = styled.span`
   user-select: none;
-  font-size: 24px;
+  font-size: 18px;
 
   :hover {
     cursor: ${({ onClick }): string => !!onClick && 'pointer'};

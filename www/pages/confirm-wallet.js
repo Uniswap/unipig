@@ -16,7 +16,7 @@ function ConfirmWallet({ balances, team, wallet }) {
     <>
       <Heading>Here’s a wallet and some tokens!</Heading>
       <TeamHeader textStyle="gradient" team={team}>
-        Welcome to team {team === Team.UNI ? 'UNI' : 'PIGI'}.
+        Welcome to #team{team === Team.UNI ? 'UNI' : 'PIGI'}.
       </TeamHeader>
 
       <Wallet wallet={wallet} team={team} balances={balances} disableNav />

@@ -6,21 +6,25 @@ import styled, { css } from 'styled-components'
 import { transparentize } from 'polished'
 
 import { getHost } from '../utils'
-import { Team, useAddMnemonic, useMnemonicExists, useTeamExists } from '../contexts/Cookie'
-import NavButton from '../components/NavButton'
+import { useAddMnemonic, useMnemonicExists, useTeamExists } from '../contexts/Cookie'
+import NavButton, { NavComponent } from '../components/NavButton'
 import Progress from '../components/Progress'
+import Emoji from '../components/Emoji'
+import Shim from '../components/Shim'
+
 import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
 
-const UNI = styled.span`
-  color: ${({ theme }) => theme.colors[Team.UNI]} !important;
-  width: 100%;
-  font-weight: 600;
+const CopyWrapper = styled.span`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 `
 
-const PIG = styled.span`
-  color: ${({ theme }) => theme.colors[Team.PIGI]} !important;
-  width: 100%;
-  font-weight: 600;
+const OpacityWrapper = styled.span`
+  /* filter: brightness(50); */
+  color: rgba(254, 109, 222, 0.4);
+  /* width: 100%; */
+  -webkit-text-fill-color: initial;
 `
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -66,19 +70,40 @@ function Welcome({ mnemonic }) {
   return (
     <>
       <Heading>Hello friend.</Heading>
-      <Title textStyle="gradient">Welcome to the Devcon 5 Trading Game</Title>
-
-      <Body textStyle="gradient">
-        Who will win? <br />
-        <UNI>UNI</UNI> vs <PIG>PIG</PIG>
-      </Body>
+      <Shim size={1} />
+      <Title textStyle="gradient">Welcome to Unipig.</Title>
+      <Shim size={4} />
       <Desc>
-        Experience{' '}
-        <b>
-          <i>L2</i>
-        </b>{' '}
-        UX with a Uniswap-based trading game.
+        A gamified demo of Uniswap on Ethereum Layer 2.{' '}
+        <NavComponent href="/welcome">
+          <b>Learn more ↗</b>
+        </NavComponent>
       </Desc>
+      <Shim size={2} />
+      <span>
+        <CopyWrapper>
+          <Emoji emoji="⚡" label="lightning" />
+          <pre> </pre>
+          <Body textStyle="gradient">Instant.</Body>
+          <pre> </pre>
+          <OpacityWrapper>No gas and blazing UX</OpacityWrapper>
+        </CopyWrapper>
+        <CopyWrapper>
+          <Emoji emoji="🌐" label="globe" />
+          <pre> </pre>
+          <Body textStyle="gradient">Scalable.</Body>
+          <pre> </pre>
+          <OpacityWrapper>~2,000 tx/s</OpacityWrapper>
+        </CopyWrapper>
+        <CopyWrapper>
+          <Emoji emoji="🔗" label="chain" />
+          <pre> </pre>
+          <Body textStyle="gradient">Secure.</Body>
+          <pre> </pre>
+          <OpacityWrapper>Optimistic rollup architecture</OpacityWrapper>
+        </CopyWrapper>
+      </span>
+      <Shim size={24} />
 
       <Progress progress="33%" />
 

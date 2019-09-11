@@ -4,12 +4,28 @@ import styled from 'styled-components'
 import { getPermissionString } from '../utils'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
+import Shim from '../components/Shim'
+import { Title, Body } from '../components/Type'
 
 const TweetContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   iframe,
   a {
     visibility: ${({ hide }) => (hide ? 'hidden' : 'visible')} !important;
   }
+`
+
+const TradeWrapper = styled.span`
+  width: 100%;
+  height: 100%;
+  display: grid;
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
 `
 
 async function getFaucetData(address, time, signature) {
@@ -98,23 +114,27 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
 
   function metaInformation() {
     if (updatedDataError) {
-      return <p>error...</p>
+      return <Body textStyle="gradient">An error occurred...</Body>
     } else if (addressData.canFaucet && !twitterLoaded) {
-      return <p>loading...</p>
+      return <Body textStyle="gradient">Loading...</Body>
     } else if (polling && (!updatedData || updatedData.canFaucet)) {
-      return <p>waiting...</p>
+      return <Body textStyle="gradient">Listening for your tweet...</Body>
     }
   }
 
   return (
-    <>
-      <h1>tweet your support to get tokens</h1>
+    <TradeWrapper>
+      <Title size={32} textStyle="gradient">
+        Tweet at the Unipig to get some tokens.
+      </Title>
+      <Shim size={16} />
 
       {metaInformation()}
 
       {(!addressData.canFaucet || (updatedData && !updatedData.canFaucet)) && (
         <>
-          <p>Coming through loud and clear @{addressData.twitterHandle}!</p>
+          <Body textStyle="gradient">Coming through loud and clear @{addressData.twitterHandle}!</Body>
+          <Shim size={32} />
           <NavButton variant="gradient" href="/">
             Dope
           </NavButton>
@@ -135,6 +155,6 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
           Tweet
         </a>
       </TweetContainer>
-    </>
+    </TradeWrapper>
   )
 }

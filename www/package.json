@@ -17,6 +17,7 @@
     "@tanem/react-nprogress": "^2.0.5",
     "@uniswap/sdk": "^1.0.0-beta.4",
     "faunadb": "^2.8.0",
+    "framer-motion": "^1.6.7",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^2.2.1",
     "next": "^9.0.5",
