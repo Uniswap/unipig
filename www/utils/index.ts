@@ -3,7 +3,7 @@ import nextCookies from 'next-cookies'
 import { verifyMessage } from '@ethersproject/wallet'
 
 import { COOKIE_NAME } from '../contexts/Cookie'
-import { SIGNATURE_TIMEOUT } from '../constants'
+import { SIGNATURE_TIMEOUT, FAUCET_TIMEOUT, AddressDocument, WalletSource } from '../constants'
 
 interface PermissionString {
   time: number
@@ -24,9 +24,12 @@ export function validatePermissionString(address: string, time: number, signatur
   const now = Date.now()
   const permissionString = getPermissionString(address, time).permissionString
 
-  const signingAddress = verifyMessage(permissionString, signature)
-
-  return signingAddress === address && time + SIGNATURE_TIMEOUT > now
+  try {
+    const signingAddress = verifyMessage(permissionString, signature)
+    return signingAddress === address && time + SIGNATURE_TIMEOUT > now
+  } catch {
+    return false
+  }
 }
 
 export function formatCookie(o: object): string {
@@ -72,4 +75,16 @@ export function getHost(req: any): string {
   }
 
   return `https://${host}`
+}
+
+export function addressSource(document: AddressDocument): WalletSource {
+  return document.paperWallet
+    ? WalletSource.PAPER
+    : document.lastTwitterFaucet > 0
+    ? WalletSource.TWITTER
+    : WalletSource.GENERATED
+}
+
+export function canFaucet(document: AddressDocument): boolean {
+  return document.lastTwitterFaucet + FAUCET_TIMEOUT < Date.now()
 }

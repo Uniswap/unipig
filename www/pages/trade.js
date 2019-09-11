@@ -6,15 +6,16 @@ import {
   BigNumber,
   getMarketDetails,
   getTradeDetails,
-  formatFixedDecimals,
-  formatSignificantDecimals
+  formatSignificant,
+  formatSignificantDecimals,
+  formatFixedDecimals
 } from '@uniswap/sdk'
 
 import { Team } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
-import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
+import { Body, Desc, ButtonText } from '../components/Type'
 import Emoji from '../components/Emoji'
 
 import { transparentize } from 'polished'
@@ -47,7 +48,9 @@ const StyledInputWrapper = styled.label`
   position: relative;
 `
 
-const Input = styled.input`
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FilteredInput = ({ inputColor, error, ...rest }) => <input {...rest} />
+const Input = styled(FilteredInput)`
   border: ${({ error, theme, inputColor }) =>
     error ? `1px solid ${theme.colors.error}` : `1px solid ${theme.colors[inputColor]}`};
   background: #202124;
@@ -61,9 +64,21 @@ const Input = styled.input`
   height: 56px;
   padding-left: 24px;
   padding-right: 24px;
+
+  :hover,
+  :focus {
+    outline: none;
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
 `
 
-const MaxButton = styled(Button)`
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FilteredButton = ({ inputColor, ...rest }) => <Button {...rest} />
+const MaxButton = styled(FilteredButton)`
   position: absolute;
   top: 16px;
   right: 80px;
@@ -80,8 +95,6 @@ const MaxButton = styled(Button)`
 `
 
 const StyledEmoji = styled(Emoji)`
-  color: ${({ theme, inputColor }) => theme.colors[inputColor]};
-  font-weight: 500;
   position: absolute;
   top: 14px;
   right: 24px;
@@ -95,20 +108,20 @@ const ArrowDown = styled.span`
 `
 
 const HelperText = styled(Desc)`
-  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors.textColor)};
+  color: ${({ error, theme }) => (error ? theme.colors.error : theme.colors.textColor)};
   width: 100%;
   max-width: 500px;
   text-align: center;
   font-size: 16px;
 `
 
-function Buy({ balances, reserves }) {
+function Buy({ wallet, team, reserves, balances }) {
   const router = useRouter()
 
   //// parse the url
   const { buy } = router.query || {}
   const outputToken = buy ? Team[buy] : null
-  const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIG : Team.UNI) : null
+  const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIGI : Team.UNI) : null
 
   //// parse the props
   const inputBalance = new BigNumber(balances[inputToken])
@@ -194,12 +207,11 @@ function Buy({ balances, reserves }) {
     <>
       <Body textStyle="gradient">
         <b>
-          Boost {Team[outputToken]} by selling {Team[inputToken]}.
+          Boost {Team[outputToken]} by dumping {Team[inputToken]}.
         </b>
       </Body>
       <TradeWrapper>
         <StyledInputWrapper>
-          {/* Sell {Team[inputToken]}: */}
           <Input
             required
             error={!!inputError}
@@ -218,15 +230,14 @@ function Buy({ balances, reserves }) {
           )}
           <StyledEmoji
             inputColor={inputToken}
-            // emoji={Team[inputToken] === 'UNI' ? '🦄' : '🐷'}
-            emoji={Team[inputToken] === 'UNI' ? 'UNI' : 'PIG'}
+            emoji={Team[inputToken] === 'UNI' ? '🦄' : '🐷'}
             label={Team[inputToken] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
         <ArrowDown>↓</ArrowDown>
         <StyledInputWrapper>
-          {/* Buy {Team[outputToken]}: */}
           <Input
+            disabled={true}
             error={!!outputError}
             type="number"
             min="0"
@@ -238,7 +249,7 @@ function Buy({ balances, reserves }) {
           />
           <StyledEmoji
             inputColor={outputToken}
-            emoji={Team[outputToken] === 'UNI' ? 'UNI' : 'PIG'}
+            emoji={Team[outputToken] === 'UNI' ? '🦄' : '🐷'}
             label={Team[outputToken] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
@@ -246,7 +257,11 @@ function Buy({ balances, reserves }) {
         {!inputError && !outputError && (
           <HelperText error={!!inputError}>
             <b>
-              {1 / marketDetails.marketRate.rate.toString()} {Team[inputToken]} = 1 {Team[outputToken]}
+              {formatSignificant(marketDetails.marketRate.rateInverted, {
+                significantDigits: 4,
+                forceIntegerSignificance: true
+              })}{' '}
+              {Team[inputToken]} = 1 {Team[outputToken]}
             </b>
           </HelperText>
         )}
@@ -255,7 +270,7 @@ function Buy({ balances, reserves }) {
         </NavButton>
       </TradeWrapper>
       <Shim size={32} />
-      <Wallet balances={balances} />
+      <Wallet wallet={wallet} team={team} balances={balances} />
     </>
   )
 }
@@ -270,7 +285,7 @@ function Confirmed({ success }) {
   )
 }
 
-function Manager({ balances, reserves }) {
+function Manager({ wallet, team, reserves, balances }) {
   const router = useRouter()
   const { buy, confirmed } = router.query || {}
   if (!buy && !confirmed) {
@@ -279,21 +294,23 @@ function Manager({ balances, reserves }) {
   }
 
   return buy ? (
-    <Buy balances={balances} reserves={reserves} />
+    <Buy wallet={wallet} team={team} reserves={reserves} balances={balances} />
   ) : (
     <Confirmed success={confirmed === 'true' ? true : false} />
   )
 }
 
+// TODO add PG API and deal with decimals
 Manager.getInitialProps = async () => {
+  const random = Math.round(Math.random() * 100, 0)
   return {
-    balances: {
-      [Team.UNI]: 100000,
-      [Team.PIG]: 100000
-    },
     reserves: {
-      [Team.UNI]: 10000000,
-      [Team.PIG]: 20000000
+      [Team.UNI]: random * 10000,
+      [Team.PIGI]: (100 - random) * 10000
+    },
+    balances: {
+      [Team.UNI]: 5 * 10000,
+      [Team.PIGI]: 5 * 10000
     }
   }
 }

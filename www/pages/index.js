@@ -1,9 +1,9 @@
 import styled from 'styled-components'
 
-import { Team, useTeam, WalletSource, useSource } from '../contexts/Cookie'
+import { Team } from '../contexts/Cookie'
 import { useStyledTheme } from '../hooks'
 import NavButton from '../components/NavButton'
-import Wallet from '../components/MiniWallet'
+import WalletComponent from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 
@@ -24,40 +24,37 @@ const FlexNavLink = styled(NavButton)`
   flex-grow: ${({ flex }) => flex};
 `
 
-function Home({ balances, reserves }) {
-  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIG])
+function Home({ wallet, team, addressData, reserves, balances }) {
+  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
 
   const theme = useStyledTheme()
 
-  const source = useSource()
-  const team = useTeam()
-
   return (
     <>
-      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5
-          ? `UNI dominance is at ${Math.round(UNIDominance * 100, 2)}%`
-          : `PIG dominance is at ${Math.round((1 - UNIDominance) * 100, 2)}%`}
+          ? `UNI dominance is at ${Math.round(UNIDominance * 100, 0)}%`
+          : `PIG dominance is at ${Math.round((1 - UNIDominance) * 100, 0)}%`}
       </Title>
 
       <Dominance
-        color={UNIDominance >= 0.5 ? 'UNI' : 'PIG'}
+        color={UNIDominance >= 0.5 ? 'UNI' : 'PIGI'}
         percent={UNIDominance >= 0.5 ? Math.round(UNIDominance * 100, 2) : Math.round((1 - UNIDominance) * 100, 2)}
       />
 
-      <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+      <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
       </Body>
 
-      <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} size={18}>
+      <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} size={18}>
         <i>
-          Dump your <b>{team === Team.UNI ? 'PIG' : 'UNI'}</b> tokens to help your team gain dominance.
+          Dump your <b>{team === Team.UNI ? 'PIGI' : 'UNI'}</b> tokens to help your team gain dominance.
         </i>
       </Body>
 
       <Shim size={32} />
 
-      {source === WalletSource.GENERATED && (
+      {addressData.canFaucet && (
         <NavButton href={`/twitter-faucet`} variant={'gradient'}>
           Get Tokens from Twitter
         </NavButton>
@@ -77,17 +74,17 @@ function Home({ balances, reserves }) {
 
         <FlexNavLink
           flex={Math.round((1 - UNIDominance) * 100, 0)}
-          href={`/trade?buy=${Team[Team.PIG]}`}
+          href={`/trade?buy=${Team[Team.PIGI]}`}
           color={'secondary'}
-          variant={team === Team.PIG ? 'contained' : 'outlined'}
+          variant={team === Team.PIGI ? 'contained' : 'outlined'}
         >
-          <ButtonText>Buy PIG</ButtonText>
+          <ButtonText>Buy PIGI</ButtonText>
         </FlexNavLink>
       </BoostWrapper>
 
       <Shim size={36} />
 
-      <Wallet walletType={'rest'} balances={balances} />
+      <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} />
     </>
   )
 }
@@ -96,13 +93,13 @@ function Home({ balances, reserves }) {
 Home.getInitialProps = async () => {
   const random = Math.round(Math.random() * 100, 0)
   return {
-    balances: {
-      [Team.UNI]: 5,
-      [Team.PIG]: 5
-    },
     reserves: {
       [Team.UNI]: random,
-      [Team.PIG]: 100 - random
+      [Team.PIGI]: 100 - random
+    },
+    balances: {
+      [Team.UNI]: 5,
+      [Team.PIGI]: 5
     }
   }
 }

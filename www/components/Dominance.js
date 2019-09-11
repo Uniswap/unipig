@@ -16,7 +16,7 @@ const Line = styled.div`
   border-radius: 20px;
   top: 12px;
   left: 4px;
-  background-color: ${({ theme, color }) => (color === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIG])};
+  background-color: ${({ theme, color }) => (color === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])};
   transition: width 0.5s ease;
 `
 

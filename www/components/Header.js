@@ -1,6 +1,5 @@
 import styled from 'styled-components'
 
-import { useTeam, useWallet } from '../contexts/Cookie'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
@@ -54,13 +53,10 @@ const LinkButton = styled(NavButton)`
   }
 `
 
-export default function Header({ showWallet }) {
-  const team = useTeam()
-  const wallet = useWallet()
-
+export default function Header({ wallet, team, showWallet }) {
   return (
     <HeaderWrapper>
-      <HomeButton href={team && wallet ? '/' : '/welcome'}>
+      <HomeButton href={wallet && team ? '/' : '/welcome'}>
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
         <Chip variant="gradient" label={<L2Text>L2</L2Text>} />

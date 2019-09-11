@@ -2,17 +2,18 @@ import styled from 'styled-components'
 import { transparentize } from 'polished'
 
 import { truncateAddress } from '../utils'
-import { Team, useWallet, useTeam } from '../contexts/Cookie'
+import { Team } from '../contexts/Cookie'
+import { NavComponent } from './NavButton'
 
-const StyledWallet = styled.a`
-  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG])} !important;
+const StyledWallet = styled(NavComponent)`
+  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
   opacity: 0.8;
   transition: opacity 0.125s ease;
-  text-decoration: none;
+  text-decoration: none !important;
 
   :hover {
     opacity: 1;
@@ -28,7 +29,7 @@ const Badge = styled.div`
   background-image: url('static/UniMoji.gif');
   background-size: contain;
   background-color: ${({ team, theme }) =>
-    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} !important;
+    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
 `
 
 const WalletAddress = styled.p`
@@ -59,7 +60,7 @@ const TokenValue = styled.span`
   font-size: 16px;
   line-height: 19px;
   flex: 1 1 0;
-  color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIG])} !important;
+  color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.greys[9])};
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -113,19 +114,16 @@ export function TokenInfo({ balances }) {
       </TokenValue>
       <TokenShim />
       <TokenValue team={'PIG'}>
-        <span>{balances[Team.PIG]}</span>
+        <span>{balances[Team.PIGI]}</span>
         <span>PIGI</span>
       </TokenValue>
     </Tokens>
   )
 }
 
-export default function Wallet({ balances, walletType }) {
-  const team = useTeam()
-  const wallet = useWallet()
-
+export default function Wallet({ wallet, team, balances, walletType, disableNav = false }) {
   return (
-    <StyledWallet team={team} href="/wallet">
+    <StyledWallet team={team} href="/wallet" as={disableNav ? 'div' : NavComponent}>
       {walletType === 'rest' ? (
         <OpenWalletLink>
           <span>Open Wallet</span>
@@ -134,7 +132,7 @@ export default function Wallet({ balances, walletType }) {
       ) : (
         <span></span>
       )}
-      <WalletInfo team={team} wallet={wallet} />
+      <WalletInfo wallet={wallet} team={team} />
       <TokenInfo balances={balances} />
     </StyledWallet>
   )

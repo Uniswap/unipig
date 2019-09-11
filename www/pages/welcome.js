@@ -1,11 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import fetch from 'isomorphic-unfetch'
-import styled from 'styled-components'
 import { Wallet } from '@ethersproject/wallet'
+import styled, { css } from 'styled-components'
+import { transparentize } from 'polished'
 
 import { getHost } from '../utils'
-import { WalletSource, Team, useAddSource, useAddMnemonic, useSource, useWallet, useTeam } from '../contexts/Cookie'
+import { Team, useAddMnemonic, useMnemonicExists, useTeamExists } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
 import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
@@ -17,37 +18,47 @@ const UNI = styled.span`
 `
 
 const PIG = styled.span`
-  color: ${({ theme }) => theme.colors[Team.PIG]} !important;
+  color: ${({ theme }) => theme.colors[Team.PIGI]} !important;
   width: 100%;
   font-weight: 600;
 `
 
-function Welcome({ mnemonic, fromPaper }) {
-  const source = useSource()
-  const wallet = useWallet()
-  const team = useTeam()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FilteredNavButton = ({ error, ...rest }) => <NavButton {...rest} />
+const ErrorNavButton = styled(FilteredNavButton)`
+  ${({ error, theme }) =>
+    error &&
+    css`
+      opacity: 1};
+      color: ${theme.colors.error} !important;
+      border-color: ${transparentize(0.75, theme.colors.error)} !important;
+    `}
+`
 
-  // save the source of the wallet
-  const addSource = useAddSource()
+function Welcome({ mnemonic }) {
+  // existence checks for cookie data
+  const mnemonicExists = useMnemonicExists()
+  const teamExists = useTeamExists()
+
+  // check if cookies are enabled
+  const [cookiesEnabled, setCookiesEnabled] = useState()
   useEffect(() => {
-    if (!source) {
-      addSource(fromPaper ? WalletSource.PAPER : WalletSource.GENERATED)
-    }
-  }, [source, fromPaper, addSource])
+    setCookiesEnabled(navigator ? navigator.cookieEnabled : false)
+  }, [])
 
-  // if a wallet doesn't exist, save the mnemonic (guaranteed to be correct from getInitialProps)
+  // save the mnemonic (guaranteed to be correct from getInitialProps)
   const addMnemonic = useAddMnemonic()
   useEffect(() => {
-    if (!wallet) {
+    if (!mnemonicExists) {
       addMnemonic(mnemonic)
     }
-  }, [wallet, addMnemonic, mnemonic])
+  }, [mnemonicExists, mnemonic, addMnemonic])
 
-  // once a wallet exists, clear mnemonic from url if it's there
+  // once a mnemonic exists, clear mnemonic from url if it's there (only if cookies are enabled)
   const router = useRouter()
   const { query } = router
   useEffect(() => {
-    if (query && query.mnemonic && wallet) {
+    if (cookiesEnabled && mnemonicExists && query && query.mnemonic) {
       router.push('/welcome', '/welcome', { shallow: true })
     }
   })
@@ -56,6 +67,7 @@ function Welcome({ mnemonic, fromPaper }) {
     <>
       <Heading>Hello friend.</Heading>
       <Title textStyle="gradient">Welcome to the Devcon 5 Trading Game</Title>
+
       <Body textStyle="gradient">
         Who will win? <br />
         <UNI>UNI</UNI> vs <PIG>PIG</PIG>
@@ -67,10 +79,18 @@ function Welcome({ mnemonic, fromPaper }) {
         </b>{' '}
         UX with a Uniswap-based trading game.
       </Desc>
-      <Progress progress="30%" />
-      <NavButton variant="gradient" href={wallet && team ? '/' : '/join-team'} disabled={!wallet} stretch>
-        <ButtonText>Let me in!</ButtonText>
-      </NavButton>
+
+      <Progress progress="33%" />
+
+      <ErrorNavButton
+        error={cookiesEnabled === false}
+        variant={cookiesEnabled === false ? 'outlined' : 'gradient'}
+        href={teamExists ? '/' : '/join-team'}
+        disabled={!mnemonicExists || !cookiesEnabled}
+        stretch
+      >
+        <ButtonText>{cookiesEnabled === false ? 'Enable cookies to continue.' : 'Let me in!'}</ButtonText>
+      </ErrorNavButton>
     </>
   )
 }
@@ -79,8 +99,8 @@ Welcome.getInitialProps = async context => {
   const { query, req } = context
   const { mnemonic } = query || {}
 
-  // validate the mnemonic if it exists
-  let wallet
+  // create a wallet, if mnemonic exists and is valid
+  let wallet = null
   if (mnemonic) {
     try {
       const parsedMnemonic = mnemonic.replace(/-/g, ' ')
@@ -89,7 +109,7 @@ Welcome.getInitialProps = async context => {
   }
 
   // check if the address is whitelisted
-  let walletIsValid
+  let walletIsValid = false
   if (wallet) {
     walletIsValid = await fetch(`${getHost(req)}/api/validate-paper-wallet`, {
       method: 'POST',
@@ -103,10 +123,10 @@ Welcome.getInitialProps = async context => {
   }
 
   if (!wallet || !walletIsValid) {
-    return { mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic, fromPaper: false }
+    return { mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic, paperWallet: false }
   }
 
-  return { mnemonic: wallet.mnemonic, fromPaper: true }
+  return { mnemonic: wallet.mnemonic, paperWallet: true }
 }
 
 export default Welcome

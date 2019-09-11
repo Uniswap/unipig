@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 
-import { Team, useAddTeam, useTeam } from '../contexts/Cookie'
+// eslint-disable-next-line @typescript-eslint/camelcase
+import { Team, useAddTeam, useTeam_UNSAFE } from '../contexts/Cookie'
 import Emoji from '../components/Emoji'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
@@ -14,11 +15,13 @@ const StyledButton = styled(Button)`
 `
 
 export default function JoinTeam() {
-  const team = useTeam()
+  const team = useTeam_UNSAFE()
   const addTeam = useAddTeam()
-  function join(team) {
+  function join(teamToJoin) {
     return () => {
-      addTeam(team)
+      if (teamToJoin !== team) {
+        addTeam(teamToJoin)
+      }
     }
   }
 
@@ -33,13 +36,13 @@ export default function JoinTeam() {
         <Emoji emoji="🦄" label="unicorn" />
       </StyledButton>
 
-      <StyledButton variant={team === Team.PIG ? 'contained' : 'outlined'} color="secondary" onClick={join(Team.PIG)}>
+      <StyledButton variant={team === Team.PIGI ? 'contained' : 'outlined'} color="secondary" onClick={join(Team.PIGI)}>
         <Emoji emoji="🐷" label="pig" />
       </StyledButton>
 
       <Shim size={56} />
 
-      <Progress progress="60%" />
+      <Progress progress="66%" />
 
       <NavButton variant="gradient" disabled={!team} href={'/confirm-wallet'} stretch>
         <ButtonText>I pledge allegiance</ButtonText>

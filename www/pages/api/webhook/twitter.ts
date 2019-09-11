@@ -2,7 +2,8 @@ import { NowRequest, NowResponse } from '@now/node'
 import crypto from 'crypto'
 import faunadb from 'faunadb'
 
-import { FAUCET_TIMEOUT } from '../../../constants'
+import { TWITTER_BOOSTS, AddressDocument } from '../../../constants'
+import { canFaucet } from '../../../utils'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
 const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
@@ -71,7 +72,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
     console.log(`Parsed Ethereum address ${matchedAddress}.`)
 
     // ensure that the address exists in our db
-    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_twitter'), matchedAddress)))
+    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)))
     if (addressRef.data.length === 0) {
       const errorString = `Address ${matchedAddress} is not recognized.`
       console.error(errorString)
@@ -80,19 +81,20 @@ export default async function(request: NowRequest, response: NowResponse): Promi
 
     // ensure that the address hasn't used the faucet recently
     const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
-    const canFaucet = addressData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
-    if (!canFaucet) {
+    const addressDocument: AddressDocument = addressData[0].data
+    if (!canFaucet(addressDocument)) {
       const errorString = `Address ${matchedAddress} cannot faucet yet.`
       console.error(errorString)
       return response.status(400).json({ message: errorString })
     }
 
     // ensure that if the twitter id exists in our db, it isn't timed out
-    const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_twitter'), userId)))
+    const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_addresses'), userId)))
     if (idRef.data.length > 0) {
       const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
-      const canFaucet = idData[0].data.lastFaucetTime + FAUCET_TIMEOUT < Date.now()
-      if (!canFaucet) {
+      const idDocument: AddressDocument = idData[0].data
+
+      if (!canFaucet(idDocument)) {
         const errorString = `Account ${userHandle} (${userId}) cannot faucet yet.`
         console.error(errorString)
         return response.status(400).json({ message: errorString })
@@ -100,7 +102,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
       // update the db to ensure uniqueness
       else {
         await client.query(
-          q.Update(q.Ref(q.Collection('twitter'), idRef.data[0].id), {
+          q.Update(q.Ref(q.Collection('addresses'), idRef.data[0].id), {
             data: {
               twitterHandle: null,
               twitterId: null
@@ -114,11 +116,12 @@ export default async function(request: NowRequest, response: NowResponse): Promi
 
     // all has gone well, update db
     await client.query(
-      q.Update(q.Ref(q.Collection('twitter'), addressRef.data[0].id), {
+      q.Update(q.Ref(q.Collection('addresses'), addressRef.data[0].id), {
         data: {
           twitterHandle: userHandle,
           twitterId: userId,
-          lastFaucetTime: now
+          lastTwitterFaucet: now,
+          ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
         }
       })
     )

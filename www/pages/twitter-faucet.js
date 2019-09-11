@@ -1,104 +1,107 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import styled from 'styled-components'
 
 import { getPermissionString } from '../utils'
-import { Team, useWallet, useTeam, WalletSource, useSource, useAddSource } from '../contexts/Cookie'
+import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 
-const Tweet = styled.a`
-  visibility: ${({ loaded }) => (loaded ? 'visible' : 'hidden')};
+const TweetContainer = styled.div`
+  iframe,
+  a {
+    visibility: ${({ hide }) => (hide ? 'hidden' : 'visible')} !important;
+  }
 `
 
 async function getFaucetData(address, time, signature) {
-  return await fetch(`/api/get-twitter-faucet-data`, {
+  return await fetch(`/api/get-address-data`, {
     method: 'POST',
     body: JSON.stringify({ address, time, signature })
-  })
-    .then(async response => {
-      if (!response.ok) {
-        throw Error('Invalid response.')
-      }
+  }).then(async response => {
+    if (!response.ok) {
+      throw Error(`${response.status} Error: ${response.statusText}`)
+    }
 
-      return await response.json()
-    })
-    .catch(error => {
-      console.error(error)
-      return null
-    })
+    return await response.json()
+  })
 }
 
-export default function TwitterFaucet() {
-  const source = useSource()
-  const wallet = useWallet()
-  const team = useTeam()
-
+export default function TwitterFaucet({ wallet, team, addressData }) {
   // get a permission signature
-  const [permission, setPermission] = useState()
+  const permission = useMemo(() => getPermissionString(wallet.address), [wallet.address])
+  const [signature, setSignature] = useState()
   useEffect(() => {
-    const permission = getPermissionString(wallet.address)
-    wallet.signMessage(permission.permissionString).then(signature => {
-      setPermission({ time: permission.time, signature })
-    })
-  }, [wallet])
+    let stale = false
 
-  // get faucet data ASAP
-  const [faucetData, setFaucetData] = useState()
-  useEffect(() => {
-    if (permission) {
-      getFaucetData(wallet.address, permission.time, permission.signature).then(setFaucetData)
+    wallet.signMessage(permission.permissionString).then(signature => {
+      if (!stale) {
+        setSignature(signature)
+      }
+    })
+
+    return () => {
+      stale = true
+      setSignature()
     }
-  }, [permission, wallet])
+  }, [wallet, permission.permissionString])
 
   // polling logic to check for valid tweet
   const [polling, setPolling] = useState(false)
+  const [updatedData, setUpdatedData] = useState()
+  const [updatedDataError, setUpdatedDataError] = useState()
   useEffect(() => {
-    if (permission) {
-      if (polling) {
-        function poll() {
-          getFaucetData(wallet.address, permission.time, permission.signature).then(setFaucetData)
-        }
+    if (polling && permission.time && signature) {
+      let stale = false
 
-        const interval = setInterval(poll, 5000)
-        return () => {
-          clearInterval(interval)
-        }
+      function poll() {
+        getFaucetData(wallet.address, permission.time, signature)
+          .then(data => {
+            if (!stale) {
+              setUpdatedData(data)
+            }
+          })
+          .catch(error => {
+            console.error(error)
+            setUpdatedDataError(error)
+          })
+      }
+
+      const interval = setInterval(poll, 4000)
+
+      return () => {
+        stale = true
+        clearInterval(interval)
       }
     }
-  }, [permission, polling, wallet])
+  }, [polling, permission.time, permission.signature, signature, wallet.address])
 
-  // initialize twitter stuff when we need it
+  // initialize twitter stuff
   const [twitterLoaded, setTwitterLoaded] = useState(false)
   useEffect(() => {
-    if (faucetData && faucetData.canFaucet) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('scriptjs')('https://platform.twitter.com/widgets.js', () => {
+    let stale = false
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('scriptjs')('https://platform.twitter.com/widgets.js', () => {
+      if (!stale) {
         window.twttr.events.bind('loaded', () => {
           setTwitterLoaded(true)
         })
-
         window.twttr.events.bind('tweet', () => {
           setPolling(true)
         })
-      })
-    }
-  }, [faucetData])
+      }
+    })
 
-  // set wallet source once twitter is successful (we could do this on the home screen as well...?)
-  const addSource = useAddSource()
-  useEffect(() => {
-    if (faucetData && !faucetData.canFaucet && source !== WalletSource.TWITTER) {
-      addSource(WalletSource.TWITTER)
+    return () => {
+      stale = true
     }
-  })
+  }, [])
 
   function metaInformation() {
-    if (faucetData === null) {
-      return <p>error</p>
-    } else if (faucetData === undefined) {
+    if (updatedDataError) {
+      return <p>error...</p>
+    } else if (addressData.canFaucet && !twitterLoaded) {
       return <p>loading...</p>
-    } else if (faucetData.canFaucet && !twitterLoaded) {
-      return <p>loading...</p>
-    } else if (faucetData.canFaucet && polling) {
+    } else if (polling && (!updatedData || updatedData.canFaucet)) {
       return <p>waiting...</p>
     }
   }
@@ -109,18 +112,17 @@ export default function TwitterFaucet() {
 
       {metaInformation()}
 
-      {faucetData && !faucetData.canFaucet && (
+      {(!addressData.canFaucet || (updatedData && !updatedData.canFaucet)) && (
         <>
-          <p>Coming through loud and clear @{faucetData.twitterHandle}!</p>
-          <NavButton variant="gradient" href="/" disabled={source !== WalletSource.TWITTER}>
+          <p>Coming through loud and clear @{addressData.twitterHandle}!</p>
+          <NavButton variant="gradient" href="/">
             Dope
           </NavButton>
         </>
       )}
 
-      <div>
-        <Tweet
-          loaded={faucetData && faucetData.canFaucet && twitterLoaded}
+      <TweetContainer hide={!addressData.canFaucet || !twitterLoaded || (updatedData && !updatedData.canFaucet)}>
+        <a
           className="twitter-share-button"
           href="https://twitter.com/intent/tweet"
           data-size="large"
@@ -131,8 +133,8 @@ export default function TwitterFaucet() {
           data-dnt="true"
         >
           Tweet
-        </Tweet>
-      </div>
+        </a>
+      </TweetContainer>
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-
 import Link from 'next/link'
+import { Link as MUILink } from '@material-ui/core'
 
 import Button from './Button'
 
@@ -23,5 +23,13 @@ export default function NavButton({ children, ...rest }: any): JSX.Element {
     <StyledNavButton component={LinkButton} {...rest}>
       {children}
     </StyledNavButton>
+  )
+}
+
+export function NavComponent({ children, ...rest }: any): JSX.Element {
+  return (
+    <MUILink component={LinkButton} {...rest}>
+      {children}
+    </MUILink>
   )
 }
