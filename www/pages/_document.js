@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Document, { Html, Head, Main, NextScript } from 'next/document'
 import { ServerStyleSheet } from 'styled-components'
 import { ServerStyleSheets } from '@material-ui/styles'
@@ -20,13 +21,13 @@ export default class MyDocument extends Document {
       const initialProps = await Document.getInitialProps(ctx)
       return {
         ...initialProps,
-        styles: (
-          <>
+        styles: [
+          <Fragment key="styles">
             {initialProps.styles}
             {MUISheets.getStyleElement()}
             {SCSheet.getStyleElement()}
-          </>
-        )
+          </Fragment>
+        ]
       }
     } finally {
       SCSheet.seal()

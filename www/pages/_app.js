@@ -23,7 +23,7 @@ const GRADIENT_BACKGROUND = css`
 const UNI = '#DC6BE5'
 const PIGI = '#FAC4B6'
 
-const theme = {
+const SCTheme = {
   colors: {
     black: BLACK,
     white: WHITE,
@@ -82,7 +82,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `
 
-const defaultMUITheme = createMuiTheme({
+const MUITheme = createMuiTheme({
   typography: {
     fontFamily: "'Inter', sans-serif"
   },
@@ -175,22 +175,22 @@ export default class MyApp extends App {
 
     return (
       <>
-        <StylesProvider injectFirst>
-          <Head>
-            <title>Unipig Exchange</title>
-          </Head>
-          <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
-            <CookieContextUpdater />
-            <MUIThemeProvider theme={defaultMUITheme}>
-              <SCThemeProvider theme={theme}>
-                <GlobalStyle />
+        <Head>
+          <title>Unipig Exchange</title>
+        </Head>
+        <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
+          <CookieContextUpdater />
+          <SCThemeProvider theme={SCTheme}>
+            <GlobalStyle />
+            <StylesProvider injectFirst>
+              <MUIThemeProvider theme={MUITheme}>
                 <Layout wallet={wallet} team={team}>
                   <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
                 </Layout>
-              </SCThemeProvider>
-            </MUIThemeProvider>
-          </CookieContext>
-        </StylesProvider>
+              </MUIThemeProvider>
+            </StylesProvider>
+          </SCThemeProvider>
+        </CookieContext>
       </>
     )
   }
