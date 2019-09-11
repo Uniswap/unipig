@@ -6,7 +6,7 @@ import { QRCode } from 'react-qrcode-logo'
 import dynamic from 'next/dynamic'
 
 import { useStyledTheme } from '../hooks'
-import { Team, useWallet, useTeam, useReset } from '../contexts/Cookie'
+import { Team, useMnemonicExists, useReset } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
@@ -21,7 +21,7 @@ const QRReader = dynamic({
 
 const StyledWallet = styled.span`
   background-color: ${({ team, theme }) =>
-    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} !important;
+    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
   padding: 1.5rem;
   color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   border-radius: 20px;
@@ -77,28 +77,26 @@ const SendShim = styled.span`
   height: 8px;
 `
 
-function Overview({ balances }) {
-  const team = useTeam()
-  const wallet = useWallet()
-  const reset = useReset()
-  const [resetPressed, setResetPressed] = useState(false)
-
+function Overview({ wallet, team, balances }) {
   const theme = useStyledTheme()
 
-  const router = useRouter()
+  const reset = useReset()
+  const [resetPressed, setResetPressed] = useState(false)
   function onReset() {
     setResetPressed(true)
     reset()
   }
 
+  const router = useRouter()
+  const mnemonicExists = useMnemonicExists()
   // handle redirect after reset
   useEffect(() => {
-    if (!wallet) {
+    if (!mnemonicExists) {
       router.push('/welcome')
     }
-  }, [wallet, router])
+  }, [mnemonicExists, router])
 
-  if (!wallet) {
+  if (!mnemonicExists) {
     return null
   }
 
@@ -115,7 +113,7 @@ function Overview({ balances }) {
           ecLevel="M"
           size="250"
           quietZone="0"
-          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}
+          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
           fgColor={theme.colors.black}
           logoImage={'static/blob_2.svg'}
           qrStyle="squares"
@@ -149,18 +147,19 @@ function Scan() {
   return <QRReader />
 }
 
-function Manager({ balances }) {
+function Manager({ wallet, team, balances }) {
   const router = useRouter()
   const { scan } = router.query || {}
 
-  return !scan ? <Overview balances={balances} /> : <Scan />
+  return !scan ? <Overview wallet={wallet} team={team} balances={balances} /> : <Scan />
 }
 
+// TODO add PG API and deal with decimals
 Manager.getInitialProps = async () => {
   return {
     balances: {
-      [Team.UNI]: 100000,
-      [Team.PIG]: 100000
+      [Team.UNI]: 5,
+      [Team.PIGI]: 5
     }
   }
 }

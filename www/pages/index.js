@@ -1,14 +1,13 @@
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
-
-import { Team, useTeam, WalletSource, useSource } from '../contexts/Cookie'
-import { useStyledTheme } from '../hooks'
 import { motion, useMotionValue } from 'framer-motion'
 
+import { useStyledTheme } from '../hooks'
+import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
-import Wallet from '../components/MiniWallet'
+import WalletComponent from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
-
 import { Title, ButtonText, Body } from '../components/Type'
 
 const BoostWrapper = styled.div`
@@ -54,23 +53,16 @@ const container = {
   }
 }
 
-const scaleTest = {
-  hidden: { scale: 0 },
-  show: { scale: 1 }
-}
-
-function Home({ balances, reserves }) {
-  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIG])
+function Home({ wallet, team, addressData, reserves, balances }) {
+  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
 
   const theme = useStyledTheme()
 
-  const source = useSource()
-  const team = useTeam()
   const x = useMotionValue(0)
 
-  const [count, setCount] = React.useState(0)
+  const [count, setCount] = useState(0)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const unsubscribeX = x.onChange(() => setCount(Math.round(x.current)))
     return () => {
       unsubscribeX()
@@ -79,8 +71,7 @@ function Home({ balances, reserves }) {
 
   return (
     <>
-      {/* <Shim size={32} /> */}
-      <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5 ? (
           <FixedNum>UNI dominance is at {count}%</FixedNum>
         ) : (
@@ -90,8 +81,8 @@ function Home({ balances, reserves }) {
       <Shim size={12} />
 
       <Dominance
-        color={UNIDominance >= 0.5 ? 'UNI' : 'PIG'}
-        percent={UNIDominance >= 0.5 ? Math.round(UNIDominance * 100, 2) : Math.round((1 - UNIDominance) * 100, 2)}
+        dominantTeam={UNIDominance >= 0.5 ? Team.UNI : Team.PIGI}
+        percent={UNIDominance > 0.5 ? UNIDominance * 100 : (1 - UNIDominance) * 100}
       />
 
       <motion.div
@@ -102,25 +93,25 @@ function Home({ balances, reserves }) {
         transition={{ ease: 'easeOut', duration: 1 }}
       ></motion.div>
 
-      <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]}>
+      <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
       </Body>
 
       <Shim size={12} />
 
-      <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIG]} size={18}>
-        {source === WalletSource.GENERATED ? (
+      <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} size={18}>
+        {addressData.canFaucet ? (
           <i>You still need to grab some tokens to play. Use the Twitter faucet below to get some.</i>
         ) : (
           <i>
-            Dump your <b>${team === Team.UNI ? 'PIG' : 'UNI'}</b> tokens to help your team gain dominance.
+            Dump your <b>{team === Team.UNI ? 'PIGI' : 'UNI'}</b> tokens to help your team gain dominance.
           </i>
         )}
       </Body>
 
       <Shim size={32} />
 
-      {source === WalletSource.GENERATED ? (
+      {addressData.canFaucet ? (
         <TwitterButton href={`/twitter-faucet`} stretch>
           <ButtonText>Get Tokens from Twitter</ButtonText>
         </TwitterButton>
@@ -139,11 +130,11 @@ function Home({ balances, reserves }) {
 
           <FlexNavLink
             flex={Math.round((1 - UNIDominance) * 100, 0)}
-            href={`/trade?buy=${Team[Team.PIG]}`}
+            href={`/trade?buy=${Team[Team.PIGI]}`}
             color={'secondary'}
-            variant={team === Team.PIG ? 'contained' : 'outlined'}
+            variant={team === Team.PIGI ? 'contained' : 'outlined'}
           >
-            <ButtonText>Buy PIG</ButtonText>
+            <ButtonText>Buy PIGI</ButtonText>
           </FlexNavLink>
         </BoostWrapper>
       )}
@@ -151,7 +142,7 @@ function Home({ balances, reserves }) {
       <Shim size={36} />
 
       <AniFrame variants={container} initial="hidden" animate="show">
-        <Wallet walletType={'rest'} balances={balances} />
+        <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} />
       </AniFrame>
     </>
   )
@@ -161,13 +152,13 @@ function Home({ balances, reserves }) {
 Home.getInitialProps = async () => {
   const random = Math.round(Math.random() * 100, 0)
   return {
-    balances: {
-      [Team.UNI]: 5,
-      [Team.PIG]: 5
-    },
     reserves: {
       [Team.UNI]: random,
-      [Team.PIG]: 100 - random
+      [Team.PIGI]: 100 - random
+    },
+    balances: {
+      [Team.UNI]: 5,
+      [Team.PIGI]: 5
     }
   }
 }

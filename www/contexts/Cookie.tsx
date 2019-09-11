@@ -1,60 +1,42 @@
-import { createContext, useContext, useReducer, useMemo, useCallback } from 'react'
+import { createContext, useContext, useReducer, useMemo, useCallback, Context } from 'react'
 import Cookies from 'js-cookie'
-import { Wallet } from '@ethersproject/wallet'
 
 import { formatCookie } from '../utils'
 
-export enum WalletSource {
-  PAPER = 'PAPER',
-  GENERATED = 'GENERATED',
-  TWITTER = 'TWITTER'
-}
-
 export enum Team {
   UNI = 1,
-  PIG = 2
+  PIGI = 2
 }
 
 export interface Cookie {
-  source: WalletSource
-  mnemonic: string
-  team: Team
+  mnemonic?: string
+  team?: Team
 }
 
 export const COOKIE_NAME = 'UNIPIG'
 
 // action types
 enum Actions {
-  ADD_SOURCE,
   ADD_MNEMONIC,
   ADD_TEAM,
   RESET
 }
 
-const CookieContext = createContext({})
+const CookieContext: Context<[Cookie, {}]> = createContext([{}, {}])
 
-function useCookieContext(): any {
+function useCookieContext(): [Cookie, any] {
   return useContext(CookieContext)
 }
 
-function init({ source, mnemonic, team }: any): any {
+function init({ mnemonic, team }: Cookie): Cookie {
   return {
-    source,
     mnemonic,
     team
   }
 }
 
-function reducer(state, { type, payload }): any {
+function reducer(state: any, { type, payload }): Cookie {
   switch (type) {
-    case Actions.ADD_SOURCE: {
-      const { source } = payload
-
-      return {
-        ...state,
-        source
-      }
-    }
     case Actions.ADD_MNEMONIC: {
       const { mnemonic } = payload
 
@@ -80,20 +62,13 @@ function reducer(state, { type, payload }): any {
   }
 }
 
-export default function Provider({ sourceInitial, mnemonicInitial, teamInitial, children }): JSX.Element {
-  const [state, dispatch] = useReducer(
-    reducer,
-    { source: sourceInitial, mnemonic: mnemonicInitial, team: teamInitial },
-    init
-  )
+export default function Provider({ mnemonicInitial, teamInitial, children }): JSX.Element {
+  const [state, dispatch] = useReducer(reducer, { mnemonic: mnemonicInitial, team: teamInitial }, init)
 
-  const addSource = useCallback((source): void => {
-    dispatch({ type: Actions.ADD_SOURCE, payload: { source } })
-  }, [])
-  const addMnemonic = useCallback((mnemonic): void => {
+  const addMnemonic = useCallback((mnemonic: string): void => {
     dispatch({ type: Actions.ADD_MNEMONIC, payload: { mnemonic } })
   }, [])
-  const addTeam = useCallback((team): void => {
+  const addTeam = useCallback((team: Team): void => {
     dispatch({ type: Actions.ADD_TEAM, payload: { team } })
   }, [])
   const reset = useCallback((): void => {
@@ -102,13 +77,7 @@ export default function Provider({ sourceInitial, mnemonicInitial, teamInitial, 
 
   return (
     <CookieContext.Provider
-      value={useMemo((): any => [state, { addSource, addMnemonic, addTeam, reset }], [
-        state,
-        addSource,
-        addMnemonic,
-        addTeam,
-        reset
-      ])}
+      value={useMemo((): any => [state, { addMnemonic, addTeam, reset }], [state, addMnemonic, addTeam, reset])}
     >
       {children}
     </CookieContext.Provider>
@@ -118,14 +87,9 @@ export default function Provider({ sourceInitial, mnemonicInitial, teamInitial, 
 export function Updater(): null {
   const [state] = useCookieContext()
 
-  Cookies.set(COOKIE_NAME, formatCookie(state))
+  Cookies.set(COOKIE_NAME, formatCookie(state), { expires: 365 * 10 }) // 10 year expiration
 
   return null
-}
-
-export function useAddSource(): () => void {
-  const [, { addSource }] = useCookieContext()
-  return addSource
 }
 
 export function useAddMnemonic(): () => void {
@@ -133,27 +97,28 @@ export function useAddMnemonic(): () => void {
   return addMnemonic
 }
 
+export function useMnemonicExists(): boolean {
+  const [state] = useCookieContext()
+  return !!state.mnemonic
+}
+
 export function useAddTeam(): () => void {
   const [, { addTeam }] = useCookieContext()
   return addTeam
 }
 
+export function useTeamExists(): boolean {
+  const [state] = useCookieContext()
+  return !!state.team
+}
+
+// eslint-disable-next-line @typescript-eslint/camelcase
+export function useTeam_UNSAFE(): Team | undefined {
+  const [state] = useCookieContext()
+  return state.team
+}
+
 export function useReset(): () => void {
   const [, { reset }] = useCookieContext()
   return reset
-}
-
-export function useSource(): WalletSource {
-  const [{ source }] = useCookieContext()
-  return source
-}
-
-export function useWallet(): Wallet | null {
-  const [{ mnemonic }] = useCookieContext()
-  return useMemo((): Wallet | null => (mnemonic ? Wallet.fromMnemonic(mnemonic) : null), [mnemonic])
-}
-
-export function useTeam(): Team {
-  const [{ team }] = useCookieContext()
-  return team
 }

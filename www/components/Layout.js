@@ -70,7 +70,7 @@ const Element = styled.div`
   }
 `
 
-export default function Layout({ children }) {
+export default function Layout({ wallet, team, children }) {
   const { pathname } = useRouter()
   const showWallet = pathname === '/'
 
@@ -84,8 +84,8 @@ export default function Layout({ children }) {
       <Element align="flex-end">
         <RouteLoader />
       </Element>
-      <Element align="center" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
-        <Header showWallet={showWallet} />
+      <Element align="flex-start" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
+        <Header wallet={wallet} team={team} showWallet={showWallet} />
       </Element>
       <Element align="flex-start" grow={false} width={'448px'}>
         {children}

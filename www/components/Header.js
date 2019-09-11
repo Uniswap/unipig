@@ -1,21 +1,30 @@
 import styled from 'styled-components'
 
-import { useTeam, useWallet } from '../contexts/Cookie'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
 
 import { QRIcon, StatsIcon, ShareIcon } from './NavIcons'
 
-const HomeButton = styled(NavButton)`
-  padding: 0 1rem;
+const HeaderWrapper = styled.span`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+
   @media only screen and (max-width: 480px) {
     padding: 0;
-    /* padding-top: 1.5rem; */
-    margin: 0;
-    margin-left: 1rem;
-    text-align: left;
-    max-width: 100px;
+  }
+`
+
+const HomeButton = styled(NavButton)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :hover {
+    cursor: pointer !important;
   }
 `
 
@@ -25,27 +34,16 @@ const Uniswap = styled.span`
   color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
   margin: 0 0.5rem 0 0.5rem;
   text-transform: none;
+
+  :hover {
+    text-decoration: none !important;
+  }
 `
 
 const L2Text = styled.span`
   font-style: oblique;
   font-size: 10px;
   font-weight: 700;
-`
-
-const HeaderWrapper = styled.span`
-  padding: 1rem 1.5rem;
-  /* width: 100vw; */
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-
-  @media only screen and (max-width: 480px) {
-    padding: 0;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-  }
 `
 
 const LinkWrapper = styled.span`
@@ -74,18 +72,16 @@ const LinkButton = styled(NavButton)`
   }
 `
 
-export default function Header({ showWallet }) {
-  const team = useTeam()
-  const wallet = useWallet()
-
+export default function Header({ wallet, team, showWallet }) {
   return (
     <HeaderWrapper>
-      <HomeButton href={team && wallet ? '/' : '/welcome'}>
+      <HomeButton href={wallet && team ? '/' : '/welcome'}>
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
         <Chip variant="gradient" label={<L2Text>L2</L2Text>} />
       </HomeButton>
-      {showWallet ? (
+
+      {showWallet && (
         <LinkWrapper>
           <LinkButton href="/wallet">
             <ShareIcon></ShareIcon>
@@ -97,8 +93,6 @@ export default function Header({ showWallet }) {
             <QRIcon></QRIcon>
           </LinkButton>
         </LinkWrapper>
-      ) : (
-        <span>{''}</span>
       )}
     </HeaderWrapper>
   )

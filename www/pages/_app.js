@@ -1,12 +1,13 @@
 import App from 'next/app'
 import Head from 'next/head'
-import { StylesProvider } from '@material-ui/styles'
+import fetch from 'isomorphic-unfetch'
+import { Wallet } from '@ethersproject/wallet'
 import { createMuiTheme } from '@material-ui/core/styles'
-import { ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
+import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
 
-import { getCookie } from '../utils'
+import { getCookie, getHost, getPermissionString } from '../utils'
 import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
 import Layout from '../components/Layout'
 
@@ -20,7 +21,7 @@ const GRADIENT_BACKGROUND = css`
 `
 
 const UNI = '#DC6BE5'
-const PIG = '#FAC4B6'
+const PIGI = '#FAC4B6'
 
 const theme = {
   colors: {
@@ -40,7 +41,7 @@ const theme = {
     plasmaGroup: '#CE2039',
 
     [Team.UNI]: UNI,
-    [Team.PIG]: PIG,
+    [Team.PIGI]: PIGI,
 
     gradientLeft: GRADIENT_LEFT,
     gradientRight: GRADIENT_RIGHT
@@ -90,7 +91,7 @@ const defaultMUITheme = createMuiTheme({
       main: UNI
     },
     secondary: {
-      main: PIG
+      main: PIGI
     }
   }
 })
@@ -106,41 +107,71 @@ export default class MyApp extends App {
   }
 
   static async getInitialProps({ Component, ctx: context }) {
-    const { res, pathname } = context
-    const serverSide = !!res
+    const { req, res, pathname } = context
+    const serverSide = !!req && !!res
 
     const cookie = getCookie(serverSide, context)
-    const { source, mnemonic, team } = cookie
+    const { mnemonic, team } = cookie
 
-    // on the server...
-    if (serverSide) {
-      // redirect all requests without source/mnemonic cookies that aren't on '/welcome' to '/welcome'
-      if ((!source || !mnemonic) && pathname !== '/welcome') {
-        res.writeHead(302, { Location: '/welcome' })
-        res.end()
-        return {}
-      }
+    // redirect all requests without any cookie data to '/welcome'
+    if (!mnemonic && !team && pathname !== '/welcome') {
+      res.writeHead(302, { Location: '/welcome' })
+      res.end()
+      return {}
+    }
 
-      // redirect all requests without team cookies that aren't on '/welcome' or '/join-team' to '/welcome'
-      if (!team && !(pathname === '/welcome' || pathname === '/join-team')) {
-        res.writeHead(302, { Location: source && mnemonic ? '/join-team' : '/welcome' })
-        res.end()
-        return {}
-      }
+    // redirect all requests without mnemonic cookie data to '/welcome'
+    if (!mnemonic && pathname !== '/welcome') {
+      res.writeHead(302, { Location: '/welcome' })
+      res.end()
+      return {}
+    }
+
+    // redirect all requests without team cookie data to '/join-team' or '/welcome'
+    if (!team && !(pathname === '/welcome' || pathname === '/join-team')) {
+      res.writeHead(302, { Location: mnemonic ? '/join-team' : '/welcome' })
+      res.end()
+      return {}
+    }
+
+    const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
+
+    // if a wallet exists, fetch server data
+    let augmentedAddressDocument = null
+    if (wallet) {
+      const permission = getPermissionString(wallet.address)
+      const signature = await wallet.signMessage(permission.permissionString)
+      augmentedAddressDocument = await fetch(`${getHost(req)}/api/get-address-data`, {
+        method: 'POST',
+        body: JSON.stringify({ address: wallet.address, time: permission.time, signature })
+      })
+        .then(async response => {
+          if (!response.ok) {
+            throw Error(`${response.status} Error: ${response.statusText}`)
+          }
+
+          return await response.json()
+        })
+        .catch(error => {
+          console.error(error)
+          throw error
+        })
     }
 
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
     return {
-      source,
       mnemonic,
       team,
+      augmentedAddressDocument,
       pageProps
     }
   }
 
   render() {
-    const { source, mnemonic, team, Component, pageProps } = this.props
+    const { mnemonic, team, augmentedAddressDocument, Component, pageProps } = this.props
+
+    const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
 
     return (
       <>
@@ -148,13 +179,13 @@ export default class MyApp extends App {
           <Head>
             <title>Unipig Exchange</title>
           </Head>
-          <CookieContext sourceInitial={source} mnemonicInitial={mnemonic} teamInitial={team}>
+          <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
             <CookieContextUpdater />
             <MUIThemeProvider theme={defaultMUITheme}>
               <SCThemeProvider theme={theme}>
                 <GlobalStyle />
-                <Layout>
-                  <Component {...pageProps} />
+                <Layout wallet={wallet} team={team}>
+                  <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
                 </Layout>
               </SCThemeProvider>
             </MUIThemeProvider>
