@@ -50,7 +50,7 @@ export default async function(request: NowRequest, response: NowResponse): Promi
       tweetObject.extended_tweet.full_text.match(addressRegex) &&
       tweetObject.extended_tweet.full_text.match(addressRegex).groups.address
 
-    console.log(`Begin parsing tweet '${tweetObject.text}' by ${userHandle} (${userId}).`)
+    console.log(`Begin parsing tweet '${tweetObject.extended_tweet.full_text}' by ${userHandle} (${userId}).`)
 
     // if account is too new return error
     const now = Date.now()
