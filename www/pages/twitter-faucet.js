@@ -5,8 +5,22 @@ import { getPermissionString } from '../utils'
 import { Team, useWallet, useTeam, WalletSource, useSource, useAddSource } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 
+import Shim from '../components/Shim'
+
 const Tweet = styled.a`
   visibility: ${({ loaded }) => (loaded ? 'visible' : 'hidden')};
+`
+
+import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
+
+const TradeWrapper = styled.span`
+  width: 100%;
+  height: 100%;
+  display: grid;
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
 `
 
 async function getFaucetData(address, time, signature) {
@@ -104,20 +118,15 @@ export default function TwitterFaucet() {
   }
 
   return (
-    <>
-      <h1>tweet your support to get tokens</h1>
+    <TradeWrapper>
+      {/* <Heading>Sup.</Heading> */}
+      <Title size={32} textStyle="gradient">
+        Tweet at the Unipig to get some tokens.
+      </Title>
+      <Shim size={16} />
 
       {metaInformation()}
-
-      {faucetData && !faucetData.canFaucet && (
-        <>
-          <p>Coming through loud and clear @{faucetData.twitterHandle}!</p>
-          <NavButton variant="gradient" href="/" disabled={source !== WalletSource.TWITTER}>
-            Dope
-          </NavButton>
-        </>
-      )}
-
+      <Shim size={16} />
       <div>
         <Tweet
           loaded={faucetData && faucetData.canFaucet && twitterLoaded}
@@ -133,6 +142,26 @@ export default function TwitterFaucet() {
           Tweet
         </Tweet>
       </div>
-    </>
+
+      <Shim size={32} />
+
+      {faucetData && !faucetData.canFaucet ? (
+        <>
+          <Body textStyle="gradient">Coming through loud and clear @{faucetData.twitterHandle}!</Body>
+          <Shim size={32} />
+          <NavButton variant="gradient" href="/" disabled={source !== WalletSource.TWITTER}>
+            Dope
+          </NavButton>
+        </>
+      ) : (
+        <>
+          <Body textStyle="gradient">Listening for your tweet...</Body>
+          <Shim size={32} />
+          <NavButton variant="gradient" disabled href="/" disabled={source !== WalletSource.TWITTER}>
+            Dope
+          </NavButton>
+        </>
+      )}
+    </TradeWrapper>
   )
 }

@@ -197,6 +197,7 @@ function Buy({ balances, reserves }) {
           Boost {Team[outputToken]} by selling {Team[inputToken]}.
         </b>
       </Body>
+      <Shim size={12} />
       <TradeWrapper>
         <StyledInputWrapper>
           {/* Sell {Team[inputToken]}: */}
@@ -262,11 +263,23 @@ function Buy({ balances, reserves }) {
 
 function Confirmed({ success }) {
   return (
-    <>
+    <TradeWrapper>
+      <Body>💸</Body>
+      <Shim size={1} />
+      <Title textStyle="gradient">Transaction Confirmed.</Title>
+      <Shim size={12} />
+      <Body color={'white'}>
+        <i>Yes. It was that fast.</i>
+      </Body>
+      <Heading>
+        150ms. No gas. <br />
+        Still decentralized.
+      </Heading>
+      <Shim size={2} />
       <NavButton variant="gradient" href="/">
         {success ? 'Dope' : ':('}
       </NavButton>
-    </>
+    </TradeWrapper>
   )
 }
 

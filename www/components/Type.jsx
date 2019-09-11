@@ -48,7 +48,7 @@ export function Title({ children, textStyle, ...rest }) {
 const StyledGradientBody = styled(GradientText)`
   /* width: 100%; */
   font-size: 18px;
-  line-height: 162.7%;
+  line-height: 150%;
   margin: 0.125rem;
 `
 
@@ -56,6 +56,7 @@ const StyledBody = styled.p`
   width: 100%;
   font-size: ${({ size }) => (size ? size + 'px' : '24px')};
   margin: 0.125rem;
+  line-height: 150%;
   color: ${({ color }) => (color ? color : 'initial')} !important;
 `
 
