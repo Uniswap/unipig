@@ -70,6 +70,10 @@ const SendWrapper = styled.span`
   line-height: 15px;
   display: flex;
   flex-direction: row;
+
+  ${SendButton} {
+    flex-grow: 1;
+  }
 `
 
 const SendShim = styled.span`
@@ -137,7 +141,7 @@ function Overview({ wallet, team, balances }) {
       </SendWrapper>
       <Shim size={24} />
       <WalletButton disabled={resetPressed} variant="text" onClick={onReset}>
-        Discard Account
+        Burn Account
       </WalletButton>
     </StyledWallet>
   )
