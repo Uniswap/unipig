@@ -6,7 +6,6 @@ import { createMuiTheme } from '@material-ui/core/styles'
 import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
-import MorphTransition from 'nextjs-morph-page'
 
 import { getCookie, getHost, getPermissionString } from '../utils'
 import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
