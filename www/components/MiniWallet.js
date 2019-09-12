@@ -121,9 +121,9 @@ export function TokenInfo({ balances }) {
   )
 }
 
-export default function Wallet({ wallet, team, balances, walletType, disableNav = false }) {
+export default function Wallet({ wallet, team, balances, walletType, disableNav = false, ...rest }) {
   return (
-    <StyledNavLink href={disableNav ? undefined : '/wallet'} as={disableNav ? 'div' : NavLink} team={team}>
+    <StyledNavLink href={disableNav ? undefined : '/wallet'} as={disableNav ? 'div' : NavLink} team={team} {...rest}>
       {walletType === 'rest' && (
         <OpenWalletLink>
           <span>Open Wallet</span>
