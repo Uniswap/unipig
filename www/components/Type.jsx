@@ -12,7 +12,7 @@ const StyledHeading = styled.p`
   width: 100%;
 `
 
-export function Heading({ children, ...rest }) {
+export function Heading({ children }) {
   return <StyledHeading>{children}</StyledHeading>
 }
 
@@ -94,6 +94,6 @@ const StyledButtonText = styled.h2`
   line-height: 20px;
 `
 
-export function ButtonText({ children, ...rest }) {
+export function ButtonText({ children }) {
   return <StyledButtonText>{children}</StyledButtonText>
 }
