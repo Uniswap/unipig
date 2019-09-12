@@ -16,6 +16,7 @@ const HeaderWrapper = styled.span`
 
   @media only screen and (max-width: 480px) {
     padding: 0;
+    padding-top: 1rem;
   }
 `
 
@@ -31,6 +32,10 @@ const L2Text = styled.span`
   font-style: oblique;
   font-size: 10px;
   font-weight: 700;
+`
+
+const StyledChip = styled(Chip)`
+  height: 100%;
 `
 
 const LinkWrapper = styled.span`
@@ -52,6 +57,7 @@ const IconButton = styled(NavButton)`
 
   @media only screen and (max-width: 480px) {
     min-width: 50px;
+    padding: 0px;
   }
 
   :hover {
@@ -71,7 +77,7 @@ export default function Header({ wallet, team, showWallet }) {
       <NavButton href={wallet && team ? '/' : '/welcome'} variant="text">
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
-        <Chip variant="gradient" label={<L2Text>L2</L2Text>} />
+        <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
       </NavButton>
 
       {showWallet && (
