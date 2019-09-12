@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
@@ -11,6 +11,9 @@ import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { TokenInfo, WalletInfo } from '../components/MiniWallet'
+import { useMotionValue } from 'framer-motion'
+
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
 //WORK IN PROGRESS
 
@@ -81,8 +84,16 @@ const SendShim = styled.span`
   height: 8px;
 `
 
+const DragContainer = styled(AnimatedFrame)`
+  width: 100%;
+  height: 750px;
+`
+
 function Overview({ wallet, team, balances }) {
   const theme = useStyledTheme()
+
+  // const y = useMotionValue(0);
+  // const constraintsRef = useRef(null);
 
   const reset = useReset()
   const [resetPressed, setResetPressed] = useState(false)
@@ -105,45 +116,47 @@ function Overview({ wallet, team, balances }) {
   }
 
   return (
-    <StyledWallet team={team}>
-      <WalletTitle>
-        <span>Wallet</span>
-      </WalletTitle>
-      <WalletInfo team={team} wallet={wallet} />
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+      <StyledWallet team={team}>
+        <WalletTitle>
+          <span>Wallet</span>
+        </WalletTitle>
+        <WalletInfo team={team} wallet={wallet} />
 
-      <QRCodeWrapper>
-        <QRCode
-          value={`https://unipig.exchange?referrer=${wallet.address}`}
-          ecLevel="M"
-          size="250"
-          quietZone="0"
-          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
-          fgColor={theme.colors.black}
-          logoImage={'static/blob_2.svg'}
-          qrStyle="squares"
-        />
-      </QRCodeWrapper>
+        <QRCodeWrapper>
+          <QRCode
+            value={`https://unipig.exchange?referrer=${wallet.address}`}
+            ecLevel="M"
+            size="250"
+            quietZone="0"
+            bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
+            fgColor={theme.colors.black}
+            logoImage={'static/blob_2.svg'}
+            qrStyle="squares"
+          />
+        </QRCodeWrapper>
 
-      <WalletButton variant="text">Copy Address</WalletButton>
-      <NavButton variant="text" href="/wallet?scan=true">
-        Scan
-      </NavButton>
-      <Shim size={24} />
-      <WalletTitle>
-        <span>Tokens</span>
-      </WalletTitle>
-      <TokenInfo balances={balances} />
-      <Shim size={8} />
-      <SendWrapper>
-        <SendButton variant="text">Send</SendButton>
-        <SendShim />
-        <SendButton variant="text">Send</SendButton>
-      </SendWrapper>
-      <Shim size={24} />
-      <WalletButton disabled={resetPressed} variant="text" onClick={onReset}>
-        Burn Account
-      </WalletButton>
-    </StyledWallet>
+        <WalletButton variant="text">Copy Address</WalletButton>
+        <NavButton variant="text" href="/wallet?scan=true">
+          Scan
+        </NavButton>
+        <Shim size={24} />
+        <WalletTitle>
+          <span>Tokens</span>
+        </WalletTitle>
+        <TokenInfo balances={balances} />
+        <Shim size={8} />
+        <SendWrapper>
+          <SendButton variant="text">Send</SendButton>
+          <SendShim />
+          <SendButton variant="text">Send</SendButton>
+        </SendWrapper>
+        <Shim size={24} />
+        <WalletButton disabled={resetPressed} variant="text" onClick={onReset}>
+          Discard Account
+        </WalletButton>
+      </StyledWallet>
+    </AnimatedFrame>
   )
 }
 

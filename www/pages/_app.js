@@ -1,4 +1,4 @@
-import App from 'next/app'
+import App, { Container } from 'next/app'
 import Head from 'next/head'
 import fetch from 'isomorphic-unfetch'
 import { Wallet } from '@ethersproject/wallet'
@@ -6,6 +6,7 @@ import { createMuiTheme } from '@material-ui/core/styles'
 import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
+import MorphTransition from 'nextjs-morph-page'
 
 import { getCookie, getHost, getPermissionString } from '../utils'
 import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
@@ -178,9 +179,11 @@ export default class MyApp extends App {
             <GlobalStyle />
             <StylesProvider injectFirst>
               <MUIThemeProvider theme={MUITheme}>
-                <Layout wallet={wallet} team={team}>
-                  <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
-                </Layout>
+                <Container>
+                  <Layout wallet={wallet} team={team}>
+                    <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
+                  </Layout>
+                </Container>
               </MUIThemeProvider>
             </StylesProvider>
           </SCThemeProvider>
