@@ -37,7 +37,7 @@ const BackroundElement = styled.div`
     transform: scale(1);
     img {
       top: -50%;
-      right: -600px;
+      right: -40vw;
     }
   }
 `

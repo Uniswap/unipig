@@ -61,7 +61,7 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.greys[9])};
+  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   padding: 0.5rem 1rem;
   border-radius: 20px;
   display: flex;

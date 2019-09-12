@@ -6,11 +6,13 @@ import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
+import { truncateAddress } from '../utils'
 
 const TweetContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  align-items: center;
 
   iframe,
   a {
@@ -21,11 +23,26 @@ const TweetContainer = styled.div`
 const TradeWrapper = styled.span`
   width: 100%;
   height: 100%;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
+`
+
+const TweetPreview = styled.span`
+  width: 100%;
+  background: #202124;
+  color: #2f80ed;
+  padding: 1rem;
+  border-radius: 10px;
+  word-wrap: all;
+`
+
+const StyledBody = styled(Body)`
+  text-align: center;
+  font-weight: 600;
 `
 
 async function getFaucetData(address, time, signature) {
@@ -114,11 +131,13 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
 
   function metaInformation() {
     if (updatedDataError) {
-      return <Body textStyle="gradient">An error occurred...</Body>
+      return <StyledBody textStyle="gradient">An error occurred...</StyledBody>
     } else if (addressData.canFaucet && !twitterLoaded) {
-      return <Body textStyle="gradient">Loading...</Body>
+      return <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
     } else if (polling && (!updatedData || updatedData.canFaucet)) {
-      return <Body textStyle="gradient">Listening for your tweet...</Body>
+      return <StyledBody textStyle="gradient">Listening for your tweet...</StyledBody>
+    } else {
+      return <StyledBody textStyle="gradient">Waiting for your tweet...</StyledBody>
     }
   }
 
@@ -127,21 +146,14 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
       <Title size={32} textStyle="gradient">
         Tweet at the Unipig to get some tokens.
       </Title>
-      <Shim size={16} />
+      <Shim size={32} />
 
-      {metaInformation()}
+      <TweetPreview>
+        ༼ つ ◕_◕ ༽つ @UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet:
+        {truncateAddress('0x486a5415db4e45e06a0f7970207751ce54791c60', 8)} https://unipig.exchange #teamPIGI
+      </TweetPreview>
 
-      {(!addressData.canFaucet || (updatedData && !updatedData.canFaucet)) && (
-        <>
-          <Body textStyle="gradient">
-            Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
-          </Body>
-          <Shim size={32} />
-          <NavButton variant="gradient" href="/">
-            <ButtonText>Dope</ButtonText>
-          </NavButton>
-        </>
-      )}
+      <Shim size={32} />
 
       <TweetContainer hide={!addressData.canFaucet || !twitterLoaded || (updatedData && !updatedData.canFaucet)}>
         <a
@@ -157,6 +169,28 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
           Tweet
         </a>
       </TweetContainer>
+
+      {!addressData.canFaucet || (updatedData && !updatedData.canFaucet) ? (
+        <>
+          <Shim size={32} />
+          <StyledBody textStyle="gradient">
+            Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
+          </StyledBody>
+          <Shim size={32} />
+          <NavButton variant="gradient" href="/">
+            <ButtonText>Dope</ButtonText>
+          </NavButton>
+        </>
+      ) : (
+        <>
+          <Shim size={32} />
+          {metaInformation()}
+          <Shim size={32} />
+          <NavButton disabled variant="gradient" href="/">
+            <ButtonText>Dope</ButtonText>
+          </NavButton>
+        </>
+      )}
     </TradeWrapper>
   )
 }

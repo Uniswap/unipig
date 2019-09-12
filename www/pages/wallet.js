@@ -45,7 +45,7 @@ const WalletTitle = styled.span`
   text-decoration: none;
   color: ${({ theme }) => theme.colors.black};
   font-weight: 600;
-  opacity: 0.6;
+  opacity: 1;
   height: 24px;
   display: flex;
   flex-direction: row;

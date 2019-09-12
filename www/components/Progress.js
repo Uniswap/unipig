@@ -4,13 +4,13 @@ import styled, { css } from 'styled-components'
 const StyledLine = styled.span`
   width: 100%;
   position: relative;
-  height: 36px;
+  height: 32px;
 `
 
 const Line = styled.div`
-  width: calc(${({ lineWidth }) => lineWidth} - 8px);
+  width: calc(${({ lineWidth }) => lineWidth} - 32px);
   height: 3px;
-  margin-left: 4px;
+  margin-left: 12px;
   border-radius: 8px;
   ${({ theme, color }) =>
     color === 'grey'
@@ -21,10 +21,10 @@ const Line = styled.div`
 `
 
 const Line1 = styled.div`
-  width: calc(${({ lineWidth }) => lineWidth} - 8px);
+  width: calc(${({ lineWidth }) => lineWidth} - 24px);
   height: 3px;
   margin-top: -3px;
-  margin-left: 4px;
+  margin-left: 12px;
   border-radius: 8px;
   ${({ theme, color }) =>
     color == 'grey'
