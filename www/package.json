@@ -9,7 +9,15 @@
     "dev": "next",
     "build": "next build",
     "now-build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "_lint": "yarn eslint './**/*{.ts,.tsx,.js,.jsx}'",
+    "lint:check": "yarn _lint",
+    "lint:fix": "yarn _lint --fix",
+    "_pretty": "yarn prettier './**/*{.ts,.tsx,.js,.jsx}'",
+    "pretty:check": "yarn _pretty --check",
+    "pretty:fix": "yarn _pretty --write",
+    "fix:all": "yarn lint:fix && yarn prettier:fix",
+    "check:all": "yarn lint:check && yarn pretty:check"
   },
   "dependencies": {
     "@ethersproject/wallet": "^5.0.0-beta.129",
@@ -51,6 +59,6 @@
     "prettier": "^1.18.2",
     "react-is": "^16.8.0",
     "stylis": "^3.5.0",
-    "typescript": "^3.5.3"
+    "typescript": "3.5.x"
   }
 }
