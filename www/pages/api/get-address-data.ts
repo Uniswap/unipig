@@ -21,9 +21,9 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     return res.status(401).send('')
   }
 
-  const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), address)))
-
   try {
+    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), address)))
+
     // handle new users
     if (addressRef.data.length === 0) {
       const addressDocument: AddressDocument = {

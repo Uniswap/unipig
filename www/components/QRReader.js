@@ -1,44 +1,37 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import styled from 'styled-components'
 import QrReader from 'react-qr-reader'
 
 import Button from '../components/Button'
 
 const Wrapper = styled.div`
-  width: 55%;
+  width: 50%;
   align-items: center;
 `
 
 const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
 
-export default function QRReader() {
+export default function QRReader({ onAddress, onError, forceLegacy }) {
   const qrRef = useRef()
 
-  const [error, setError] = useState(false)
-  const [scannedAddress, setScannedAddress] = useState()
-
-  const legacyMode = !!(!navigator || !navigator.mediaDevices)
+  const legacyMode = forceLegacy || !!!navigator.mediaDevices // it's ok to do this since we're guaranteeing no ssr
 
   function onScan(scan) {
-    if (scan === null && legacyMode) {
-      setError(true)
+    if (legacyMode && scan === null) {
+      onError(Error('No QR code found.'))
     }
 
     if (scan !== null) {
       if (scan.match(addressRegex)) {
-        setScannedAddress(scan.match(addressRegex)[0])
+        onAddress(scan.match(addressRegex)[0])
       } else {
-        setError(true)
+        onError(Error('Invalid QR data.'))
       }
     }
   }
 
   return (
     <Wrapper>
-      {error && <p>error</p>}
-
-      {scannedAddress && <p>{scannedAddress}</p>}
-
       <QrReader
         ref={qrRef}
         delay={500}
@@ -47,10 +40,7 @@ export default function QRReader() {
         showViewFinder={true}
         legacyMode={legacyMode}
         onScan={onScan}
-        onError={error => {
-          console.error(error)
-          setError(true)
-        }}
+        onError={onError}
       />
 
       {legacyMode && (

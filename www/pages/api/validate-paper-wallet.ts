@@ -16,12 +16,17 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     return res.status(400).send('')
   }
 
-  const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), address)))
-  if (addressRef.data.length === 0) {
-    return res.status(401).send('')
-  } else {
-    const addressData = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
-    const addressDocument: AddressDocument = addressData[0].data
-    return res.status(addressDocument.paperWallet ? 200 : 401).send('')
+  try {
+    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), address)))
+    if (addressRef.data.length === 0) {
+      return res.status(401).send('')
+    } else {
+      const addressData = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
+      const addressDocument: AddressDocument = addressData[0].data
+      return res.status(addressDocument.paperWallet ? 200 : 401).send('')
+    }
+  } catch (error) {
+    console.error(error)
+    return res.status(500).send('An unknown error occurred.')
   }
 }
