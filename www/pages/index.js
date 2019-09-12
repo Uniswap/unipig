@@ -9,6 +9,7 @@ import WalletComponent from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 import { Title, ButtonText, Body } from '../components/Type'
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
 const BoostWrapper = styled.div`
   display: flex;
@@ -33,25 +34,9 @@ const FlexNavButton = styled(NavButton)`
   flex-grow: ${({ flex }) => flex};
 `
 
-const AniFrame = styled(motion.div)`
-  display: grid;
-  width: 100%;
-`
-
 const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
-
-const container = {
-  hidden: { opacity: 0, y: 100 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      delayChildren: 0.5
-    }
-  }
-}
 
 function Home({ wallet, team, addressData, reserves, balances }) {
   const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
@@ -70,8 +55,8 @@ function Home({ wallet, team, addressData, reserves, balances }) {
   }, [x])
 
   return (
-    <>
-      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+      <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5 ? (
           <FixedNum>UNI dominance is at {count}%</FixedNum>
         ) : (
@@ -141,10 +126,10 @@ function Home({ wallet, team, addressData, reserves, balances }) {
 
       <Shim size={36} />
 
-      <AniFrame variants={container} initial="hidden" animate="show">
-        <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} id="123" />
-      </AniFrame>
-    </>
+      <AnimatedFrame variants={childAnimation}>
+        <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} />
+      </AnimatedFrame>
+    </AnimatedFrame>
   )
 }
 
