@@ -29,7 +29,7 @@ const TwitterButton = styled(NavButton)`
   }
 `
 
-const FlexNavLink = styled(NavButton)`
+const FlexNavButton = styled(NavButton)`
   flex-grow: ${({ flex }) => flex};
 `
 
@@ -117,32 +117,32 @@ function Home({ wallet, team, addressData, reserves, balances }) {
         </TwitterButton>
       ) : (
         <BoostWrapper>
-          <FlexNavLink
+          <FlexNavButton
             flex={Math.round(UNIDominance * 100, 0)}
             href={`/trade?buy=${Team[Team.UNI]}`}
             color={'primary'}
             variant={team === Team.UNI ? 'contained' : 'outlined'}
           >
             <ButtonText>Buy UNI</ButtonText>
-          </FlexNavLink>
+          </FlexNavButton>
 
           <BoostShim />
 
-          <FlexNavLink
+          <FlexNavButton
             flex={Math.round((1 - UNIDominance) * 100, 0)}
             href={`/trade?buy=${Team[Team.PIGI]}`}
             color={'secondary'}
             variant={team === Team.PIGI ? 'contained' : 'outlined'}
           >
             <ButtonText>Buy PIGI</ButtonText>
-          </FlexNavLink>
+          </FlexNavButton>
         </BoostWrapper>
       )}
 
       <Shim size={36} />
 
       <AniFrame variants={container} initial="hidden" animate="show">
-        <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} />
+        <WalletComponent wallet={wallet} team={team} balances={balances} walletType={'rest'} id="123" />
       </AniFrame>
     </>
   )

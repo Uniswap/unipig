@@ -3,9 +3,9 @@ import { transparentize } from 'polished'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
-import { NavComponent } from './NavButton'
+import NavLink from './NavLink'
 
-const StyledWallet = styled(NavComponent)`
+const StyledNavLink = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
@@ -17,7 +17,7 @@ const StyledWallet = styled(NavComponent)`
 
   :hover {
     opacity: 1;
-    cursor: pointer;
+    cursor: ${({ href }) => (href ? 'pointer' : 'default')};
   }
 `
 
@@ -123,17 +123,15 @@ export function TokenInfo({ balances }) {
 
 export default function Wallet({ wallet, team, balances, walletType, disableNav = false }) {
   return (
-    <StyledWallet team={team} href="/wallet" as={disableNav ? 'div' : NavComponent}>
-      {walletType === 'rest' ? (
+    <StyledNavLink href={disableNav ? undefined : '/wallet'} as={disableNav ? 'div' : NavLink} team={team}>
+      {walletType === 'rest' && (
         <OpenWalletLink>
           <span>Open Wallet</span>
           <span>↗</span>
         </OpenWalletLink>
-      ) : (
-        <span></span>
       )}
       <WalletInfo wallet={wallet} team={team} />
       <TokenInfo balances={balances} />
-    </StyledWallet>
+    </StyledNavLink>
   )
 }

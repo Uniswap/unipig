@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
+import { transparentize } from 'polished'
 import {
   TRADE_EXACT,
   BigNumber,
@@ -15,11 +16,8 @@ import { Team } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
-import { Body, Desc, ButtonText } from '../components/Type'
+import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
-
-import { transparentize } from 'polished'
-
 import Wallet from '../components/MiniWallet'
 
 const DECIMALS = 4
@@ -292,7 +290,7 @@ function Confirmed({ success }) {
       </Heading>
       <Shim size={2} />
       <NavButton variant="gradient" href="/">
-        {success ? 'Dope' : ':('}
+        <ButtonText>{success ? 'Dope' : ':('}</ButtonText>
       </NavButton>
     </TradeWrapper>
   )

@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
-
+import Button from './Button'
 import { QRIcon, StatsIcon, ShareIcon } from './NavIcons'
 
 const HeaderWrapper = styled.span`
@@ -18,26 +19,12 @@ const HeaderWrapper = styled.span`
   }
 `
 
-const HomeButton = styled(NavButton)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  :hover {
-    cursor: pointer !important;
-  }
-`
-
 const Uniswap = styled.span`
   margin: 0;
   font-size: 1rem;
   color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
   margin: 0 0.5rem 0 0.5rem;
   text-transform: none;
-
-  :hover {
-    text-decoration: none !important;
-  }
 `
 
 const L2Text = styled.span`
@@ -52,7 +39,7 @@ const LinkWrapper = styled.span`
   align-items: center;
 `
 
-const LinkButton = styled(NavButton)`
+const IconButton = styled(NavButton)`
   height: 40px;
   width: 40px;
   min-height: 60px;
@@ -73,25 +60,41 @@ const LinkButton = styled(NavButton)`
 `
 
 export default function Header({ wallet, team, showWallet }) {
+  // check if sharing is enabled
+  const [canShare, setCanShare] = useState()
+  useEffect(() => {
+    setCanShare(navigator ? !!navigator.share : false)
+  }, [])
+
   return (
     <HeaderWrapper>
-      <HomeButton href={wallet && team ? '/' : '/welcome'}>
+      <NavButton href={wallet && team ? '/' : '/welcome'} variant="text">
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
         <Chip variant="gradient" label={<L2Text>L2</L2Text>} />
-      </HomeButton>
+      </NavButton>
 
       {showWallet && (
         <LinkWrapper>
-          <LinkButton href="/wallet">
-            <ShareIcon></ShareIcon>
-          </LinkButton>
-          <LinkButton href="/wallet">
-            <StatsIcon></StatsIcon>
-          </LinkButton>
-          <LinkButton href="/wallet">
-            <QRIcon></QRIcon>
-          </LinkButton>
+          {canShare && (
+            <IconButton
+              as={Button}
+              onClick={() => {
+                navigator.share({
+                  title: 'Unipig Exchange',
+                  url: 'https://unipig.exchange/'
+                })
+              }}
+            >
+              <ShareIcon />
+            </IconButton>
+          )}
+          <IconButton href="/stats">
+            <StatsIcon />
+          </IconButton>
+          <IconButton href="/wallet">
+            <QRIcon />
+          </IconButton>
         </LinkWrapper>
       )}
     </HeaderWrapper>

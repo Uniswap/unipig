@@ -15,18 +15,18 @@ const Line = styled.div`
   top: 12px;
   left: 4px;
   ${({ theme, color }) =>
-    color == 'grey'
+    color === 'grey'
       ? css`
           background-color: ${theme.colors.greys[8]};
         `
       : theme.gradientBackground};
 `
 
-const Progress = props => (
-  <StyledLine>
-    <Line lineWidth="100%" color="grey" />
-    <Line lineWidth={props.progress} />
-  </StyledLine>
-)
-
-export default Progress
+export default function Progress({ progress }) {
+  return (
+    <StyledLine>
+      <Line lineWidth="100%" color="grey" />
+      <Line lineWidth={progress} />
+    </StyledLine>
+  )
+}

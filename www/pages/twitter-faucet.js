@@ -5,7 +5,7 @@ import { getPermissionString } from '../utils'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
-import { Title, Body } from '../components/Type'
+import { Title, Body, ButtonText } from '../components/Type'
 
 const TweetContainer = styled.div`
   display: flex;
@@ -138,7 +138,7 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
           </Body>
           <Shim size={32} />
           <NavButton variant="gradient" href="/">
-            Dope
+            <ButtonText>Dope</ButtonText>
           </NavButton>
         </>
       )}

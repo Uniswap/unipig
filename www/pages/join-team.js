@@ -32,11 +32,21 @@ export default function JoinTeam() {
 
       <Shim size={32} />
 
-      <StyledButton variant={team === Team.UNI ? 'contained' : 'outlined'} color="primary" onClick={join(Team.UNI)}>
+      <StyledButton
+        variant={team === Team.UNI ? 'contained' : 'outlined'}
+        color="primary"
+        onClick={join(Team.UNI)}
+        stretch
+      >
         <Emoji emoji="🦄" label="unicorn" />
       </StyledButton>
 
-      <StyledButton variant={team === Team.PIGI ? 'contained' : 'outlined'} color="secondary" onClick={join(Team.PIGI)}>
+      <StyledButton
+        variant={team === Team.PIGI ? 'contained' : 'outlined'}
+        color="secondary"
+        onClick={join(Team.PIGI)}
+        stretch
+      >
         <Emoji emoji="🐷" label="pig" />
       </StyledButton>
 

@@ -7,7 +7,8 @@ import { transparentize } from 'polished'
 
 import { getHost } from '../utils'
 import { useAddMnemonic, useMnemonicExists, useTeamExists } from '../contexts/Cookie'
-import NavButton, { NavComponent } from '../components/NavButton'
+import NavLink from '../components/NavLink'
+import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
 import Emoji from '../components/Emoji'
 import Shim from '../components/Shim'
@@ -21,9 +22,7 @@ const CopyWrapper = styled.span`
 `
 
 const OpacityWrapper = styled.span`
-  /* filter: brightness(50); */
   color: rgba(254, 109, 222, 0.4);
-  /* width: 100%; */
   -webkit-text-fill-color: initial;
 `
 
@@ -75,9 +74,9 @@ function Welcome({ mnemonic }) {
       <Shim size={4} />
       <Desc>
         A gamified demo of Uniswap on Ethereum Layer 2.{' '}
-        <NavComponent href="/welcome">
+        <NavLink href="/welcome" naked="true">
           <b>Learn more ↗</b>
-        </NavComponent>
+        </NavLink>
       </Desc>
       <Shim size={2} />
       <span>
@@ -108,9 +107,9 @@ function Welcome({ mnemonic }) {
       <Progress progress="33%" />
 
       <ErrorNavButton
+        href={teamExists ? '/' : '/join-team'}
         error={cookiesEnabled === false}
         variant={cookiesEnabled === false ? 'outlined' : 'gradient'}
-        href={teamExists ? '/' : '/join-team'}
         disabled={!mnemonicExists || !cookiesEnabled}
         stretch
       >
