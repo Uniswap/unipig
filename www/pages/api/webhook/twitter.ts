@@ -71,61 +71,66 @@ export default async function(request: NowRequest, response: NowResponse): Promi
 
     console.log(`Parsed Ethereum address ${matchedAddress}.`)
 
-    // ensure that the address exists in our db
-    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)))
-    if (addressRef.data.length === 0) {
-      const errorString = `Address ${matchedAddress} is not recognized.`
-      console.error(errorString)
-      return response.status(400).json({ message: errorString })
-    }
-
-    // ensure that the address hasn't used the faucet recently
-    const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
-    const addressDocument: AddressDocument = addressData[0].data
-    if (!canFaucet(addressDocument)) {
-      const errorString = `Address ${matchedAddress} cannot faucet yet.`
-      console.error(errorString)
-      return response.status(400).json({ message: errorString })
-    }
-
-    // ensure that if the twitter id exists in our db, it isn't timed out
-    const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_addresses'), userId)))
-    if (idRef.data.length > 0) {
-      const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
-      const idDocument: AddressDocument = idData[0].data
-
-      if (!canFaucet(idDocument)) {
-        const errorString = `Account ${userHandle} (${userId}) cannot faucet yet.`
+    try {
+      // ensure that the address exists in our db
+      const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)))
+      if (addressRef.data.length === 0) {
+        const errorString = `Address ${matchedAddress} is not recognized.`
         console.error(errorString)
         return response.status(400).json({ message: errorString })
       }
-      // update the db to ensure uniqueness
-      else {
-        await client.query(
-          q.Update(q.Ref(q.Collection('addresses'), idRef.data[0].id), {
-            data: {
-              twitterHandle: null,
-              twitterId: null
-            }
-          })
-        )
+
+      // ensure that the address hasn't used the faucet recently
+      const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
+      const addressDocument: AddressDocument = addressData[0].data
+      if (!canFaucet(addressDocument)) {
+        const errorString = `Address ${matchedAddress} cannot faucet yet.`
+        console.error(errorString)
+        return response.status(400).json({ message: errorString })
       }
-    }
 
-    // faucet here
+      // ensure that if the twitter id exists in our db, it isn't timed out
+      const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_addresses'), userId)))
+      if (idRef.data.length > 0) {
+        const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
+        const idDocument: AddressDocument = idData[0].data
 
-    // all has gone well, update db
-    await client.query(
-      q.Update(q.Ref(q.Collection('addresses'), addressRef.data[0].id), {
-        data: {
-          twitterHandle: userHandle,
-          twitterId: userId,
-          lastTwitterFaucet: now,
-          ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
+        if (!canFaucet(idDocument)) {
+          const errorString = `Account ${userHandle} (${userId}) cannot faucet yet.`
+          console.error(errorString)
+          return response.status(400).json({ message: errorString })
         }
-      })
-    )
+        // update the db to ensure uniqueness
+        else {
+          await client.query(
+            q.Update(q.Ref(q.Collection('addresses'), idRef.data[0].id), {
+              data: {
+                twitterHandle: null,
+                twitterId: null
+              }
+            })
+          )
+        }
+      }
 
-    return response.status(200).send('')
+      // faucet here
+
+      // all has gone well, update db
+      await client.query(
+        q.Update(q.Ref(q.Collection('addresses'), addressRef.data[0].id), {
+          data: {
+            twitterHandle: userHandle,
+            twitterId: userId,
+            lastTwitterFaucet: now,
+            ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
+          }
+        })
+      )
+
+      return response.status(200).send('')
+    } catch (error) {
+      console.error(error)
+      return response.status(500).send('An unknown error occurred.')
+    }
   }
 }

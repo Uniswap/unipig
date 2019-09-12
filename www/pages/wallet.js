@@ -1,26 +1,28 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { QRCode } from 'react-qrcode-logo'
-import dynamic from 'next/dynamic'
+import copy from 'copy-to-clipboard'
+import { Badge } from '@material-ui/core'
 
+import { getPermissionString } from '../utils'
 import { useStyledTheme } from '../hooks'
 import { Team, useMnemonicExists, useReset } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
+import QRScanModal from '../components/QRScanModal'
 import { TokenInfo, WalletInfo } from '../components/MiniWallet'
-import { useMotionValue } from 'framer-motion'
+import { AnimatedFrame, containerAnimation } from '../components/Animation'
+import { ButtonText } from '../components/Type'
 
-import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
-
-//WORK IN PROGRESS
-
-const QRReader = dynamic({
-  loader: () => import('../components/QRReader'),
-  ssr: false
-})
+const StyledBadge = styled(Badge)`
+  .MuiBadge-badge {
+    color: ${({ theme }) => theme.colors.black};
+    background-color: ${({ theme }) => theme.colors.white};
+  }
+`
 
 const StyledWallet = styled.span`
   background-color: ${({ team, theme }) =>
@@ -84,27 +86,53 @@ const SendShim = styled.span`
   height: 8px;
 `
 
-const DragContainer = styled(AnimatedFrame)`
-  width: 100%;
-  height: 750px;
-`
-
-function Overview({ wallet, team, balances }) {
+function Wallet({ wallet, team, addressData, balances, openModal }) {
   const theme = useStyledTheme()
 
   // const y = useMotionValue(0);
   // const constraintsRef = useRef(null);
 
   const reset = useReset()
-  const [resetPressed, setResetPressed] = useState(false)
-  function onReset() {
-    setResetPressed(true)
-    reset()
+  const [clickedBurnOnce, setClickedBurnOnce] = useState(false)
+  useEffect(() => {
+    if (clickedBurnOnce) {
+      const timeout = setTimeout(() => {
+        setClickedBurnOnce(false)
+      }, 2500)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+  function manageBurn() {
+    if (!clickedBurnOnce) {
+      setClickedBurnOnce(true)
+    } else {
+      reset()
+    }
   }
 
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => {
+        setCopied(false)
+      }, 1000)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+  function copyAddress() {
+    copy(wallet.address)
+    setCopied(true)
+  }
+
+  // handle redirect after reset
   const router = useRouter()
   const mnemonicExists = useMnemonicExists()
-  // handle redirect after reset
   useEffect(() => {
     if (!mnemonicExists) {
       router.push('/welcome')
@@ -136,10 +164,14 @@ function Overview({ wallet, team, balances }) {
           />
         </QRCodeWrapper>
 
-        <WalletButton variant="text">Copy Address</WalletButton>
-        <NavButton variant="text" href="/wallet?scan=true">
-          Scan
-        </NavButton>
+        <WalletButton variant="text" onClick={copyAddress}>
+          {copied ? 'Copied' : 'Copy Address'}
+        </WalletButton>
+        <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
+          <Button variant="contained" disabled={addressData.boostsLeft === 0} onClick={openModal}>
+            Scan To Airdrop
+          </Button>
+        </StyledBadge>
         <Shim size={24} />
         <WalletTitle>
           <span>Tokens</span>
@@ -152,23 +184,76 @@ function Overview({ wallet, team, balances }) {
           <SendButton variant="text">Send</SendButton>
         </SendWrapper>
         <Shim size={24} />
-        <WalletButton disabled={resetPressed} variant="text" onClick={onReset}>
-          Discard Account
+        <WalletButton variant="text" onClick={manageBurn}>
+          {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
         </WalletButton>
       </StyledWallet>
     </AnimatedFrame>
   )
 }
 
-function Scan() {
-  return <QRReader />
+function Airdrop({ wallet, scannedAddress }) {
+  const [error, setError] = useState(false)
+  const [success, setSuccess] = useState(false)
+  useEffect(() => {
+    const permission = getPermissionString(wallet.address)
+    wallet.signMessage(permission.permissionString).then(signature => {
+      fetch('/api/airdrop', {
+        method: 'POST',
+        body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
+      })
+        .then(async response => {
+          if (!response.ok) {
+            throw Error(`${response.status} Error: ${response.statusText}`)
+          }
+
+          setSuccess(true)
+        })
+        .catch(error => {
+          console.error(error)
+          setError(error)
+        })
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <>
+      {error && <p>Uh-oh, an error occurred.</p>}
+
+      {success && <p>woo! you airdropped to yourself and {scannedAddress}</p>}
+
+      <NavButton href="/" variant="gradient" stretch>
+        <ButtonText>{!error && !success ? 'Loading...' : error ? 'Bummer.' : 'Dope.'}</ButtonText>
+      </NavButton>
+    </>
+  )
 }
 
-function Manager({ wallet, team, balances }) {
-  const router = useRouter()
-  const { scan } = router.query || {}
+function Manager({ wallet, team, addressData, balances }) {
+  const [modalIsOpen, setModalIsOpen] = useState(false)
+  function openModal() {
+    setModalIsOpen(true)
+  }
+  function closeModal() {
+    setModalIsOpen(false)
+  }
+  const [scannedAddress, setScannedAddress] = useState()
 
-  return !scan ? <Overview wallet={wallet} team={team} balances={balances} /> : <Scan />
+  if (scannedAddress) {
+    return <Airdrop wallet={wallet} scannedAddress={scannedAddress} />
+  } else if (modalIsOpen) {
+    return (
+      <QRScanModal
+        open={true}
+        onClose={closeModal}
+        onAddress={address => {
+          setScannedAddress(address)
+        }}
+      />
+    )
+  } else {
+    return <Wallet wallet={wallet} team={team} addressData={addressData} balances={balances} openModal={openModal} />
+  }
 }
 
 // TODO add PG API and deal with decimals

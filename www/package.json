@@ -22,8 +22,11 @@
   "dependencies": {
     "@ethersproject/wallet": "^5.0.0-beta.129",
     "@material-ui/core": "^4.4.0",
+    "@reach/dialog": "^0.2.9",
     "@tanem/react-nprogress": "^2.0.5",
     "@uniswap/sdk": "^1.0.0-beta.4",
+    "@zeit/next-css": "^1.0.1",
+    "copy-to-clipboard": "^3.2.0",
     "faunadb": "^2.8.0",
     "framer-motion": "^1.6.7",
     "isomorphic-unfetch": "^3.0.0",
