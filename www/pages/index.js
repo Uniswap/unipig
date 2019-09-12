@@ -56,7 +56,7 @@ function Home({ wallet, team, addressData, reserves, balances }) {
 
   return (
     <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
-      <Title size={64} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
+      <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
         {UNIDominance >= 0.5 ? (
           <FixedNum>UNI dominance is at {count}%</FixedNum>
         ) : (
