@@ -26,23 +26,30 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
   if (req.method === 'GET') {
     const { query } = req
 
+    console.log(typeof query)
+    console.log(query)
+
     const token = query['crc_token']
+    console.log(typeof token)
+    console.log(token)
     if (!token) {
       return res.status(400).send('')
     }
 
-    console.log('DEBUG should be string', typeof token)
     const hmac = crypto
       .createHmac('sha256', secret)
       .update(token as string, 'utf8')
       .digest('base64')
 
+    console.log(typeof hmac)
+    console.log(hmac)
+
     // eslint-disable-next-line @typescript-eslint/camelcase
     const resBody = { res_token: `sha256=${hmac}` }
-    return res.status(200).json(JSON.stringify(resBody))
-  }
-  // POST with incoming twitter activity
-  else if (req.method === 'POST') {
+    const resBodyFormatted = JSON.stringify(resBody)
+    return res.status(200).json(resBodyFormatted)
+  } else if (req.method === 'POST') {
+    // POST with incoming twitter activity
     const twitterSignature = req.headers['x-twitter-webhooks-signature']
     console.log(typeof twitterSignature)
     console.log(twitterSignature)
@@ -64,9 +71,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     console.log(body)
 
     return res.status(200).send('')
-  }
-  // unsupported method
-  else {
+  } else {
+    // unsupported method
     return res.status(400).send('')
   }
 
