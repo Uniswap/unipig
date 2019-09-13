@@ -43,19 +43,17 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
   } else if (req.method === 'POST') {
     // POST with incoming twitter activity
     const twitterSignature = req.headers['x-twitter-webhooks-signature']
-    console.log(typeof twitterSignature)
     console.log(twitterSignature)
 
     const body: Buffer = await new Promise((resolve: (body: Buffer) => void): void => {
-      let body: Buffer
+      let body: Buffer[] = []
+
       req.on('data', (chunk: Buffer): void => {
-        console.log(typeof chunk)
-        console.log(chunk)
-        body = Buffer.concat(body ? [chunk] : [body, chunk])
+        body.push(chunk)
       })
 
       req.on('end', (): void => {
-        resolve(body)
+        resolve(Buffer.concat(body))
       })
     })
 
