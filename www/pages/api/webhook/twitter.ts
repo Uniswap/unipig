@@ -26,12 +26,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
   if (req.method === 'GET') {
     const { query } = req
 
-    console.log(typeof query)
-    console.log(query)
-
     const token = query['crc_token']
-    console.log(typeof token)
-    console.log(token)
     if (!token) {
       return res.status(400).send('')
     }
@@ -41,11 +36,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       .update(token as string, 'utf8')
       .digest('base64')
 
-    console.log(typeof hmac)
-    console.log(hmac)
-
     // eslint-disable-next-line @typescript-eslint/camelcase
-    const resBody = { res_token: `sha256=${hmac}` }
+    const resBody = { response_token: `sha256=${hmac}` }
     const resBodyFormatted = JSON.stringify(resBody)
     return res.status(200).json(resBodyFormatted)
   } else if (req.method === 'POST') {
@@ -54,12 +46,12 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     console.log(typeof twitterSignature)
     console.log(twitterSignature)
 
-    const body: string = await new Promise((resolve: (body: string) => void): void => {
-      let body = ''
+    const body: Buffer = await new Promise((resolve: (body: Buffer) => void): void => {
+      let body: Buffer
       req.on('data', (chunk: Buffer): void => {
         console.log(typeof chunk)
         console.log(chunk)
-        body += chunk
+        body = Buffer.concat(body ? [chunk] : [body, chunk])
       })
 
       req.on('end', (): void => {
@@ -69,6 +61,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
 
     console.log(typeof body)
     console.log(body)
+
+    console.log(JSON.parse(body.toString()))
 
     return res.status(200).send('')
   } else {
