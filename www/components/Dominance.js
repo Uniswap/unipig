@@ -1,5 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
+import { motion } from 'framer-motion'
 
 import { Team } from '../contexts/Cookie'
 
@@ -16,16 +17,33 @@ const Line = styled.div`
   border-radius: 20px;
   top: 12px;
   left: 4px;
-  background-color: ${({ theme, dominantTeam }) =>
-    dominantTeam === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]};
+  background-color: ${({ theme }) => theme.colors[Team.PIGI]};
   transition: width 0.5s ease;
 `
 
-export default function Dominance({ dominantTeam, percent }) {
+const LineAnimated = styled(motion.div)`
+  height: 12px;
+  position: absolute;
+  border-radius: 20px;
+  top: 12px;
+  left: 4px;
+  background-color: ${({ theme }) => theme.colors[Team.UNI]};
+`
+
+export default function Dominance({ percent }) {
   return (
     <StyledLine>
-      <Line percent="100%" dominantTeam={dominantTeam === Team.UNI ? Team.PIGI : Team.UNI} />
-      <Line percent={`${percent}%`} dominantTeam={dominantTeam} />
+      <Line percent={'100%'} />
+      <LineAnimated
+        initial={{ width: 0 }}
+        animate={{
+          width: `${percent}%`,
+          transition: {
+            ease: 'easeOut',
+            duration: 1
+          }
+        }}
+      />
     </StyledLine>
   )
 }

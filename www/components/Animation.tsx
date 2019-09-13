@@ -14,28 +14,27 @@ export const containerAnimationNoDelay = {
     transition: {
       delay: 0,
       when: 'beforeChildren',
-      staggerChildren: 0.2
+      staggerChildren: 0.15
     }
   },
   exit: { opacity: 0, y: 24 }
 }
 
 export const containerAnimation = {
-  hidden: { opacity: 0, y: 48 },
+  hidden: { opacity: 0, y: 24 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
-      delay: 0.2,
+      delay: 0.15,
       when: 'beforeChildren',
-      staggerChildren: 0.2
+      staggerChildren: 0.15
     }
-  },
-  exit: { opacity: 0, y: 48 }
+  }
 }
 
 export const childAnimation = {
-  hidden: { opacity: 0, y: 48 },
+  hidden: { opacity: 0, y: 24 },
   show: {
     opacity: 1,
     y: 0

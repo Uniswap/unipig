@@ -24,7 +24,7 @@ const StyledTitle = styled.h1`
   font-weight: 600;
   color: ${({ color }) => (color ? color : 'initial')} !important;
   @media only screen and (max-width: 480px) {
-    font-size: ${({ size }) => (size ? size + 'px' : '3rem')};
+    font-size: ${({ size }) => (size ? size + 'px' : '3.5rem')};
   }
 `
 
@@ -33,6 +33,9 @@ const StyledGradientTitle = styled(GradientText)`
   margin: 0;
   font-size: ${({ size }) => (size ? size + 'px' : '4rem')};
   font-weight: 700;
+  @media only screen and (max-width: 480px) {
+    font-size: ${({ size }) => (size ? size + 'px' : '3.5rem')};
+  }
 `
 
 export function Title({ children, textStyle, ...rest }) {

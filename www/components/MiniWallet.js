@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { transparentize } from 'polished'
+import { transparentize, lighten } from 'polished'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
@@ -7,7 +7,7 @@ import { Team } from '../contexts/Cookie'
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  background-color: ${({ theme }) => lighten(0.1, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
   opacity: 0.8;
@@ -60,7 +60,7 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.greys[9])};
+  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   padding: 0.5rem 1rem;
   border-radius: 20px;
   display: flex;

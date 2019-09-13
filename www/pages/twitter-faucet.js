@@ -1,31 +1,70 @@
 import { useEffect, useState, useMemo } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import Confetti from 'react-dom-confetti'
 
-import { getPermissionString } from '../utils'
+import { getPermissionString, truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
+import Wallet from '../components/MiniWallet'
+import { config } from '../components/ConfettiConfig'
 
 const TweetContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  align-items: center;
 
-  iframe,
   a {
-    visibility: ${({ hide }) => (hide ? 'hidden' : 'visible')} !important;
+    display: none;
+  }
+
+  iframe {
+    ${({ hide }) =>
+      hide &&
+      css`
+        visiblity: hidden !important;
+        height: 0 !important;
+      `}
   }
 `
 
 const TradeWrapper = styled.span`
   width: 100%;
   height: 100%;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
+  transition: height 0.125s ease;
+`
+
+const TweetPreview = styled.span`
+  line-height: 2rem;
+  width: 100%;
+  background: #202124;
+  color: #2f80ed;
+  padding: 1rem;
+  border-radius: 10px;
+  word-wrap: all;
+`
+
+const InformationContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 6rem;
+  margin: 1rem 0 1rem 0;
+`
+
+const StyledBody = styled(Body)`
+  text-align: center;
+  font-weight: 600;
+  margin: 0px;
 `
 
 async function getFaucetData(address, time, signature) {
@@ -41,7 +80,7 @@ async function getFaucetData(address, time, signature) {
   })
 }
 
-export default function TwitterFaucet({ wallet, team, addressData }) {
+function TwitterFaucet({ wallet, team, addressData, balances }) {
   // get a permission signature
   const permission = useMemo(() => getPermissionString(wallet.address), [wallet.address])
   const [signature, setSignature] = useState()
@@ -112,51 +151,99 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
     }
   }, [])
 
+  const justFauceted = updatedData ? !updatedData.canFaucet : false
+  const alreadyFauceted = !addressData.canFaucet || justFauceted
+
   function metaInformation() {
-    if (updatedDataError) {
-      return <Body textStyle="gradient">An error occurred...</Body>
+    if (alreadyFauceted) {
+      return (
+        <StyledBody textStyle="gradient">
+          Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
+        </StyledBody>
+      )
+    } else if (updatedDataError) {
+      return (
+        <>
+          <StyledBody textStyle="gradient">An error occurred...</StyledBody>
+        </>
+      )
     } else if (addressData.canFaucet && !twitterLoaded) {
-      return <Body textStyle="gradient">Loading...</Body>
-    } else if (polling && (!updatedData || updatedData.canFaucet)) {
-      return <Body textStyle="gradient">Listening for your tweet...</Body>
+      return (
+        <>
+          <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
+        </>
+      )
+    } else if (polling && !justFauceted) {
+      return (
+        <>
+          <StyledBody textStyle="gradient">Listening for your tweet...</StyledBody>
+        </>
+      )
     }
   }
 
   return (
     <TradeWrapper>
       <Title size={32} textStyle="gradient">
-        Tweet at the Unipig to get some tokens.
+        {justFauceted
+          ? 'TOKENS. IN. YOUR. WALLET.'
+          : alreadyFauceted
+          ? 'Thank you for tweeting.'
+          : 'Tweet at the Unipig to get some tokens.'}
       </Title>
-      <Shim size={16} />
+      <Shim size={32} />
+      {alreadyFauceted ? (
+        <Wallet wallet={wallet} team={team} balances={balances} />
+      ) : (
+        <TweetPreview>
+          {`༼ つ ◕_◕ ༽つ`}
+          <br />
+          {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${truncateAddress(
+            wallet.address,
+            4
+          )} https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+        </TweetPreview>
+      )}
+      <InformationContainer>
+        <TweetContainer hide={alreadyFauceted || polling || !twitterLoaded}>
+          <a
+            className="twitter-share-button"
+            href="https://twitter.com/intent/tweet"
+            data-size="large"
+            data-text={`༼ つ ◕_◕ ༽つ
+@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
+            data-url="https://unipig.exchange"
+            data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+            data-dnt="true"
+          >
+            Tweet
+          </a>
+        </TweetContainer>
 
-      {metaInformation()}
+        {metaInformation()}
+      </InformationContainer>
 
-      {(!addressData.canFaucet || (updatedData && !updatedData.canFaucet)) && (
-        <>
-          <Body textStyle="gradient">
-            Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
-          </Body>
-          <Shim size={32} />
-          <NavButton variant="gradient" href="/">
-            <ButtonText>Dope</ButtonText>
-          </NavButton>
-        </>
+      {alreadyFauceted && (
+        <NavButton variant="gradient" href="/">
+          <ButtonText>Dope</ButtonText>
+        </NavButton>
       )}
 
-      <TweetContainer hide={!addressData.canFaucet || !twitterLoaded || (updatedData && !updatedData.canFaucet)}>
-        <a
-          className="twitter-share-button"
-          href="https://twitter.com/intent/tweet"
-          data-size="large"
-          data-text={`༼ つ ◕_◕ ༽つ
-@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
-          data-url="https://unipig.exchange"
-          data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
-          data-dnt="true"
-        >
-          Tweet
-        </a>
-      </TweetContainer>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <Confetti active={justFauceted} config={config} />
+      </div>
     </TradeWrapper>
   )
 }
+
+// TODO add PG API and deal with decimals
+TwitterFaucet.getInitialProps = async () => {
+  return {
+    balances: {
+      [Team.UNI]: 5,
+      [Team.PIGI]: 5
+    }
+  }
+}
+
+export default TwitterFaucet

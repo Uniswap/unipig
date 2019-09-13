@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { DialogOverlay, DialogContent } from '@reach/dialog'
 import '@reach/dialog/styles.css'
@@ -11,7 +12,6 @@ import QRScanModal from './QRScanModal'
 import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
 import { useStyledTheme } from '../hooks'
 import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
-import { useRouter } from 'next/router'
 import copy from 'copy-to-clipboard'
 import { WalletInfo, TokenInfo } from './MiniWallet'
 import { transparentize } from 'polished'
@@ -44,13 +44,15 @@ const StyledWallet = styled.span`
   color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 `
 
 const WalletTitle = styled.span`
   text-decoration: none;
   color: ${({ theme }) => theme.colors.black};
   font-weight: 600;
-  opacity: 0.6;
+  opacity: 1;
   height: 24px;
   display: flex;
   flex-direction: row;
@@ -72,6 +74,7 @@ const WalletButton = styled(Button)`
   min-height: 36px;
   width: initial;
   margin: 0 auto;
+  padding: 0 1rem;
   background: rgba(242, 242, 242, 0.2);
   color: black;
 `
@@ -87,6 +90,12 @@ const SendButton = styled(Button)`
   min-height: 36px;
   background: rgba(242, 242, 242, 0.2);
   color: black;
+`
+
+const ScanButton = styled(Button)`
+  min-height: 36px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
 `
 
 const SendWrapper = styled.span`
@@ -181,14 +190,18 @@ function Wallet({ wallet, team, addressData, balances, openQRModal }) {
           />
         </QRCodeWrapper>
 
+        <Shim size={8} />
+        <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
+          <ScanButton variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal} stretch>
+            Trigger an Airdrop 📦
+          </ScanButton>
+        </StyledBadge>
+
+        <Shim size={12} />
+
         <WalletButton variant="text" onClick={copyAddress}>
           {copied ? 'Copied' : 'Copy Address'}
         </WalletButton>
-        <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
-          <Button variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal}>
-            Scan To Airdrop
-          </Button>
-        </StyledBadge>
         <Shim size={24} />
         <WalletTitle>
           <span>Tokens</span>

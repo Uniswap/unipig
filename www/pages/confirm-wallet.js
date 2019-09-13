@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 
 import { Team } from '../contexts/Cookie'
@@ -5,21 +6,31 @@ import NavButton from '../components/NavButton'
 import Wallet from '../components/MiniWallet'
 import Shim from '../components/Shim'
 import { Heading, Title, ButtonText, Body } from '../components/Type'
-import Progress from '../components/Progress'
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
+
+import Confetti from 'react-dom-confetti'
+import { config } from '../components/ConfettiConfig'
 
 const TeamHeader = styled(Title)`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
 `
 
 function ConfirmWallet({ balances, team, wallet }) {
+  const [bang, setBang] = useState(false)
+  useEffect(() => {
+    setTimeout(() => setBang(true), 300)
+  }, [])
+
   return (
-    <>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
       <Heading>Here’s a wallet and some tokens!</Heading>
       <TeamHeader textStyle="gradient" team={team}>
         Welcome to #team{team === Team.UNI ? 'UNI' : 'PIGI'}.
       </TeamHeader>
 
-      <Wallet wallet={wallet} team={team} balances={balances} disableNav />
+      <Shim size={24} />
+
+      <Wallet wallet={wallet} team={team} balances={balances} />
 
       <Shim size={24} />
 
@@ -33,12 +44,17 @@ function ConfirmWallet({ balances, team, wallet }) {
 
       <Shim size={32} />
 
-      <Progress progress="100%" />
+      {/* <Progress progress="100%" /> */}
 
-      <NavButton variant="gradient" href="/" stretch>
-        <ButtonText>Let's play.</ButtonText>
-      </NavButton>
-    </>
+      <AnimatedFrame variants={childAnimation}>
+        <NavButton variant="gradient" href="/" stretch>
+          <ButtonText>Let's play.</ButtonText>
+        </NavButton>
+      </AnimatedFrame>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <Confetti active={bang} config={config} />
+      </div>
+    </AnimatedFrame>
   )
 }
 

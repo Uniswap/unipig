@@ -44,6 +44,12 @@ const LinkWrapper = styled.span`
   align-items: center;
 `
 
+const HomeButton = styled(NavButton)`
+  @media only screen and (max-width: 480px) {
+    padding: 0px;
+  }
+`
+
 const IconButton = styled(NavButton)`
   height: 40px;
   width: 40px;
@@ -74,11 +80,11 @@ export default function Header({ wallet, team, showWallet }) {
 
   return (
     <HeaderWrapper>
-      <NavButton href={wallet && team ? '/' : '/welcome'} variant="text">
+      <HomeButton href={wallet && team ? '/' : '/welcome'} variant="text">
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
         <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
-      </NavButton>
+      </HomeButton>
 
       {showWallet && (
         <LinkWrapper>

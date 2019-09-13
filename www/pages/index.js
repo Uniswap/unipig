@@ -79,10 +79,7 @@ function Home({ wallet, team, addressData, reserves, balances }) {
         </Title>
         <Shim size={12} />
 
-        <Dominance
-          dominantTeam={UNIDominance >= 0.5 ? Team.UNI : Team.PIGI}
-          percent={UNIDominance > 0.5 ? UNIDominance * 100 : (1 - UNIDominance) * 100}
-        />
+        <Dominance percent={UNIDominance * 100} />
 
         <motion.div
           style={{ x }}
