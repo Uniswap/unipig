@@ -62,6 +62,13 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     console.log(typeof body)
     console.log(body)
 
+    const hmac = crypto
+      .createHmac('sha256', secret)
+      .update(body)
+      .digest('base64')
+
+    console.log(`sha256=${hmac}`)
+
     console.log(JSON.parse(body.toString()))
 
     return res.status(200).send('')
