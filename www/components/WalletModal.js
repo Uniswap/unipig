@@ -1,26 +1,39 @@
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
+import { DialogOverlay, DialogContent } from '@reach/dialog'
+import '@reach/dialog/styles.css'
+
+import Button from './Button'
+import { getPermissionString } from '../utils'
+import NavButton from './NavButton'
+import { ButtonText } from './Type'
+import QRScanModal from './QRScanModal'
+import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
+import { useStyledTheme } from '../hooks'
+import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
+import { useRouter } from 'next/router'
+import copy from 'copy-to-clipboard'
+import { WalletInfo, TokenInfo } from './MiniWallet'
 import { transparentize } from 'polished'
 import { QRCode } from 'react-qrcode-logo'
-import copy from 'copy-to-clipboard'
 import { Badge } from '@material-ui/core'
+import Shim from './Shim'
 
-import { getPermissionString } from '../utils'
-import { useStyledTheme } from '../hooks'
-import { Team, useMnemonicExists, useReset } from '../contexts/Cookie'
-import Button from '../components/Button'
-import NavButton from '../components/NavButton'
-import Shim from '../components/Shim'
-import QRScanModal from '../components/QRScanModal'
-import { TokenInfo, WalletInfo } from '../components/MiniWallet'
-import { AnimatedFrame, containerAnimation } from '../components/Animation'
-import { ButtonText } from '../components/Type'
+const StyledDialogOverlay = styled(DialogOverlay)`
+  &[data-reach-dialog-overlay] {
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+`
 
-const StyledBadge = styled(Badge)`
-  .MuiBadge-badge {
-    color: ${({ theme }) => theme.colors.black};
-    background-color: ${({ theme }) => theme.colors.white};
+const StyledDialogContent = styled(DialogContent)`
+  &[data-reach-dialog-content] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
   }
 `
 
@@ -31,14 +44,6 @@ const StyledWallet = styled.span`
   color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
-`
-
-const QRCodeWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin-bottom: 1rem;
 `
 
 const WalletTitle = styled.span`
@@ -55,12 +60,27 @@ const WalletTitle = styled.span`
   margin-bottom: 1rem;
 `
 
+const QRCodeWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1rem;
+`
+
 const WalletButton = styled(Button)`
   min-height: 36px;
   width: initial;
   margin: 0 auto;
   background: rgba(242, 242, 242, 0.2);
   color: black;
+`
+
+const StyledBadge = styled(Badge)`
+  .MuiBadge-badge {
+    color: ${({ theme }) => theme.colors.black};
+    background-color: ${({ theme }) => theme.colors.white};
+  }
 `
 
 const SendButton = styled(Button)`
@@ -86,11 +106,8 @@ const SendShim = styled.span`
   height: 8px;
 `
 
-function Wallet({ wallet, team, addressData, balances, openModal }) {
+function Wallet({ wallet, team, addressData, balances, openQRModal }) {
   const theme = useStyledTheme()
-
-  // const y = useMotionValue(0);
-  // const constraintsRef = useRef(null);
 
   const reset = useReset()
   const [clickedBurnOnce, setClickedBurnOnce] = useState(false)
@@ -144,7 +161,7 @@ function Wallet({ wallet, team, addressData, balances, openModal }) {
   }
 
   return (
-    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+    <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
       <StyledWallet team={team}>
         <WalletTitle>
           <span>Wallet</span>
@@ -168,7 +185,7 @@ function Wallet({ wallet, team, addressData, balances, openModal }) {
           {copied ? 'Copied' : 'Copy Address'}
         </WalletButton>
         <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
-          <Button variant="contained" disabled={addressData.boostsLeft === 0} onClick={openModal}>
+          <Button variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal}>
             Scan To Airdrop
           </Button>
         </StyledBadge>
@@ -179,9 +196,13 @@ function Wallet({ wallet, team, addressData, balances, openModal }) {
         <TokenInfo balances={balances} />
         <Shim size={8} />
         <SendWrapper>
-          <SendButton variant="text">Send</SendButton>
+          <SendButton variant="text" disabled>
+            Send
+          </SendButton>
           <SendShim />
-          <SendButton variant="text">Send</SendButton>
+          <SendButton variant="text" disabled>
+            Send
+          </SendButton>
         </SendWrapper>
         <Shim size={24} />
         <WalletButton variant="text" onClick={manageBurn}>
@@ -195,6 +216,7 @@ function Wallet({ wallet, team, addressData, balances, openModal }) {
 function Airdrop({ wallet, scannedAddress }) {
   const [error, setError] = useState(false)
   const [success, setSuccess] = useState(false)
+
   useEffect(() => {
     const permission = getPermissionString(wallet.address)
     wallet.signMessage(permission.permissionString).then(signature => {
@@ -229,41 +251,45 @@ function Airdrop({ wallet, scannedAddress }) {
   )
 }
 
-function Manager({ wallet, team, addressData, balances }) {
-  const [modalIsOpen, setModalIsOpen] = useState(false)
-  function openModal() {
-    setModalIsOpen(true)
-  }
-  function closeModal() {
-    setModalIsOpen(false)
-  }
+function ViewManager({ wallet, team, addressData, balances }) {
+  const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
   const [scannedAddress, setScannedAddress] = useState()
 
   if (scannedAddress) {
     return <Airdrop wallet={wallet} scannedAddress={scannedAddress} />
-  } else if (modalIsOpen) {
-    return (
-      <QRScanModal
-        open={true}
-        onClose={closeModal}
-        onAddress={address => {
-          setScannedAddress(address)
-        }}
-      />
-    )
   } else {
-    return <Wallet wallet={wallet} team={team} addressData={addressData} balances={balances} openModal={openModal} />
+    return (
+      <>
+        <QRScanModal
+          isOpen={QRModalIsOpen}
+          onDismiss={() => {
+            setQRModalIsOpen(false)
+          }}
+          onAddress={address => {
+            setScannedAddress(address)
+          }}
+        />
+
+        <Wallet
+          wallet={wallet}
+          team={team}
+          addressData={addressData}
+          balances={balances}
+          openQRModal={() => {
+            setQRModalIsOpen(true)
+          }}
+        />
+      </>
+    )
   }
 }
 
-// TODO add PG API and deal with decimals
-Manager.getInitialProps = async () => {
-  return {
-    balances: {
-      [Team.UNI]: 5,
-      [Team.PIGI]: 5
-    }
-  }
+export default function WalletModal({ wallet, team, addressData, balances, isOpen, onDismiss }) {
+  return (
+    <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
+      <StyledDialogContent>
+        <ViewManager wallet={wallet} team={team} addressData={addressData} balances={balances} />
+      </StyledDialogContent>
+    </StyledDialogOverlay>
+  )
 }
-
-export default Manager

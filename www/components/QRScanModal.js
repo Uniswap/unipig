@@ -6,10 +6,7 @@ import '@reach/dialog/styles.css'
 
 import Button from './Button'
 
-const QRReader = dynamic({
-  loader: () => import('./QRReader'),
-  ssr: false
-})
+const QRReader = dynamic(() => import('./QRReader'), { ssr: false })
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
@@ -17,7 +14,6 @@ const StyledDialogOverlay = styled(DialogOverlay)`
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: ${({ theme }) => theme.modalBackground};
   }
 `
 
@@ -32,13 +28,13 @@ const StyledDialogContent = styled(DialogContent)`
   }
 `
 
-export default function QRScanModal({ open, onClose, onAddress }) {
+export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
   const [error, setError] = useState()
 
-  return open ? (
-    <StyledDialogOverlay onClose={onClose}>
+  return (
+    <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
       <StyledDialogContent>
-        <Button variant="contained" onClick={onClose}>
+        <Button variant="contained" onClick={onDismiss}>
           x
         </Button>
         <QRReader
@@ -51,5 +47,5 @@ export default function QRScanModal({ open, onClose, onAddress }) {
         {error && <p>error</p>}
       </StyledDialogContent>
     </StyledDialogOverlay>
-  ) : null
+  )
 }

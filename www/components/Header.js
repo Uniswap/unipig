@@ -98,7 +98,7 @@ export default function Header({ wallet, team, showWallet }) {
           <IconButton href="/stats">
             <StatsIcon />
           </IconButton>
-          <IconButton href="/wallet">
+          <IconButton href="/wallet" disabled>
             <QRIcon />
           </IconButton>
         </LinkWrapper>
