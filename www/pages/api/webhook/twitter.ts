@@ -56,7 +56,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
 
     const body: string = await new Promise((resolve: (body: string) => void): void => {
       let body = ''
-      req.on('data', (chunk: string): void => {
+      req.on('data', (chunk: Buffer): void => {
         console.log(typeof chunk)
         console.log(chunk)
         body += chunk
