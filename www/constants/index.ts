@@ -4,6 +4,8 @@ export const SIGNATURE_TIMEOUT = 1000 * 60 * 60 * 24 // 1 day in ms
 
 export const TWITTER_BOOSTS = 3
 
+export const UNIPIG_TWITTER_ID = 1169730193260519400
+
 export enum WalletSource {
   PAPER = 'PAPER',
   GENERATED = 'GENERATED',
