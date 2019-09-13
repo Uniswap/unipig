@@ -1,4 +1,10 @@
 README.md
+LICENSE
 yarn.lock
 .env
 .env.example
+.eslintrc
+.eslintignore
+.prettierrc
+.prettierignore
+.circleci/
