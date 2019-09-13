@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
+import { useState } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import {
@@ -113,14 +112,7 @@ const HelperText = styled(Desc)`
   font-size: 16px;
 `
 
-function Buy({ wallet, team, reserves, balances }) {
-  const router = useRouter()
-
-  //// parse the url
-  const { buy } = router.query || {}
-  const outputToken = buy ? Team[buy] : null
-  const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIGI : Team.UNI) : null
-
+function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confirm }) {
   //// parse the props
   const inputBalance = new BigNumber(balances[inputToken])
   const inputReserve = new BigNumber(reserves[inputToken])
@@ -191,16 +183,6 @@ function Buy({ wallet, team, reserves, balances }) {
     updateValues(formatFixedDecimals(inputBalance, DECIMALS), inputBalance)
   }
 
-  // handle redirect
-  useEffect(() => {
-    if (!outputToken) {
-      router.push('/')
-    }
-  })
-  if (!outputToken) {
-    return null
-  }
-
   return (
     <>
       <Body textStyle="gradient">
@@ -264,9 +246,16 @@ function Buy({ wallet, team, reserves, balances }) {
             </b>
           </HelperText>
         )}
-        <NavButton variant="gradient" stretch href="/trade?confirmed=true">
+        <Button
+          disabled={!!inputError || !!outputError || !!!inputAmount.parsed}
+          variant="gradient"
+          stretch
+          onClick={() => {
+            confirm()
+          }}
+        >
           <ButtonText>Swap</ButtonText>
-        </NavButton>
+        </Button>
       </TradeWrapper>
       <Shim size={32} />
       <Wallet wallet={wallet} team={team} balances={balances} />
@@ -274,7 +263,7 @@ function Buy({ wallet, team, reserves, balances }) {
   )
 }
 
-function Confirmed({ success }) {
+function Confirmed() {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -290,30 +279,49 @@ function Confirmed({ success }) {
       </Heading>
       <Shim size={2} />
       <NavButton variant="gradient" href="/">
-        <ButtonText>{success ? 'Dope' : ':('}</ButtonText>
+        <ButtonText>Dope</ButtonText>
       </NavButton>
     </TradeWrapper>
   )
 }
 
-function Manager({ wallet, team, reserves, balances }) {
-  const router = useRouter()
-  const { buy, confirmed } = router.query || {}
-  if (!buy && !confirmed) {
-    router.push(`/trade?buy=${Team[Team.UNI]}`, `/trade?buy=${Team[Team.UNI]}`, { shallow: true })
-    return null
+function Manager({ wallet, team, reserves, balances, inputToken, outputToken }) {
+  const [showConfirm, setShowConfirm] = useState(false)
+  function confirm() {
+    setShowConfirm(true)
   }
 
-  return buy ? (
-    <Buy wallet={wallet} team={team} reserves={reserves} balances={balances} />
+  return !showConfirm ? (
+    <Buy
+      wallet={wallet}
+      team={team}
+      reserves={reserves}
+      balances={balances}
+      outputToken={outputToken}
+      inputToken={inputToken}
+      confirm={confirm}
+    />
   ) : (
-    <Confirmed success={confirmed === 'true' ? true : false} />
+    <Confirmed />
   )
 }
 
 // TODO add PG API and deal with decimals
-Manager.getInitialProps = async () => {
+Manager.getInitialProps = async context => {
   const random = Math.round(Math.random() * 100, 0)
+
+  const { query, res } = context
+  const { buy } = query
+
+  const outputToken = buy ? (Team[buy] === Team.UNI || Team[buy] === Team.PIGI ? Team[buy] : null) : null
+  const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIGI : Team.UNI) : null
+
+  if (!inputToken || !outputToken) {
+    res.writeHead(302, { Location: '/' })
+    res.end()
+    return {}
+  }
+
   return {
     reserves: {
       [Team.UNI]: random * 10000,
@@ -322,7 +330,9 @@ Manager.getInitialProps = async () => {
     balances: {
       [Team.UNI]: 5 * 10000,
       [Team.PIGI]: 5 * 10000
-    }
+    },
+    inputToken,
+    outputToken
   }
 }
 

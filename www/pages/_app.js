@@ -1,4 +1,4 @@
-import App, { Container } from 'next/app'
+import App from 'next/app'
 import Head from 'next/head'
 import fetch from 'isomorphic-unfetch'
 import { Wallet } from '@ethersproject/wallet'
@@ -178,11 +178,9 @@ export default class MyApp extends App {
             <GlobalStyle />
             <StylesProvider injectFirst>
               <MUIThemeProvider theme={MUITheme}>
-                <Container>
-                  <Layout wallet={wallet} team={team}>
-                    <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
-                  </Layout>
-                </Container>
+                <Layout wallet={wallet} team={team}>
+                  <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
+                </Layout>
               </MUIThemeProvider>
             </StylesProvider>
           </SCThemeProvider>

@@ -36,9 +36,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       .digest('base64')
 
     // eslint-disable-next-line @typescript-eslint/camelcase
-    const resBody = { response_token: `sha256=${hmac}` }
-    const resBodyFormatted = JSON.stringify(resBody)
-    return res.status(200).json(resBodyFormatted)
+    return res.status(200).json(JSON.stringify({ response_token: `sha256=${hmac}` }))
   }
   // POST with incoming twitter activity
   else if (req.method === 'POST') {
@@ -98,16 +96,14 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     const creationWindow = 1000 * 60 * 60 * 24 * 2 // 2 days
     const accountCreated = new Date(tweetObject.user.created_at).getTime()
     if (accountCreated + creationWindow >= now) {
-      const errorString = 'Account is too new.'
-      console.error(errorString)
-      return res.status(400).send(errorString)
+      console.error('Account is too new.')
+      return res.status(200).send('')
     }
 
     // if there wasn't an address in the tweet return error
     if (!matchedAddress) {
-      const errorString = 'Tweet does not contain a valid Ethereum address.'
-      console.error(errorString)
-      return res.status(400).send(errorString)
+      console.error('Tweet does not contain a valid Ethereum address.')
+      return res.status(200).send('')
     }
 
     // begin DB logic
@@ -115,18 +111,16 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       // ensure that the address exists in our db
       const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)))
       if (addressRef.data.length === 0) {
-        const errorString = `Address ${matchedAddress} is not recognized.`
-        console.error(errorString)
-        return res.status(401).send(errorString)
+        console.error(`Address ${matchedAddress} is not recognized.`)
+        return res.status(200).send('')
       }
 
       // ensure that the address hasn't used the faucet recently
       const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
       const addressDocument: AddressDocument = addressData[0].data
       if (!canFaucet(addressDocument)) {
-        const errorString = `Address ${matchedAddress} cannot faucet yet.`
-        console.error(errorString)
-        return res.status(401).send(errorString)
+        console.error(`Address ${matchedAddress} cannot faucet yet.`)
+        return res.status(200).send('')
       }
 
       // ensure that if the twitter id exists in our db, it hasn't used the faucet recently
@@ -136,9 +130,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         const idDocument: AddressDocument = idData[0].data
 
         if (!canFaucet(idDocument)) {
-          const errorString = `Account ${userHandle} (${userId}) cannot faucet yet.`
-          console.error(errorString)
-          return res.status(401).send(errorString)
+          console.error(`Account ${userHandle} (${userId}) cannot faucet yet.`)
+          return res.status(200).send('')
         }
         // update the db to ensure uniqueness
         else {

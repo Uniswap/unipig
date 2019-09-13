@@ -5,11 +5,9 @@ import { DialogOverlay, DialogContent } from '@reach/dialog'
 import '@reach/dialog/styles.css'
 
 import Button from './Button'
+import { Body } from '../components/Type'
 
-const QRReader = dynamic({
-  loader: () => import('./QRReader'),
-  ssr: false
-})
+const QRReader = dynamic(() => import('./QRReader'), { ssr: false })
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
@@ -17,7 +15,6 @@ const StyledDialogOverlay = styled(DialogOverlay)`
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: ${({ theme }) => theme.modalBackground};
   }
 `
 
@@ -32,15 +29,44 @@ const StyledDialogContent = styled(DialogContent)`
   }
 `
 
-export default function QRScanModal({ open, onClose, onAddress }) {
+const ScanHeader = styled.span`
+  display: flex;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  justify-content: space-between;
+  padding: 1rem;
+  font-weight: 600;
+  z-index: 100;
+`
+const StyledHeaderText = styled(Body)`
+  padding-top: 1rem;
+  padding-left: 1rem;
+`
+
+const CloseButton = styled(Button)`
+  background-color: black;
+  color: white;
+  font-size: 30px;
+  padding: 0px;
+  margin: 0;
+  min-width: 48px;
+  min-height: 48px;
+  font-weight: 400;
+`
+
+export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
   const [error, setError] = useState()
 
-  return open ? (
-    <StyledDialogOverlay onClose={onClose}>
+  return (
+    <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
       <StyledDialogContent>
-        <Button variant="contained" onClick={onClose}>
-          x
-        </Button>
+        <ScanHeader>
+          <StyledHeaderText textStyle="gradient">Scan QR Code.</StyledHeaderText>
+          <CloseButton variant="outlined" onClick={onDismiss}>
+            ✗
+          </CloseButton>
+        </ScanHeader>
         <QRReader
           onAddress={onAddress}
           onError={error => {
@@ -51,5 +77,5 @@ export default function QRScanModal({ open, onClose, onAddress }) {
         {error && <p>error</p>}
       </StyledDialogContent>
     </StyledDialogOverlay>
-  ) : null
+  )
 }

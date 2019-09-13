@@ -1,14 +1,13 @@
 import styled from 'styled-components'
-import { transparentize } from 'polished'
+import { transparentize, lighten } from 'polished'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
-import NavLink from './NavLink'
 
-const StyledNavLink = styled.div`
+const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  background-color: ${({ theme }) => lighten(0.1, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
   opacity: 0.8;
@@ -17,7 +16,7 @@ const StyledNavLink = styled.div`
 
   :hover {
     opacity: 1;
-    cursor: ${({ href }) => (href ? 'pointer' : 'default')};
+    cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
   }
 `
 
@@ -61,7 +60,7 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.greys[9])};
+  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   padding: 0.5rem 1rem;
   border-radius: 20px;
   display: flex;
@@ -121,10 +120,10 @@ export function TokenInfo({ balances }) {
   )
 }
 
-export default function Wallet({ wallet, team, balances, walletType, disableNav = false, ...rest }) {
+export default function Wallet({ wallet, team, balances, onClick, ...rest }) {
   return (
-    <StyledNavLink href={disableNav ? undefined : '/wallet'} as={disableNav ? 'div' : NavLink} team={team} {...rest}>
-      {walletType === 'rest' && (
+    <StyledWallet team={team} onClick={onClick} {...rest}>
+      {!!onClick && (
         <OpenWalletLink>
           <span>Open Wallet</span>
           <span>↗</span>
@@ -132,6 +131,6 @@ export default function Wallet({ wallet, team, balances, walletType, disableNav 
       )}
       <WalletInfo wallet={wallet} team={team} />
       <TokenInfo balances={balances} />
-    </StyledNavLink>
+    </StyledWallet>
   )
 }

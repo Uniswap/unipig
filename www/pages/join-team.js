@@ -9,6 +9,7 @@ import Progress from '../components/Progress'
 import Shim from '../components/Shim'
 
 import { Heading, Title, ButtonText } from '../components/Type'
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
 const StyledButton = styled(Button)`
   margin-bottom: 24px;
@@ -26,7 +27,7 @@ export default function JoinTeam() {
   }
 
   return (
-    <>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
       <Heading>Oink or Horn.</Heading>
       <Title textStyle="gradient">Choose a team.</Title>
 
@@ -53,10 +54,11 @@ export default function JoinTeam() {
       <Shim size={24} />
 
       <Progress progress="66%" />
-
-      <NavButton variant="gradient" disabled={!team} href={'/confirm-wallet'} stretch>
-        <ButtonText>I pledge allegiance</ButtonText>
-      </NavButton>
-    </>
+      <AnimatedFrame variants={childAnimation}>
+        <NavButton variant="gradient" disabled={!team} href={'/confirm-wallet'} stretch>
+          <ButtonText>I pledge allegiance</ButtonText>
+        </NavButton>
+      </AnimatedFrame>
+    </AnimatedFrame>
   )
 }

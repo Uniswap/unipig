@@ -5,8 +5,27 @@ import QrReader from 'react-qr-reader'
 import Button from '../components/Button'
 
 const Wrapper = styled.div`
-  width: 50%;
-  align-items: center;
+  width: 100vh;
+  max-width: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
+  max-height: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+
+  section:first-child {
+    transform: scale(0.5) translateY(40%);
+  }
+  @media only screen and (max-width: 480px) {
+    width: 100%;
+
+    section:first-child {
+      transform: scale(0.9) translateY(20%);
+    }
+  }
+`
+
+const FixedButton = styled(Button)`
+  margin: 100px auto;
 `
 
 const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
@@ -42,16 +61,16 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
         onScan={onScan}
         onError={onError}
       />
-
       {legacyMode && (
-        <Button
-          variant="contained"
+        <FixedButton
+          variant="outlined"
+          color="primary"
           onClick={() => {
             qrRef.current.openImageDialog()
           }}
         >
-          Upload
-        </Button>
+          Upload an image of a Unipig wallet
+        </FixedButton>
       )}
     </Wrapper>
   )

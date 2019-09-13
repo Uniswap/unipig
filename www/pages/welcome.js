@@ -12,8 +12,8 @@ import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
 import Emoji from '../components/Emoji'
 import Shim from '../components/Shim'
-
 import { Heading, Title, Body, Desc, ButtonText } from '../components/Type'
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
 const CopyWrapper = styled.span`
   display: flex;
@@ -67,7 +67,7 @@ function Welcome({ mnemonic }) {
   })
 
   return (
-    <>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
       <Heading>Hello friend.</Heading>
       <Shim size={1} />
       <Title textStyle="gradient">Welcome to Unipig.</Title>
@@ -103,19 +103,20 @@ function Welcome({ mnemonic }) {
         </CopyWrapper>
       </span>
       <Shim size={24} />
-
       <Progress progress="33%" />
 
-      <ErrorNavButton
-        href={teamExists ? '/' : '/join-team'}
-        error={cookiesEnabled === false}
-        variant={cookiesEnabled === false ? 'outlined' : 'gradient'}
-        disabled={!mnemonicExists || !cookiesEnabled}
-        stretch
-      >
-        <ButtonText>{cookiesEnabled === false ? 'Enable cookies to continue.' : 'Let me in!'}</ButtonText>
-      </ErrorNavButton>
-    </>
+      <AnimatedFrame variants={childAnimation}>
+        <ErrorNavButton
+          href={teamExists ? '/' : '/join-team'}
+          error={cookiesEnabled === false}
+          variant={cookiesEnabled === false ? 'outlined' : 'gradient'}
+          disabled={!mnemonicExists || !cookiesEnabled}
+          stretch
+        >
+          <ButtonText>{cookiesEnabled === false ? 'Enable cookies to continue.' : 'Let me in!'}</ButtonText>
+        </ErrorNavButton>
+      </AnimatedFrame>
+    </AnimatedFrame>
   )
 }
 
