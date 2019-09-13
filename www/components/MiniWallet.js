@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { transparentize } from 'polished'
+import { transparentize, lighten } from 'polished'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
@@ -8,7 +8,7 @@ import NavLink from './NavLink'
 const StyledNavLink = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  background-color: ${({ theme }) => lighten(0.05, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
   opacity: 0.8;

@@ -7,6 +7,10 @@ import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
 import { truncateAddress } from '../utils'
+import Wallet from '../components/MiniWallet'
+
+import Confetti from 'react-dom-confetti'
+import { config } from '../components/ConfettiConfig'
 
 const TweetContainer = styled.div`
   display: flex;
@@ -29,6 +33,7 @@ const TradeWrapper = styled.span`
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
+  transition: height 0.125s ease;
 `
 
 const TweetPreview = styled.span`
@@ -43,6 +48,7 @@ const TweetPreview = styled.span`
 const StyledBody = styled(Body)`
   text-align: center;
   font-weight: 600;
+  margin: 0px;
 `
 
 async function getFaucetData(address, time, signature) {
@@ -131,27 +137,45 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
 
   function metaInformation() {
     if (updatedDataError) {
-      return <StyledBody textStyle="gradient">An error occurred...</StyledBody>
+      return (
+        <>
+          <Shim size={32} />
+          <StyledBody textStyle="gradient">An error occurred...</StyledBody>
+        </>
+      )
     } else if (addressData.canFaucet && !twitterLoaded) {
-      return <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
+      return (
+        <>
+          <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
+        </>
+      )
     } else if (polling && (!updatedData || updatedData.canFaucet)) {
-      return <StyledBody textStyle="gradient">Listening for your tweet...</StyledBody>
-    } else {
-      return <StyledBody textStyle="gradient">Waiting for your tweet...</StyledBody>
+      return (
+        <>
+          <Shim size={32} />
+          <StyledBody textStyle="gradient">Listening for your tweet...</StyledBody>
+        </>
+      )
     }
   }
 
   return (
     <TradeWrapper>
       <Title size={32} textStyle="gradient">
-        Tweet at the Unipig to get some tokens.
+        {!addressData.canFaucet || (updatedData && !updatedData.canFaucet)
+          ? 'TOKENS. IN. YOUR. WALLET.'
+          : 'Tweet at the Unipig to get some tokens.'}
       </Title>
       <Shim size={32} />
 
-      <TweetPreview>
-        ༼ つ ◕_◕ ༽つ @UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet:
-        {truncateAddress('0x486a5415db4e45e06a0f7970207751ce54791c60', 8)} https://unipig.exchange #teamPIGI
-      </TweetPreview>
+      {!addressData.canFaucet || (updatedData && !updatedData.canFaucet) ? (
+        <Wallet wallet={wallet} team={team} balances={balances} disableNav />
+      ) : (
+        <TweetPreview>
+          ༼ つ ◕_◕ ༽つ @UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet:
+          {truncateAddress('0x486a5415db4e45e06a0f7970207751ce54791c60', 8)} https://unipig.exchange #teamPIGI
+        </TweetPreview>
+      )}
 
       <Shim size={32} />
 
@@ -172,7 +196,7 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
 
       {!addressData.canFaucet || (updatedData && !updatedData.canFaucet) ? (
         <>
-          <Shim size={32} />
+          {/* <Shim size={32} /> */}
           <StyledBody textStyle="gradient">
             Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
           </StyledBody>
@@ -183,7 +207,7 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
         </>
       ) : (
         <>
-          <Shim size={32} />
+          {/* <Shim size={32} /> */}
           {metaInformation()}
           <Shim size={32} />
           <NavButton disabled variant="gradient" href="/">
@@ -191,6 +215,9 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
           </NavButton>
         </>
       )}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <Confetti active={!addressData.canFaucet || (updatedData && !updatedData.canFaucet)} config={config} />
+      </div>
     </TradeWrapper>
   )
 }

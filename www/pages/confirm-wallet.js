@@ -9,25 +9,13 @@ import { Heading, Title, ButtonText, Body } from '../components/Type'
 import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
 import Confetti from 'react-dom-confetti'
+import { config } from '../components/ConfettiConfig'
 
 import Progress from '../components/Progress'
 
 const TeamHeader = styled(Title)`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
 `
-
-const config = {
-  angle: 90,
-  spread: 76,
-  startVelocity: 51,
-  elementCount: 50,
-  dragFriction: 0.1,
-  duration: 5000,
-  stagger: 0,
-  width: '10px',
-  height: '10px',
-  colors: ['#a864fd', '#29cdff', '#78ff44', '#ff718d', '#fdff6a']
-}
 
 function ConfirmWallet({ balances, team, wallet }) {
   const [bang, setBang] = useState(false)
