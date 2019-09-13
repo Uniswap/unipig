@@ -64,7 +64,7 @@ async function getFaucetData(address, time, signature) {
   })
 }
 
-export default function TwitterFaucet({ wallet, team, addressData }) {
+function TwitterFaucet({ wallet, team, addressData, balances }) {
   // get a permission signature
   const permission = useMemo(() => getPermissionString(wallet.address), [wallet.address])
   const [signature, setSignature] = useState()
@@ -221,3 +221,15 @@ export default function TwitterFaucet({ wallet, team, addressData }) {
     </TradeWrapper>
   )
 }
+
+// TODO add PG API and deal with decimals
+TwitterFaucet.getInitialProps = async () => {
+  return {
+    balances: {
+      [Team.UNI]: 5,
+      [Team.PIGI]: 5
+    }
+  }
+}
+
+export default TwitterFaucet
