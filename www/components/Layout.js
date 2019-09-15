@@ -70,9 +70,9 @@ const Element = styled.div`
   }
 `
 
-export default function Layout({ wallet, team, children }) {
+export default function Layout({ wallet, team, children, setWalletModalIsOpen }) {
   const { pathname } = useRouter()
-  const showWallet = pathname === '/'
+  const showIcons = pathname === '/'
 
   return (
     <Root>
@@ -84,8 +84,8 @@ export default function Layout({ wallet, team, children }) {
       <Element align="flex-end">
         <RouteLoader />
       </Element>
-      <Element align="flex-start" justify={showWallet ? 'space-between' : 'flex-start'} direction="row">
-        <Header wallet={wallet} team={team} showWallet={showWallet} />
+      <Element align="flex-start" justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
+        <Header wallet={wallet} team={team} showIcons={showIcons} setWalletModalIsOpen={setWalletModalIsOpen} />
       </Element>
       <Element align="flex-start" grow={false} width={'448px'}>
         {children}

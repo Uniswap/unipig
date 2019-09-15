@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import styled from 'styled-components'
 import { motion, useMotionValue } from 'framer-motion'
 
@@ -10,7 +11,8 @@ import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 import { Title, ButtonText, Body } from '../components/Type'
 import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
-import WalletModal from '../components/WalletModal'
+
+const WalletModal = dynamic(() => import('../components/WalletModal'), { ssr: false })
 
 const BoostWrapper = styled.div`
   display: flex;
@@ -39,7 +41,7 @@ const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
-function Home({ wallet, team, addressData, reserves, balances }) {
+function Home({ wallet, team, addressData, reserves, balances, walletModalIsOpen, setWalletModalIsOpen }) {
   const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
 
   const theme = useStyledTheme()
@@ -55,8 +57,6 @@ function Home({ wallet, team, addressData, reserves, balances }) {
     }
   }, [x])
 
-  const [walletIsOpen, setWalletIsOpen] = useState(false)
-
   return (
     <>
       <WalletModal
@@ -64,9 +64,9 @@ function Home({ wallet, team, addressData, reserves, balances }) {
         team={team}
         addressData={addressData}
         balances={balances}
-        isOpen={walletIsOpen}
+        isOpen={walletModalIsOpen}
         onDismiss={() => {
-          setWalletIsOpen(false)
+          setWalletModalIsOpen(false)
         }}
       />
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
@@ -144,7 +144,7 @@ function Home({ wallet, team, addressData, reserves, balances }) {
             balances={balances}
             walletType={'rest'}
             onClick={() => {
-              setWalletIsOpen(true)
+              setWalletModalIsOpen(true)
             }}
           />
         </AnimatedFrame>

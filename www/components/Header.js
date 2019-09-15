@@ -71,7 +71,7 @@ const IconButton = styled(NavButton)`
   }
 `
 
-export default function Header({ wallet, team, showWallet }) {
+export default function Header({ wallet, team, showIcons, setWalletModalIsOpen }) {
   // check if sharing is enabled
   const [canShare, setCanShare] = useState()
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function Header({ wallet, team, showWallet }) {
         <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
       </HomeButton>
 
-      {showWallet && (
+      {showIcons && (
         <LinkWrapper>
           {canShare && (
             <IconButton
@@ -104,7 +104,12 @@ export default function Header({ wallet, team, showWallet }) {
           <IconButton href="/stats">
             <StatsIcon />
           </IconButton>
-          <IconButton href="/wallet" disabled>
+          <IconButton
+            as={Button}
+            onClick={() => {
+              setWalletModalIsOpen(true)
+            }}
+          >
             <QRIcon />
           </IconButton>
         </LinkWrapper>

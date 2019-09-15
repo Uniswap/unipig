@@ -93,11 +93,10 @@ const MUITheme = createMuiTheme({
 // https://github.com/MarchWorks/nextjs-with-material-ui-and-styled-components
 // https://stackoverflow.com/questions/55109497/how-to-integrate-nextjs-styled-components-with-material-ui
 export default class MyApp extends App {
-  componentDidMount() {
-    const jssStyles = document.querySelector('#jss-server-side')
-    if (jssStyles) {
-      jssStyles.parentNode.removeChild(jssStyles)
-    }
+  constructor(props) {
+    super(props)
+    this.state = { walletModalIsOpen: false }
+    this.setWalletModalIsOpen = this.setWalletModalIsOpen.bind(this)
   }
 
   static async getInitialProps({ Component, ctx: context }) {
@@ -162,8 +161,21 @@ export default class MyApp extends App {
     }
   }
 
+  componentDidMount() {
+    const jssStyles = document.querySelector('#jss-server-side')
+    if (jssStyles) {
+      jssStyles.parentNode.removeChild(jssStyles)
+    }
+  }
+
+  setWalletModalIsOpen(flag) {
+    this.setState({ walletModalIsOpen: flag })
+  }
+
   render() {
     const { mnemonic, team, augmentedAddressDocument, Component, pageProps } = this.props
+    const { walletModalIsOpen } = this.state
+    const { setWalletModalIsOpen } = this
 
     const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
 
@@ -178,8 +190,15 @@ export default class MyApp extends App {
             <GlobalStyle />
             <StylesProvider injectFirst>
               <MUIThemeProvider theme={MUITheme}>
-                <Layout wallet={wallet} team={team}>
-                  <Component {...pageProps} wallet={wallet} team={team} addressData={augmentedAddressDocument} />
+                <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
+                  <Component
+                    {...pageProps}
+                    wallet={wallet}
+                    team={team}
+                    addressData={augmentedAddressDocument}
+                    walletModalIsOpen={walletModalIsOpen}
+                    setWalletModalIsOpen={setWalletModalIsOpen}
+                  />
                 </Layout>
               </MUIThemeProvider>
             </StylesProvider>

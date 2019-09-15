@@ -1,13 +1,11 @@
 import React, { useState } from 'react'
-import dynamic from 'next/dynamic'
 import styled from 'styled-components'
 import { DialogOverlay, DialogContent } from '@reach/dialog'
 import '@reach/dialog/styles.css'
 
 import Button from './Button'
-import { Body } from '../components/Type'
-
-const QRReader = dynamic(() => import('./QRReader'), { ssr: false })
+import { Body } from './Type'
+import QRReader from './QRReader'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
