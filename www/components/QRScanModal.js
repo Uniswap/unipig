@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
+import Head from 'next/head'
 import styled from 'styled-components'
 import { DialogOverlay, DialogContent } from '@reach/dialog'
-import '@reach/dialog/styles.css'
 
 import Button from './Button'
 import { Body } from './Type'
@@ -57,23 +57,28 @@ export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
   const [error, setError] = useState()
 
   return (
-    <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
-      <StyledDialogContent>
-        <ScanHeader>
-          <StyledHeaderText textStyle="gradient">Scan QR Code.</StyledHeaderText>
-          <CloseButton variant="outlined" onClick={onDismiss}>
-            ✗
-          </CloseButton>
-        </ScanHeader>
-        <QRReader
-          onAddress={onAddress}
-          onError={error => {
-            console.error(error)
-            setError(error)
-          }}
-        />
-        {error && <p>error</p>}
-      </StyledDialogContent>
-    </StyledDialogOverlay>
+    <>
+      <Head>
+        <link rel="stylesheet" type="text/css" href="static/@reach/dialog/styles.css" />
+      </Head>
+      <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
+        <StyledDialogContent>
+          <ScanHeader>
+            <StyledHeaderText textStyle="gradient">Scan QR Code.</StyledHeaderText>
+            <CloseButton variant="outlined" onClick={onDismiss}>
+              ✗
+            </CloseButton>
+          </ScanHeader>
+          <QRReader
+            onAddress={onAddress}
+            onError={error => {
+              console.error(error)
+              setError(error)
+            }}
+          />
+          {error && <p>error</p>}
+        </StyledDialogContent>
+      </StyledDialogOverlay>
+    </>
   )
 }
