@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import styled from 'styled-components'
+import { QRCode } from 'react-qrcode-logo'
+import { Badge, Snackbar, SnackbarContent } from '@material-ui/core'
 import { DialogOverlay, DialogContent } from '@reach/dialog'
+import { useMotionValue, useAnimation, motion } from 'framer-motion'
+import copy from 'copy-to-clipboard'
+import styled from 'styled-components'
+import { transparentize } from 'polished'
 
+import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
+import { getPermissionString, truncateAddress } from '../utils'
+import { useStyledTheme, usePrevious } from '../hooks'
 import Button from './Button'
-import { getPermissionString } from '../utils'
-import NavButton from './NavButton'
-import { ButtonText } from './Type'
+import Emoji from './Emoji'
 import QRScanModal from './QRScanModal'
 import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
-import { useStyledTheme } from '../hooks'
-import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
-import copy from 'copy-to-clipboard'
 import { WalletInfo, TokenInfo } from './MiniWallet'
-import { transparentize } from 'polished'
-import { QRCode } from 'react-qrcode-logo'
-import { Badge } from '@material-ui/core'
 import Shim from './Shim'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
@@ -114,7 +114,157 @@ const SendShim = styled.span`
   height: 8px;
 `
 
-function Wallet({ wallet, team, addressData, balances, openQRModal }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FilteredSnackbarContent = ({ inError, ...rest }) => <SnackbarContent {...rest} />
+const StyledSnackbarContent = styled(FilteredSnackbarContent)`
+  background-color: ${({ inError, theme }) => inError && theme.colors.error};
+`
+
+const Contents = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
+
+const ProgressSVG = styled.svg`
+  height: 1.5rem;
+  margin: 0.25rem;
+`
+
+const DURATION = 6
+function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScannedAddress, setClientSideDecrement }) {
+  const [error, setError] = useState()
+  const [success, setSuccess] = useState()
+
+  useEffect(() => {
+    if (scannedAddress) {
+      const permission = getPermissionString(wallet.address)
+      wallet.signMessage(permission.permissionString).then(signature => {
+        fetch('/api/airdrop', {
+          method: 'POST',
+          body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
+        })
+          .then(async response => {
+            if (!response.ok) {
+              throw Error(`${response.status} Error: ${response.statusText}`)
+            }
+
+            setSuccess(true)
+            setClientSideDecrement(d => d + 1)
+          })
+          .catch(error => {
+            console.error(error)
+            setError(error)
+          })
+      })
+    }
+  }, [scannedAddress, wallet, setClientSideDecrement])
+
+  function statusMessage() {
+    if (!!!error && !!!success) {
+      return <span>Loading...</span>
+    } else if (!!error) {
+      return <span>Sorry, there was an error.</span>
+    } else {
+      return (
+        <span>
+          Nice! You and{' '}
+          {(scannedAddress || lastScannedAddress) && truncateAddress(scannedAddress || lastScannedAddress, 4)} just got
+          tokens.
+        </span>
+      )
+    }
+  }
+
+  const pathLength = useMotionValue(0)
+  const controls = useAnimation()
+  const animateTo = duration => ({
+    pathLength: 1,
+    transition: { type: 'tween', duration, ease: 'linear' }
+  })
+  const [isFinished, setIsFinished] = useState(false)
+  useEffect(() => {
+    if (success || error) {
+      controls.start(animateTo(DURATION))
+    }
+  }, [success, error, controls])
+
+  return (
+    <Snackbar
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left'
+      }}
+      open={!!scannedAddress}
+      autoHideDuration={null}
+      onClose={() => {}}
+      onMouseEnter={() => {
+        if (pathLength.isAnimating()) {
+          controls.stop()
+        }
+      }}
+      onMouseLeave={() => {
+        if (pathLength.get() !== 0 && !pathLength.isAnimating() && !isFinished) {
+          controls.start(animateTo(DURATION * (1 - pathLength.get())))
+        }
+      }}
+      onExited={() => {
+        setError()
+        setSuccess()
+        setIsFinished(false)
+        pathLength.set(0)
+      }}
+    >
+      <StyledSnackbarContent
+        inError={!!error}
+        message={
+          <Contents>
+            <Emoji style={{ marginRight: '0.3rem' }} emoji="📦" label="airdrop" />
+            {statusMessage()}
+          </Contents>
+        }
+        action={
+          <ProgressSVG viewBox="0 0 50 50">
+            <motion.path
+              fill="none"
+              strokeWidth="4"
+              stroke="white"
+              strokeDasharray="0 1"
+              d="M 0, 20 a 20, 20 0 1,0 40,0 a 20, 20 0 1,0 -40,0"
+              initial={false}
+              style={{
+                pathLength,
+                rotate: 90,
+                translateX: 5,
+                translateY: 5,
+                scaleX: -1 // Reverse direction of line animation
+              }}
+              animate={controls}
+              onAnimationComplete={() => {
+                setIsFinished(true)
+              }}
+            />
+            <motion.path
+              fill="none"
+              strokeWidth="3"
+              stroke="white"
+              d="M14,26 L 22,33 L 35,16"
+              initial={false}
+              strokeDasharray="0 1"
+              animate={{ pathLength: isFinished ? 1 : 0 }}
+              transition={{ duration: 0.75 }}
+              onAnimationComplete={() => {
+                setScannedAddress()
+              }}
+            />
+          </ProgressSVG>
+        }
+      />
+    </Snackbar>
+  )
+}
+
+function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRModal, clientSideDecrement }) {
   const theme = useStyledTheme()
 
   const reset = useReset()
@@ -190,9 +340,15 @@ function Wallet({ wallet, team, addressData, balances, openQRModal }) {
         </QRCodeWrapper>
 
         <Shim size={8} />
-        <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
-          <ScanButton variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal} stretch>
-            Trigger an Airdrop 📦
+        <StyledBadge badgeContent={(addressData.boostsLeft || 0) - clientSideDecrement}>
+          <ScanButton
+            variant="contained"
+            disabled={!!scannedAddress || (addressData.boostsLeft || 0) - clientSideDecrement === 0}
+            onClick={openQRModal}
+            stretch
+          >
+            Trigger an Airdrop
+            <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
           </ScanButton>
         </StyledBadge>
 
@@ -225,83 +381,66 @@ function Wallet({ wallet, team, addressData, balances, openQRModal }) {
   )
 }
 
-function Airdrop({ wallet, scannedAddress }) {
-  const [error, setError] = useState(false)
-  const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    const permission = getPermissionString(wallet.address)
-    wallet.signMessage(permission.permissionString).then(signature => {
-      fetch('/api/airdrop', {
-        method: 'POST',
-        body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
-      })
-        .then(async response => {
-          if (!response.ok) {
-            throw Error(`${response.status} Error: ${response.statusText}`)
-          }
-
-          setSuccess(true)
-        })
-        .catch(error => {
-          console.error(error)
-          setError(error)
-        })
-    })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+function ViewManager({ wallet, team, addressData, balances, scannedAddress, setScannedAddress, clientSideDecrement }) {
+  const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
   return (
     <>
-      {error && <p>Uh-oh, an error occurred.</p>}
+      <QRScanModal
+        isOpen={QRModalIsOpen}
+        onDismiss={() => {
+          setQRModalIsOpen(false)
+        }}
+        onAddress={address => {
+          setScannedAddress(address)
+          setQRModalIsOpen(false)
+        }}
+      />
 
-      {success && <p>woo! you airdropped to yourself and {scannedAddress}</p>}
-
-      <NavButton href="/" variant="gradient" stretch>
-        <ButtonText>{!error && !success ? 'Loading...' : error ? 'Bummer.' : 'Dope.'}</ButtonText>
-      </NavButton>
+      <Wallet
+        wallet={wallet}
+        team={team}
+        addressData={addressData}
+        balances={balances}
+        scannedAddress={scannedAddress}
+        clientSideDecrement={clientSideDecrement}
+        openQRModal={() => {
+          setQRModalIsOpen(true)
+        }}
+      />
     </>
   )
 }
 
-function ViewManager({ wallet, team, addressData, balances }) {
-  const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
-  const [scannedAddress, setScannedAddress] = useState()
-
-  if (scannedAddress) {
-    return <Airdrop wallet={wallet} scannedAddress={scannedAddress} />
-  } else {
-    return (
-      <>
-        <QRScanModal
-          isOpen={QRModalIsOpen}
-          onDismiss={() => {
-            setQRModalIsOpen(false)
-          }}
-          onAddress={address => {
-            setScannedAddress(address)
-          }}
-        />
-
-        <Wallet
-          wallet={wallet}
-          team={team}
-          addressData={addressData}
-          balances={balances}
-          openQRModal={() => {
-            setQRModalIsOpen(true)
-          }}
-        />
-      </>
-    )
-  }
-}
-
 export default function WalletModal({ wallet, team, addressData, balances, isOpen, onDismiss }) {
+  const [scannedAddress, setScannedAddress] = useState()
+  const lastScannedAddress = usePrevious(scannedAddress)
+
+  // janky, but keep track of # of successful aidrops client-side so we don't have to re-fetch from the server
+  const [clientSideDecrement, setClientSideDecrement] = useState(0)
+
   return (
-    <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
-      <StyledDialogContent>
-        <ViewManager wallet={wallet} team={team} addressData={addressData} balances={balances} />
-      </StyledDialogContent>
-    </StyledDialogOverlay>
+    <>
+      <AirdropSnackbar
+        wallet={wallet}
+        scannedAddress={scannedAddress}
+        setScannedAddress={setScannedAddress}
+        lastScannedAddress={lastScannedAddress}
+        setClientSideDecrement={setClientSideDecrement}
+      />
+      <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
+        <StyledDialogContent>
+          <ViewManager
+            wallet={wallet}
+            team={team}
+            addressData={addressData}
+            balances={balances}
+            scannedAddress={scannedAddress}
+            setScannedAddress={setScannedAddress}
+            clientSideDecrement={clientSideDecrement}
+          />
+        </StyledDialogContent>
+      </StyledDialogOverlay>
+    </>
   )
 }

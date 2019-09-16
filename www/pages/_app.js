@@ -91,6 +91,23 @@ const MUITheme = createMuiTheme({
   }
 })
 
+function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
+  const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
+
+  return (
+    <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
+      <Component
+        wallet={wallet}
+        team={team}
+        addressData={addressData}
+        walletModalIsOpen={walletModalIsOpen}
+        setWalletModalIsOpen={setWalletModalIsOpen}
+        {...rest}
+      />
+    </Layout>
+  )
+}
+
 // https://github.com/MarchWorks/nextjs-with-material-ui-and-styled-components
 // https://stackoverflow.com/questions/55109497/how-to-integrate-nextjs-styled-components-with-material-ui
 export default class MyApp extends App {
@@ -193,21 +210,4 @@ export default class MyApp extends App {
       </>
     )
   }
-}
-
-function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
-  const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
-
-  return (
-    <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
-      <Component
-        wallet={wallet}
-        team={team}
-        addressData={addressData}
-        walletModalIsOpen={walletModalIsOpen}
-        setWalletModalIsOpen={setWalletModalIsOpen}
-        {...rest}
-      />
-    </Layout>
-  )
 }
