@@ -11,7 +11,6 @@ const Loader = styled.div`
 
   opacity: ${({ isFinished, progress }) => (isFinished || progress === 0 ? 0 : 1)};
   margin-right: ${({ progress }) => `${(1 - progress) * 100}%`};
-  transition: ${({ animationDuration }) => `margin-right ${animationDuration}ms linear`};
 `
 
 export default function RouteLoader() {
@@ -37,9 +36,9 @@ export default function RouteLoader() {
 
   return (
     <NProgress incrementDuration={500} isAnimating={animating} minimum={0.1}>
-      {({ animationDuration, isFinished, progress }) => {
-        return <Loader animationDuration={animationDuration} isFinished={isFinished} progress={progress} />
-      }}
+      {({ animationDuration, isFinished, progress }) => (
+        <Loader animationDuration={animationDuration} isFinished={isFinished} progress={progress} />
+      )}
     </NProgress>
   )
 }
