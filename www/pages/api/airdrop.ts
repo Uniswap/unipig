@@ -17,6 +17,10 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     return res.status(400).send('')
   }
 
+  if (address === scannedAddress) {
+    return res.status(400).send('')
+  }
+
   if (!validatePermissionString(address, time, signature)) {
     return res.status(401).send('')
   }
@@ -36,7 +40,6 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     }
 
     // faucet both here
-    console.log(scannedAddress)
 
     // all has gone well, update db
     await client.query(
