@@ -45,6 +45,7 @@ export default class MyDocument extends Document {
           <meta name="theme-color" content="#FFFFFF" />
           <meta name="Description" content="Unipig Exchange" />
           <link rel="shortcut icon" href="static/favicon.ico" />
+          <link rel="stylesheet" type="text/css" href="static/@reach/dialog/styles.css" />
           <style jsx>{`
             @import url('https://rsms.me/inter/inter.css');
             @supports (font-variation-settings: normal) {

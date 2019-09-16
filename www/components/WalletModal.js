@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import Head from 'next/head'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { DialogOverlay, DialogContent } from '@reach/dialog'
@@ -170,64 +169,59 @@ function Wallet({ wallet, team, addressData, balances, openQRModal }) {
   }
 
   return (
-    <>
-      <Head>
-        <link rel="stylesheet" type="text/css" href="static/@reach/dialog/styles.css" />
-      </Head>
-      <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
-        <StyledWallet team={team}>
-          <WalletTitle>
-            <span>Wallet</span>
-          </WalletTitle>
-          <WalletInfo team={team} wallet={wallet} />
+    <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
+      <StyledWallet team={team}>
+        <WalletTitle>
+          <span>Wallet</span>
+        </WalletTitle>
+        <WalletInfo team={team} wallet={wallet} />
 
-          <QRCodeWrapper>
-            <QRCode
-              value={`https://unipig.exchange?referrer=${wallet.address}`}
-              ecLevel="M"
-              size="250"
-              quietZone="0"
-              bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
-              fgColor={theme.colors.black}
-              logoImage={'static/blob_2.svg'}
-              qrStyle="squares"
-            />
-          </QRCodeWrapper>
+        <QRCodeWrapper>
+          <QRCode
+            value={`https://unipig.exchange?referrer=${wallet.address}`}
+            ecLevel="M"
+            size="250"
+            quietZone="0"
+            bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
+            fgColor={theme.colors.black}
+            logoImage={'static/blob_2.svg'}
+            qrStyle="squares"
+          />
+        </QRCodeWrapper>
 
-          <Shim size={8} />
-          <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
-            <ScanButton variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal} stretch>
-              Trigger an Airdrop 📦
-            </ScanButton>
-          </StyledBadge>
+        <Shim size={8} />
+        <StyledBadge badgeContent={addressData.boostsLeft || '0'}>
+          <ScanButton variant="contained" disabled={addressData.boostsLeft === 0} onClick={openQRModal} stretch>
+            Trigger an Airdrop 📦
+          </ScanButton>
+        </StyledBadge>
 
-          <Shim size={12} />
+        <Shim size={12} />
 
-          <WalletButton variant="text" onClick={copyAddress}>
-            {copied ? 'Copied' : 'Copy Address'}
-          </WalletButton>
-          <Shim size={24} />
-          <WalletTitle>
-            <span>Tokens</span>
-          </WalletTitle>
-          <TokenInfo balances={balances} />
-          <Shim size={8} />
-          <SendWrapper>
-            <SendButton variant="text" disabled>
-              Send
-            </SendButton>
-            <SendShim />
-            <SendButton variant="text" disabled>
-              Send
-            </SendButton>
-          </SendWrapper>
-          <Shim size={24} />
-          <WalletButton variant="text" onClick={manageBurn}>
-            {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
-          </WalletButton>
-        </StyledWallet>
-      </AnimatedFrame>
-    </>
+        <WalletButton variant="text" onClick={copyAddress}>
+          {copied ? 'Copied' : 'Copy Address'}
+        </WalletButton>
+        <Shim size={24} />
+        <WalletTitle>
+          <span>Tokens</span>
+        </WalletTitle>
+        <TokenInfo balances={balances} />
+        <Shim size={8} />
+        <SendWrapper>
+          <SendButton variant="text" disabled>
+            Send
+          </SendButton>
+          <SendShim />
+          <SendButton variant="text" disabled>
+            Send
+          </SendButton>
+        </SendWrapper>
+        <Shim size={24} />
+        <WalletButton variant="text" onClick={manageBurn}>
+          {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
+        </WalletButton>
+      </StyledWallet>
+    </AnimatedFrame>
   )
 }
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import App from 'next/app'
 import Head from 'next/head'
 import fetch from 'isomorphic-unfetch'
@@ -93,12 +94,6 @@ const MUITheme = createMuiTheme({
 // https://github.com/MarchWorks/nextjs-with-material-ui-and-styled-components
 // https://stackoverflow.com/questions/55109497/how-to-integrate-nextjs-styled-components-with-material-ui
 export default class MyApp extends App {
-  constructor(props) {
-    super(props)
-    this.state = { walletModalIsOpen: false }
-    this.setWalletModalIsOpen = this.setWalletModalIsOpen.bind(this)
-  }
-
   static async getInitialProps({ Component, ctx: context }) {
     const { req, res, pathname } = context
     const serverSide = !!req && !!res
@@ -168,14 +163,8 @@ export default class MyApp extends App {
     }
   }
 
-  setWalletModalIsOpen(flag) {
-    this.setState({ walletModalIsOpen: flag })
-  }
-
   render() {
     const { mnemonic, team, augmentedAddressDocument, Component, pageProps } = this.props
-    const { walletModalIsOpen } = this.state
-    const { setWalletModalIsOpen } = this
 
     const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
 
@@ -190,16 +179,13 @@ export default class MyApp extends App {
             <GlobalStyle />
             <StylesProvider injectFirst>
               <MUIThemeProvider theme={MUITheme}>
-                <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
-                  <Component
-                    {...pageProps}
-                    wallet={wallet}
-                    team={team}
-                    addressData={augmentedAddressDocument}
-                    walletModalIsOpen={walletModalIsOpen}
-                    setWalletModalIsOpen={setWalletModalIsOpen}
-                  />
-                </Layout>
+                <AppStateWrapper
+                  Component={Component}
+                  wallet={wallet}
+                  team={team}
+                  addressData={augmentedAddressDocument}
+                  {...pageProps}
+                />
               </MUIThemeProvider>
             </StylesProvider>
           </SCThemeProvider>
@@ -207,4 +193,21 @@ export default class MyApp extends App {
       </>
     )
   }
+}
+
+function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
+  const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
+
+  return (
+    <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
+      <Component
+        wallet={wallet}
+        team={team}
+        addressData={addressData}
+        walletModalIsOpen={walletModalIsOpen}
+        setWalletModalIsOpen={setWalletModalIsOpen}
+        {...rest}
+      />
+    </Layout>
+  )
 }
