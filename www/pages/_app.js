@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import App from 'next/app'
 import Head from 'next/head'
 import fetch from 'isomorphic-unfetch'
@@ -93,6 +93,13 @@ const MUITheme = createMuiTheme({
 
 function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
   const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
+
+  // weird hacky thing to reset wallet modal openness across pages
+  useEffect(() => {
+    return () => {
+      setWalletModalIsOpen(false)
+    }
+  }, [Component])
 
   return (
     <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
