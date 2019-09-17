@@ -33,6 +33,12 @@ const StyledDialogContent = styled(DialogContent)`
     flex-direction: column;
     align-items: center;
     background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
+    max-width: 448px;
+    padding: 0px;
+    @media only screen and (max-width: 480px) {
+      width: 100%;
+      margin: 0px;
+    }
   }
 `
 
@@ -78,6 +84,11 @@ const WalletButton = styled(Button)`
   color: black;
 `
 
+const StyledAirdrop = styled.span`
+  display: flex;
+  justify-content: center;
+`
+
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
     color: ${({ theme }) => theme.colors.black};
@@ -91,10 +102,19 @@ const SendButton = styled(Button)`
   color: black;
 `
 
+const Description = styled.p`
+  font-weight: 500;
+  text-align: center;
+`
+
 const ScanButton = styled(Button)`
   min-height: 36px;
   background: rgba(0, 0, 0, 0.9);
   color: white;
+  width: initial;
+  :hover{
+    background: rgba(0, 0, 0, 0.7));
+  }
 `
 
 const SendWrapper = styled.span`
@@ -323,6 +343,7 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
       <StyledWallet team={team}>
         <WalletTitle>
           <span>Wallet</span>
+          <span> ✗</span>
         </WalletTitle>
         <WalletInfo team={team} wallet={wallet} />
 
@@ -339,21 +360,27 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
           />
         </QRCodeWrapper>
 
-        <Shim size={8} />
-        {(addressData.boostsLeft || 0) !== 0 && (
-          <StyledBadge badgeContent={addressData.boostsLeft}>
-            <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
-              Trigger an Airdrop
-              <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
-            </ScanButton>
-          </StyledBadge>
-        )}
-
         <Shim size={12} />
 
         <WalletButton variant="text" onClick={copyAddress}>
           {copied ? 'Copied' : 'Copy Address'}
         </WalletButton>
+
+        <Shim size={8} />
+        {(addressData.boostsLeft || 0) !== 0 && (
+          <StyledAirdrop>
+            <StyledBadge badgeContent={addressData.boostsLeft}>
+              <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
+                Trigger an Airdrop
+                <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+              </ScanButton>
+            </StyledBadge>
+          </StyledAirdrop>
+        )}
+        <Description>
+          Scan another player to trigger an airdrop. You will both recieve 10 tokens from the Unipig faucet.
+        </Description>
+
         <Shim size={24} />
         <WalletTitle>
           <span>Tokens</span>

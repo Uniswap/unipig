@@ -12,6 +12,7 @@ const StyledDialogOverlay = styled(DialogOverlay)`
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
   }
 `
 
@@ -66,6 +67,7 @@ export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
         </ScanHeader>
         <QRReader
           onAddress={onAddress}
+          forceLegacy={true}
           onError={error => {
             console.error(error)
             setError(error)

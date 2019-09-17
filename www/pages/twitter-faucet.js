@@ -67,6 +67,10 @@ const StyledBody = styled(Body)`
   margin: 0px;
 `
 
+const StyledWallet = styled(Wallet)`
+  background-color: rgba(255, 255, 255, 0.1);
+`
+
 function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances }) {
   // save the initial addressData
   const initialAddressData = useRef(addressData)
@@ -157,7 +161,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances 
       </Title>
       <Shim size={32} />
       {alreadyFauceted ? (
-        <Wallet wallet={wallet} team={team} balances={balances} />
+        <StyledWallet wallet={wallet} team={team} balances={balances} />
       ) : (
         <TweetPreview>
           {`༼ つ ◕_◕ ༽つ`}
@@ -187,8 +191,12 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances 
         {metaInformation()}
       </InformationContainer>
 
-      {alreadyFauceted && (
+      {alreadyFauceted ? (
         <NavButton variant="gradient" href="/">
+          <ButtonText>Dope</ButtonText>
+        </NavButton>
+      ) : (
+        <NavButton variant="gradient" disabled href="/">
           <ButtonText>Dope</ButtonText>
         </NavButton>
       )}

@@ -1,11 +1,12 @@
 import { useRef } from 'react'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import QrReader from 'react-qr-reader'
 
 import Button from '../components/Button'
 
 const Wrapper = styled.div`
   width: 100vh;
+  /* height: 100vh; */
   max-width: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
   max-height: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
   max-width: 100%;
@@ -13,11 +14,11 @@ const Wrapper = styled.div`
   margin: auto;
 
   section:first-child {
-    transform: scale(0.5) translateY(40%);
+    ${({ legacyMode }) => legacyMode && `transform: scale(0.8)`};
   }
+
   @media only screen and (max-width: 480px) {
     width: 100%;
-
     section:first-child {
       transform: scale(0.9) translateY(20%);
     }
@@ -50,7 +51,7 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
   }
 
   return (
-    <Wrapper>
+    <Wrapper legacyMode={legacyMode || forcelegacy}>
       <QrReader
         ref={qrRef}
         delay={500}
@@ -61,7 +62,7 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
         onScan={onScan}
         onError={onError}
       />
-      {legacyMode && (
+      {(legacyMode || forceLegacy) && (
         <FixedButton
           variant="outlined"
           color="primary"
