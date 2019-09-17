@@ -23,7 +23,6 @@
     "@ethersproject/wallet": "^5.0.0-beta.129",
     "@material-ui/core": "^4.4.0",
     "@reach/dialog": "^0.2.9",
-    "@tanem/react-nprogress": "^2.0.5",
     "@uniswap/sdk": "^1.0.0-beta.4",
     "copy-to-clipboard": "^3.2.0",
     "faunadb": "^2.8.0",

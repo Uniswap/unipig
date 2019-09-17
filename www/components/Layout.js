@@ -81,7 +81,7 @@ export default function Layout({ wallet, team, children, setWalletModalIsOpen })
         <AnimatedImg time={'500s'} src="static/blob_3.svg" />
         <AnimatedImg time={'250s'} src="static/blob_1.svg" />
       </BackroundElement>
-      <Element align="flex-end">
+      <Element align="flex-start">
         <RouteLoader />
       </Element>
       <Element align="flex-start" justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
