@@ -4,14 +4,16 @@ import styled from 'styled-components'
 import { useAnimation, motion } from 'framer-motion'
 
 const BASE_INTERVAL = 0.5 // seconds
-const MAXIMUM_DURATION = 10 // seconds
+const MAXIMUM_DURATION = 16 // seconds
+const TIME_TO_MINIMUM = 0.2 // seconds
 const MINIMUM_WIDTH = 0.1 // %
 const MAXIMUM_WIDTH = 0.975 // %
 
 const GRANULARITY = Math.round(MAXIMUM_DURATION / BASE_INTERVAL)
+const TIME_INTERVAL_TO_MINIMUM = TIME_TO_MINIMUM * (1 / MAXIMUM_DURATION)
 
 const evenTimeIntervals = [0, ...Array.from(Array(GRANULARITY).keys()).map(i => (i + 1) / GRANULARITY)]
-const customTimeIntervals = [0, 0.15 * (1 / MAXIMUM_DURATION), ...evenTimeIntervals.slice(2)]
+const customTimeIntervals = [0, TIME_INTERVAL_TO_MINIMUM, ...evenTimeIntervals.slice(2).map(i => Math.pow(i, 2))]
 const randomWidthIntervals = [
   0,
   MINIMUM_WIDTH,
@@ -38,14 +40,14 @@ const variants = {
   finish: {
     width: '100%',
     transition: {
-      duration: 0.15,
+      duration: 0.2,
       ease: 'easeIn'
     }
   },
   done: {
     opacity: 0,
     transition: {
-      duration: 0.15
+      duration: 0.2
     }
   }
 }
