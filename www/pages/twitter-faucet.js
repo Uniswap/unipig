@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import styled, { css } from 'styled-components'
 import Confetti from 'react-dom-confetti'
 
-import { getPermissionString, truncateAddress } from '../utils'
+import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
@@ -43,7 +43,7 @@ const TradeWrapper = styled.span`
 `
 
 const TweetPreview = styled.span`
-  line-height: 2rem;
+  line-height: 1.5rem;
   width: 100%;
   background: #202124;
   color: #2f80ed;
@@ -67,101 +67,65 @@ const StyledBody = styled(Body)`
   margin: 0px;
 `
 
-async function getFaucetData(address, time, signature) {
-  return await fetch(`/api/get-address-data`, {
-    method: 'POST',
-    body: JSON.stringify({ address, time, signature })
-  }).then(async response => {
-    if (!response.ok) {
-      throw Error(`${response.status} Error: ${response.statusText}`)
-    }
-
-    return await response.json()
-  })
-}
-
-function TwitterFaucet({ wallet, team, addressData, balances }) {
-  // get a permission signature
-  const permission = useMemo(() => getPermissionString(wallet.address), [wallet.address])
-  const [signature, setSignature] = useState()
-  useEffect(() => {
-    let stale = false
-
-    wallet.signMessage(permission.permissionString).then(signature => {
-      if (!stale) {
-        setSignature(signature)
-      }
-    })
-
-    return () => {
-      stale = true
-      setSignature()
-    }
-  }, [wallet, permission.permissionString])
+function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances }) {
+  // save the initial addressData
+  const initialAddressData = useRef(addressData)
 
   // polling logic to check for valid tweet
   const [polling, setPolling] = useState(false)
-  const [updatedData, setUpdatedData] = useState()
-  const [updatedDataError, setUpdatedDataError] = useState()
+  const pollInterval = useRef(4000)
+  const [updateError, setUpdateError] = useState()
   useEffect(() => {
-    if (polling && permission.time && signature) {
+    if (polling) {
       let stale = false
 
-      function poll() {
-        getFaucetData(wallet.address, permission.time, signature)
-          .then(data => {
-            if (!stale) {
-              setUpdatedData(data)
-            }
-          })
-          .catch(error => {
-            console.error(error)
-            setUpdatedDataError(error)
-          })
+      function increasePollInterval() {
+        if (pollInterval.current < 60000) {
+          pollInterval.current = Math.max(60000, (pollInterval.current / 1000) ** 2 * 1000)
+        }
       }
 
-      const interval = setInterval(poll, 4000)
+      async function poll() {
+        await updateAddressData().catch(error => {
+          if (!stale) {
+            console.error(error)
+            setUpdateError(error)
+          }
+        })
+      }
+
+      const timeout = setTimeout(increasePollInterval, pollInterval.current * 10.5)
+      const interval = setInterval(poll, pollInterval.current)
 
       return () => {
         stale = true
+        clearTimeout(timeout)
         clearInterval(interval)
       }
     }
-  }, [polling, permission.time, permission.signature, signature, wallet.address])
+  }, [polling, updateAddressData])
 
   // initialize twitter stuff
   const [twitterLoaded, setTwitterLoaded] = useState(false)
   useEffect(() => {
-    let stale = false
-
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     require('scriptjs')('https://platform.twitter.com/widgets.js', () => {
-      if (!stale) {
-        window.twttr.events.bind('loaded', () => {
-          setTwitterLoaded(true)
-        })
-        window.twttr.events.bind('tweet', () => {
-          setPolling(true)
-        })
-      }
+      window.twttr.events.bind('loaded', () => {
+        setTwitterLoaded(true)
+      })
+      window.twttr.events.bind('tweet', () => {
+        setPolling(true)
+      })
     })
-
-    return () => {
-      stale = true
-    }
   }, [])
 
-  const justFauceted = updatedData ? !updatedData.canFaucet : false
-  const alreadyFauceted = !addressData.canFaucet || justFauceted
+  const justFauceted = initialAddressData.current.canFaucet && !addressData.canFaucet
+  const alreadyFauceted = !addressData.canFaucet
 
   function metaInformation() {
     if (alreadyFauceted) {
-      return (
-        <StyledBody textStyle="gradient">
-          Coming through loud and clear @{updatedData ? updatedData.twitterHandle : addressData.twitterHandle}!
-        </StyledBody>
-      )
-    } else if (updatedDataError) {
+      return <StyledBody textStyle="gradient">Coming through loud and clear @{addressData.twitterHandle}!</StyledBody>
+    } else if (updateError) {
       return (
         <>
           <StyledBody textStyle="gradient">An error occurred...</StyledBody>

@@ -132,7 +132,7 @@ const ProgressSVG = styled.svg`
 `
 
 const DURATION = 6
-function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScannedAddress, setClientSideDecrement }) {
+function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScannedAddress, updateAddressData }) {
   const [error, setError] = useState()
   const [success, setSuccess] = useState()
 
@@ -150,7 +150,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
             }
 
             setSuccess(true)
-            setClientSideDecrement(d => d + 1)
+            await updateAddressData()
           })
           .catch(error => {
             console.error(error)
@@ -158,7 +158,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
           })
       })
     }
-  }, [scannedAddress, wallet, setClientSideDecrement])
+  }, [scannedAddress, wallet, updateAddressData])
 
   function statusMessage() {
     if (!!!error && !!!success) {
@@ -252,7 +252,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
               initial={false}
               strokeDasharray="0 1"
               animate={{ pathLength: isFinished ? 1 : 0 }}
-              transition={{ duration: 0.75 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
               onAnimationComplete={() => {
                 setScannedAddress()
               }}
@@ -264,7 +264,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
   )
 }
 
-function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRModal, clientSideDecrement }) {
+function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRModal }) {
   const theme = useStyledTheme()
 
   const reset = useReset()
@@ -334,16 +334,16 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
             quietZone="0"
             bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
             fgColor={theme.colors.black}
-            logoImage={'static/blob_2.svg'}
+            logoImage={team === Team.UNI ? 'static/unicorn.png' : 'static/pig.png'}
             qrStyle="squares"
           />
         </QRCodeWrapper>
 
         <Shim size={8} />
-        <StyledBadge badgeContent={(addressData.boostsLeft || 0) - clientSideDecrement}>
+        <StyledBadge badgeContent={addressData.boostsLeft || 0}>
           <ScanButton
             variant="contained"
-            disabled={!!scannedAddress || (addressData.boostsLeft || 0) - clientSideDecrement === 0}
+            disabled={!!scannedAddress || (addressData.boostsLeft || 0) === 0}
             onClick={openQRModal}
             stretch
           >
@@ -381,7 +381,7 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
   )
 }
 
-function ViewManager({ wallet, team, addressData, balances, scannedAddress, setScannedAddress, clientSideDecrement }) {
+function ViewManager({ wallet, team, addressData, balances, scannedAddress, setScannedAddress }) {
   const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
   return (
@@ -403,7 +403,6 @@ function ViewManager({ wallet, team, addressData, balances, scannedAddress, setS
         addressData={addressData}
         balances={balances}
         scannedAddress={scannedAddress}
-        clientSideDecrement={clientSideDecrement}
         openQRModal={() => {
           setQRModalIsOpen(true)
         }}
@@ -412,12 +411,9 @@ function ViewManager({ wallet, team, addressData, balances, scannedAddress, setS
   )
 }
 
-export default function WalletModal({ wallet, team, addressData, balances, isOpen, onDismiss }) {
+export default function WalletModal({ wallet, team, addressData, updateAddressData, balances, isOpen, onDismiss }) {
   const [scannedAddress, setScannedAddress] = useState()
   const lastScannedAddress = usePrevious(scannedAddress)
-
-  // janky, but keep track of # of successful aidrops client-side so we don't have to re-fetch from the server
-  const [clientSideDecrement, setClientSideDecrement] = useState(0)
 
   return (
     <>
@@ -426,7 +422,7 @@ export default function WalletModal({ wallet, team, addressData, balances, isOpe
         scannedAddress={scannedAddress}
         setScannedAddress={setScannedAddress}
         lastScannedAddress={lastScannedAddress}
-        setClientSideDecrement={setClientSideDecrement}
+        updateAddressData={updateAddressData}
       />
       <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
         <StyledDialogContent>
@@ -437,7 +433,6 @@ export default function WalletModal({ wallet, team, addressData, balances, isOpe
             balances={balances}
             scannedAddress={scannedAddress}
             setScannedAddress={setScannedAddress}
-            clientSideDecrement={clientSideDecrement}
           />
         </StyledDialogContent>
       </StyledDialogOverlay>

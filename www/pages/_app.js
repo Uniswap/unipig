@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import App from 'next/app'
 import Head from 'next/head'
 import fetch from 'isomorphic-unfetch'
@@ -91,6 +91,21 @@ const MUITheme = createMuiTheme({
   }
 })
 
+async function getAddressData(wallet, req) {
+  const permission = getPermissionString(wallet.address)
+  const signature = await wallet.signMessage(permission.permissionString)
+  return await fetch(`${getHost(req)}/api/get-address-data`, {
+    method: 'POST',
+    body: JSON.stringify({ address: wallet.address, time: permission.time, signature })
+  }).then(async response => {
+    if (!response.ok) {
+      throw Error(`${response.status} Error: ${response.statusText}`)
+    }
+
+    return await response.json()
+  })
+}
+
 function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
   const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
 
@@ -101,12 +116,21 @@ function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
     }
   }, [Component])
 
+  const [updatedAddressData, setUpdatedAddressData] = useState(null)
+  // note: must only be called client-side!
+  const updateAddressData = useCallback(async () => {
+    await getAddressData(wallet).then(d => {
+      setUpdatedAddressData(d)
+    })
+  }, [wallet])
+
   return (
     <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
       <Component
         wallet={wallet}
         team={team}
-        addressData={addressData}
+        addressData={updatedAddressData || addressData}
+        updateAddressData={updateAddressData}
         walletModalIsOpen={walletModalIsOpen}
         setWalletModalIsOpen={setWalletModalIsOpen}
         {...rest}
@@ -146,36 +170,17 @@ export default class MyApp extends App {
       return {}
     }
 
-    const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
-
-    // if a wallet exists, fetch server data
-    let augmentedAddressDocument = null
-    if (wallet) {
-      const permission = getPermissionString(wallet.address)
-      const signature = await wallet.signMessage(permission.permissionString)
-      augmentedAddressDocument = await fetch(`${getHost(req)}/api/get-address-data`, {
-        method: 'POST',
-        body: JSON.stringify({ address: wallet.address, time: permission.time, signature })
-      })
-        .then(async response => {
-          if (!response.ok) {
-            throw Error(`${response.status} Error: ${response.statusText}`)
-          }
-
-          return await response.json()
-        })
-        .catch(error => {
-          console.error(error)
-          throw error
-        })
-    }
+    // if we need the data, fetch server data
+    const addressData = ['/', '/twitter-faucet'].includes(pathname)
+      ? await getAddressData(Wallet.fromMnemonic(mnemonic), req)
+      : null
 
     const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
     return {
       mnemonic,
       team,
-      augmentedAddressDocument,
+      addressData,
       pageProps
     }
   }
@@ -188,7 +193,7 @@ export default class MyApp extends App {
   }
 
   render() {
-    const { mnemonic, team, augmentedAddressDocument, Component, pageProps } = this.props
+    const { mnemonic, team, addressData, Component, pageProps } = this.props
 
     const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
 
@@ -207,7 +212,7 @@ export default class MyApp extends App {
                   Component={Component}
                   wallet={wallet}
                   team={team}
-                  addressData={augmentedAddressDocument}
+                  addressData={addressData}
                   {...pageProps}
                 />
               </MUIThemeProvider>

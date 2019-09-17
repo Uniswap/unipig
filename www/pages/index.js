@@ -41,7 +41,16 @@ const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
-function Home({ wallet, team, addressData, reserves, balances, walletModalIsOpen, setWalletModalIsOpen }) {
+function Home({
+  wallet,
+  team,
+  addressData,
+  updateAddressData,
+  reserves,
+  balances,
+  walletModalIsOpen,
+  setWalletModalIsOpen
+}) {
   const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
 
   const theme = useStyledTheme()
@@ -63,6 +72,7 @@ function Home({ wallet, team, addressData, reserves, balances, walletModalIsOpen
         wallet={wallet}
         team={team}
         addressData={addressData}
+        updateAddressData={updateAddressData}
         balances={balances}
         isOpen={walletModalIsOpen}
         onDismiss={() => {
