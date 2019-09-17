@@ -15,4 +15,4 @@ function NavLink({ innerRef, ...rest }): JSX.Element {
   return <MUILink component={NextComposed} ref={innerRef} {...rest} />
 }
 
-export default forwardRef((props, ref): JSX.Element => <NavLink innerRef={ref} {...props} />)
+export default forwardRef((props: any, ref): JSX.Element => <NavLink innerRef={ref} {...props} />)

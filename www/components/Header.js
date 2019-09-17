@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import styled from 'styled-components'
+import { Badge } from '@material-ui/core'
 
 import Emoji from './Emoji'
 import Chip from './Chip'
@@ -71,7 +72,14 @@ const IconButton = styled(NavButton)`
   }
 `
 
-export default function Header({ wallet, team, showIcons, setWalletModalIsOpen }) {
+const StyledBadge = styled(Badge)`
+  .MuiBadge-badge {
+    color: ${({ theme }) => theme.colors.black};
+    background-color: ${({ theme }) => theme.colors.white};
+  }
+`
+
+export default function Header({ wallet, team, showIcons, boostsLeft, setWalletModalIsOpen }) {
   // check if sharing is enabled
   const [canShare, setCanShare] = useState()
   useEffect(() => {
@@ -104,14 +112,16 @@ export default function Header({ wallet, team, showIcons, setWalletModalIsOpen }
           <IconButton href="/stats">
             <StatsIcon />
           </IconButton>
-          <IconButton
-            as={Button}
-            onClick={() => {
-              setWalletModalIsOpen(true)
-            }}
-          >
-            <QRIcon />
-          </IconButton>
+          <StyledBadge badgeContent={boostsLeft}>
+            <IconButton
+              as={Button}
+              onClick={() => {
+                setWalletModalIsOpen(true)
+              }}
+            >
+              <QRIcon />
+            </IconButton>
+          </StyledBadge>
         </LinkWrapper>
       )}
     </HeaderWrapper>

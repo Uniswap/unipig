@@ -74,7 +74,7 @@ function Welcome({ mnemonic }) {
       <Shim size={4} />
       <Desc>
         A gamified demo of Uniswap on Ethereum Layer 2.{' '}
-        <NavLink href="/welcome" naked="true">
+        <NavLink href="/welcome">
           <b>Learn more ↗</b>
         </NavLink>
       </Desc>

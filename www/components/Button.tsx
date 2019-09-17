@@ -38,4 +38,4 @@ function CustomButton({ innerRef, children, ...rest }: any): JSX.Element {
   }
 }
 
-export default forwardRef((props, ref): JSX.Element => <CustomButton innerRef={ref} {...props} />)
+export default forwardRef((props: any, ref): JSX.Element => <CustomButton innerRef={ref} {...props} />)

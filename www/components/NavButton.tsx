@@ -12,8 +12,8 @@ const NextComposed = forwardRef(function NextComposed({ href, as, prefetch, ...r
   )
 })
 
-function NavButton({ innerRef, naked = true, ...rest }): JSX.Element {
+function NavButton({ innerRef, ...rest }): JSX.Element {
   return <Button component={NextComposed} ref={innerRef} {...rest} />
 }
 
-export default forwardRef((props, ref): JSX.Element => <NavButton innerRef={ref} {...props} />)
+export default forwardRef((props: any, ref): JSX.Element => <NavButton innerRef={ref} {...props} />)

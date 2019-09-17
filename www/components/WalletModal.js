@@ -252,7 +252,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
               initial={false}
               strokeDasharray="0 1"
               animate={{ pathLength: isFinished ? 1 : 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
+              transition={{ duration: 0.75, ease: 'easeOut' }}
               onAnimationComplete={() => {
                 setScannedAddress()
               }}
@@ -340,17 +340,14 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
         </QRCodeWrapper>
 
         <Shim size={8} />
-        <StyledBadge badgeContent={addressData.boostsLeft || 0}>
-          <ScanButton
-            variant="contained"
-            disabled={!!scannedAddress || (addressData.boostsLeft || 0) === 0}
-            onClick={openQRModal}
-            stretch
-          >
-            Trigger an Airdrop
-            <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
-          </ScanButton>
-        </StyledBadge>
+        {(addressData.boostsLeft || 0) !== 0 && (
+          <StyledBadge badgeContent={addressData.boostsLeft}>
+            <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
+              Trigger an Airdrop
+              <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+            </ScanButton>
+          </StyledBadge>
+        )}
 
         <Shim size={12} />
 

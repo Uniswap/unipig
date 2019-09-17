@@ -125,7 +125,12 @@ function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
   }, [wallet])
 
   return (
-    <Layout wallet={wallet} team={team} setWalletModalIsOpen={setWalletModalIsOpen}>
+    <Layout
+      wallet={wallet}
+      team={team}
+      boostsLeft={updatedAddressData || addressData ? (updatedAddressData || addressData).boostsLeft : 0}
+      setWalletModalIsOpen={setWalletModalIsOpen}
+    >
       <Component
         wallet={wallet}
         team={team}
