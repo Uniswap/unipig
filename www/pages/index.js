@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic'
 import styled from 'styled-components'
 import { motion, useMotionValue } from 'framer-motion'
 
+import { DataNeeds } from '../constants'
 import { useStyledTheme } from '../hooks'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
@@ -46,12 +47,12 @@ function Home({
   team,
   addressData,
   updateAddressData,
-  reserves,
-  balances,
+  reservesData,
+  balancesData,
   walletModalIsOpen,
   setWalletModalIsOpen
 }) {
-  const UNIDominance = reserves[Team.UNI] / (reserves[Team.UNI] + reserves[Team.PIGI])
+  const UNIDominance = reservesData[Team.PIGI] / (reservesData[Team.UNI] + reservesData[Team.PIGI])
 
   const theme = useStyledTheme()
 
@@ -66,6 +67,8 @@ function Home({
     }
   }, [x])
 
+  const showFaucet = addressData.canFaucet && balancesData[Team.UNI] === 0 && balancesData[Team.PIGI] === 0
+
   return (
     <>
       <WalletModal
@@ -73,7 +76,7 @@ function Home({
         team={team}
         addressData={addressData}
         updateAddressData={updateAddressData}
-        balances={balances}
+        balances={balancesData}
         isOpen={walletModalIsOpen}
         onDismiss={() => {
           setWalletModalIsOpen(false)
@@ -82,7 +85,7 @@ function Home({
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
         <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
           {UNIDominance >= 0.5 ? (
-            <FixedNum>UNI dominance is at {count}%</FixedNum>
+            <FixedNum>Unicorn dominance is at {count}%</FixedNum>
           ) : (
             <FixedNum>Pig dominance is at {count}%</FixedNum>
           )}
@@ -106,7 +109,7 @@ function Home({
         <Shim size={12} />
 
         <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} size={18}>
-          {addressData.canFaucet ? (
+          {showFaucet ? (
             <i>You still need to grab some tokens to play. Use the Twitter faucet below to get some.</i>
           ) : (
             <i>
@@ -117,30 +120,32 @@ function Home({
 
         <Shim size={32} />
 
-        {addressData.canFaucet ? (
+        {showFaucet ? (
           <TwitterButton href={`/twitter-faucet`} stretch>
             <ButtonText>Get Tokens from Twitter</ButtonText>
           </TwitterButton>
         ) : (
           <BoostWrapper>
             <FlexNavButton
+              disabled={balancesData[Team.PIGI] === 0}
               flex={Math.round(UNIDominance * 100, 0)}
               href={`/trade?buy=${Team[Team.UNI]}`}
               color={'primary'}
               variant={team === Team.UNI ? 'contained' : 'outlined'}
             >
-              <ButtonText>Buy UNI</ButtonText>
+              <ButtonText>Dump PIGI</ButtonText>
             </FlexNavButton>
 
             <BoostShim />
 
             <FlexNavButton
+              disabled={balancesData[Team.UNI] === 0}
               flex={Math.round((1 - UNIDominance) * 100, 0)}
               href={`/trade?buy=${Team[Team.PIGI]}`}
               color={'secondary'}
               variant={team === Team.PIGI ? 'contained' : 'outlined'}
             >
-              <ButtonText>Buy PIGI</ButtonText>
+              <ButtonText>Dump UNI</ButtonText>
             </FlexNavButton>
           </BoostWrapper>
         )}
@@ -151,7 +156,7 @@ function Home({
           <WalletComponent
             wallet={wallet}
             team={team}
-            balances={balances}
+            balances={balancesData}
             walletType={'rest'}
             onClick={() => {
               setWalletModalIsOpen(true)
@@ -163,17 +168,12 @@ function Home({
   )
 }
 
-// TODO add PG API and deal with decimals
 Home.getInitialProps = async () => {
-  const random = Math.round(Math.random() * 100, 0)
   return {
-    reserves: {
-      [Team.UNI]: random,
-      [Team.PIGI]: 100 - random
-    },
-    balances: {
-      [Team.UNI]: 5,
-      [Team.PIGI]: 5
+    dataNeeds: {
+      [DataNeeds.ADDRESS]: true,
+      [DataNeeds.BALANCES]: true,
+      [DataNeeds.RESERVES]: true
     }
   }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useReducer } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import {
@@ -7,10 +7,10 @@ import {
   getMarketDetails,
   getTradeDetails,
   formatSignificant,
-  formatSignificantDecimals,
   formatFixedDecimals
 } from '@uniswap/sdk'
 
+import { DECIMALS, DataNeeds, OVMWalletInteractions } from '../constants'
 import { Team } from '../contexts/Cookie'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
@@ -19,7 +19,6 @@ import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 
-const DECIMALS = 4
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 
 const DUMMY_TOKEN = {
@@ -112,11 +111,96 @@ const HelperText = styled(Desc)`
   font-size: 16px;
 `
 
-function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confirm }) {
+const ERROR_MESSAGE = 'ERROR_MESSAGE'
+const INPUT_AMOUNT_RAW = 'INPUT_AMOUNT_RAW'
+const INPUT_AMOUNT_PARSED = 'INPUT_AMOUNT_PARSED'
+const OUTPUT_AMOUNT_RAW = 'OUTPUT_AMOUNT_RAW'
+const OUTPUT_AMOUNT_PARSED = 'OUTPUT_AMOUNT_PARSED'
+const MARKET_RATE_PRE_INVERTED = 'MARKET_RATE_PRE_INVERTED'
+const MARKET_RATE_POST_INVERTED = 'MARKET_RATE_POST_INVERTED'
+
+const initialSwapState = {
+  [ERROR_MESSAGE]: null,
+  [INPUT_AMOUNT_RAW]: '',
+  [INPUT_AMOUNT_PARSED]: null,
+  [OUTPUT_AMOUNT_RAW]: '',
+  [OUTPUT_AMOUNT_PARSED]: null,
+  [MARKET_RATE_POST_INVERTED]: null
+}
+
+function init(marketRatePreInverted) {
+  return {
+    ...initialSwapState,
+    [MARKET_RATE_PRE_INVERTED]: marketRatePreInverted
+  }
+}
+
+const SET_INPUT_AMOUNT = 'SET_INPUT_AMOUNT'
+const SET_INPUT_AMOUNT_INVALID = 'SET_INPUT_AMOUNT_INVALID'
+const SET_INSUFFICIENT_BALANCE = 'SET_INSUFFICIENT_BALANCE'
+const SET_ERROR = 'SET_ERROR'
+const RESET = 'RESET'
+
+function reducer(state, { type, payload } = {}) {
+  switch (type) {
+    case SET_INPUT_AMOUNT: {
+      const { rawInputValue, parsedInputValue, rawOutputValue, parsedOutputValue, marketRatePostInverted } = payload
+
+      return {
+        ...state,
+        [INPUT_AMOUNT_RAW]: rawInputValue,
+        [INPUT_AMOUNT_PARSED]: parsedInputValue,
+        [OUTPUT_AMOUNT_RAW]: rawOutputValue,
+        [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
+        [MARKET_RATE_POST_INVERTED]: marketRatePostInverted,
+        [ERROR_MESSAGE]: ''
+      }
+    }
+    case SET_INPUT_AMOUNT_INVALID: {
+      const { rawValue } = payload
+
+      return {
+        ...state,
+        [INPUT_AMOUNT_RAW]: rawValue,
+        [ERROR_MESSAGE]: 'Invalid Input'
+      }
+    }
+    case SET_INSUFFICIENT_BALANCE: {
+      const { rawInputValue, parsedInputValue, rawOutputValue, parsedOutputValue, marketRatePostInverted } = payload
+
+      return {
+        ...state,
+        [INPUT_AMOUNT_RAW]: rawInputValue,
+        [INPUT_AMOUNT_PARSED]: parsedInputValue,
+        [OUTPUT_AMOUNT_RAW]: rawOutputValue,
+        [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
+        [MARKET_RATE_POST_INVERTED]: marketRatePostInverted,
+        [ERROR_MESSAGE]: 'Insufficient Balance'
+      }
+    }
+    case SET_ERROR: {
+      return {
+        ...state,
+        [ERROR_MESSAGE]: 'Unknoxwn Error'
+      }
+    }
+    case RESET: {
+      return {
+        ...initialSwapState,
+        [MARKET_RATE_PRE_INVERTED]: state[MARKET_RATE_PRE_INVERTED]
+      }
+    }
+    default: {
+      throw Error(`Unexpected action type in swapState reducer: '${type}'.`)
+    }
+  }
+}
+
+function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken, confirm }) {
   //// parse the props
-  const inputBalance = new BigNumber(balances[inputToken])
-  const inputReserve = new BigNumber(reserves[inputToken])
-  const outputReserve = new BigNumber(reserves[outputToken])
+  const inputBalance = new BigNumber(balancesData[inputToken])
+  const inputReserve = new BigNumber(reservesData[inputToken])
+  const outputReserve = new BigNumber(reservesData[outputToken])
   // fake it by pretending the input currency is ETH
   const marketDetails = getMarketDetails(undefined, {
     token: DUMMY_TOKEN,
@@ -125,44 +209,52 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
   })
 
   // amounts
-  const [inputError, setInputError] = useState()
-  const [outputError, setOutputError] = useState()
-  const [inputAmount, setInputAmount] = useState({ raw: '', parsed: undefined })
-  const [outputAmount, setOutputAmount] = useState({ raw: '', parsed: undefined })
-  // updaters
-  function setValues(inputAmountRaw, inputAmountParsed, outputAmountRaw, outputAmountParsed, inputError, outputError) {
-    setInputAmount({ raw: inputAmountRaw, parsed: inputAmountParsed })
-    setOutputAmount({ raw: outputAmountRaw, parsed: outputAmountParsed })
-    setInputError(inputError)
-    setOutputError(outputError)
-  }
+  const [swapState, dispatchSwapState] = useReducer(reducer, marketDetails.marketRate.rateInverted, init)
+
   function updateValues(rawValue, parsedValue) {
     let tradeDetails
     try {
       tradeDetails = getTradeDetails(TRADE_EXACT.INPUT, parsedValue, marketDetails)
-    } catch {
-      setValues(rawValue, undefined, '', undefined, 'Invalid Input')
+    } catch (error) {
+      console.error(error)
+      dispatchSwapState({ type: SET_INPUT_AMOUNT_INVALID, payload: { rawValue, errorMessage: 'Invalid Trade' } })
       return
     }
 
     const outputAmount = tradeDetails.outputAmount.amount
-    const formattedOutputAmount = formatSignificantDecimals(outputAmount, DECIMALS, {
-      significantDigits: 4,
-      forceIntegerSignificance: true
-    })
+    const formattedOutputAmount = formatFixedDecimals(outputAmount, DECIMALS)
 
     if (parsedValue.gt(inputBalance)) {
-      setValues(rawValue, parsedValue, formattedOutputAmount, outputAmount, 'Insufficient Balance')
+      dispatchSwapState({
+        type: SET_INSUFFICIENT_BALANCE,
+        payload: {
+          rawInputValue: rawValue,
+          parsedInputValue: parsedValue,
+          rawOutputValue: formattedOutputAmount,
+          parsedOutputValue: outputAmount,
+          marketRatePostInverted: tradeDetails.marketDetailsPost.marketRate.rateInverted
+        }
+      })
       return
     }
 
-    setValues(rawValue, parsedValue, formattedOutputAmount, outputAmount)
+    dispatchSwapState({
+      type: SET_INPUT_AMOUNT,
+      payload: {
+        rawInputValue: rawValue,
+        parsedInputValue: parsedValue,
+        rawOutputValue: formattedOutputAmount,
+        parsedOutputValue: outputAmount,
+        marketRatePostInverted: tradeDetails.marketDetailsPost.marketRate.rateInverted
+      }
+    })
   }
+
   function onInputAmount(event) {
     const typedValue = event.target.value
 
     if (typedValue === '') {
-      setValues('', undefined, '', undefined)
+      dispatchSwapState({ type: RESET })
       return
     }
 
@@ -173,12 +265,16 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
         throw Error()
       }
     } catch {
-      setValues(typedValue, undefined, '', undefined, 'Invalid Input')
+      dispatchSwapState({
+        type: SET_INPUT_AMOUNT_INVALID,
+        payload: { rawValue: typedValue }
+      })
       return
     }
 
     updateValues(typedValue, parsedValue)
   }
+
   function onMaxInputValue() {
     updateValues(formatFixedDecimals(inputBalance, DECIMALS), inputBalance)
   }
@@ -195,20 +291,18 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
         <StyledInputWrapper>
           <Input
             required
-            error={!!inputError}
+            error={!!swapState[ERROR_MESSAGE]}
             type="number"
             min="0"
             step="0.0001"
             placeholder="0"
-            value={inputAmount.raw}
+            value={swapState[INPUT_AMOUNT_RAW]}
             onChange={onInputAmount}
             inputColor={inputToken}
           />
-          {!inputError && (
-            <MaxButton inputColor={inputToken} onClick={onMaxInputValue}>
-              Max
-            </MaxButton>
-          )}
+          <MaxButton inputColor={inputToken} onClick={onMaxInputValue}>
+            Max
+          </MaxButton>
           <StyledEmoji
             inputColor={inputToken}
             emoji={Team[inputToken] === 'UNI' ? '🦄' : '🐷'}
@@ -219,11 +313,11 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
         <StyledInputWrapper>
           <Input
             disabled={true}
-            error={!!outputError}
+            error={!!swapState[ERROR_MESSAGE]}
             type="number"
             min="0"
             step="0.0001"
-            value={outputAmount.raw}
+            value={swapState[OUTPUT_AMOUNT_RAW]}
             readOnly={true}
             placeholder="0"
             inputColor={outputToken}
@@ -234,12 +328,13 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
             label={Team[outputToken] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
-        {(inputError || outputError) && <HelperText error={!!inputError}>{inputError || outputError}</HelperText>}
-        {!inputError && !outputError && (
-          <HelperText error={!!inputError}>
+        {!!swapState[ERROR_MESSAGE] ? (
+          <HelperText error={true}>{swapState[ERROR_MESSAGE]}</HelperText>
+        ) : (
+          <HelperText error={false}>
             <b>
-              {formatSignificant(marketDetails.marketRate.rateInverted, {
-                significantDigits: 4,
+              {formatSignificant(swapState[MARKET_RATE_POST_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
+                significantDigits: 3,
                 forceIntegerSignificance: true
               })}{' '}
               {Team[inputToken]} = 1 {Team[outputToken]}
@@ -247,23 +342,42 @@ function Buy({ wallet, team, reserves, balances, inputToken, outputToken, confir
           </HelperText>
         )}
         <Button
-          disabled={!!inputError || !!outputError || !!!inputAmount.parsed}
+          disabled={!!swapState[ERROR_MESSAGE] || !!!swapState[INPUT_AMOUNT_PARSED]}
           variant="gradient"
           stretch
           onClick={() => {
-            confirm()
+            fetch('/api/ovm-wallet', {
+              method: 'POST',
+              body: JSON.stringify({
+                interactionType: OVMWalletInteractions.SWAP,
+                address: wallet.address,
+                inputToken,
+                inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
+              })
+            })
+              .then(response => {
+                if (!response.ok) {
+                  throw Error(`${response.status} Error: ${response.statusText}`)
+                }
+                updateBalancesData()
+                confirm()
+              })
+              .catch(error => {
+                console.error(error)
+                dispatchSwapState({ type: SET_ERROR })
+              })
           }}
         >
           <ButtonText>Swap</ButtonText>
         </Button>
       </TradeWrapper>
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} balances={balances} />
+      <Wallet wallet={wallet} team={team} balances={balancesData} />
     </>
   )
 }
 
-function Confirmed() {
+function Confirmed({ wallet, team, balancesData }) {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -281,11 +395,13 @@ function Confirmed() {
       <NavButton variant="gradient" href="/">
         <ButtonText>Dope</ButtonText>
       </NavButton>
+      <Shim size={32} />
+      <Wallet wallet={wallet} team={team} balances={balancesData} />
     </TradeWrapper>
   )
 }
 
-function Manager({ wallet, team, reserves, balances, inputToken, outputToken }) {
+function Manager({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken }) {
   const [showConfirm, setShowConfirm] = useState(false)
   function confirm() {
     setShowConfirm(true)
@@ -295,21 +411,19 @@ function Manager({ wallet, team, reserves, balances, inputToken, outputToken }) 
     <Buy
       wallet={wallet}
       team={team}
-      reserves={reserves}
-      balances={balances}
+      reservesData={reservesData}
+      balancesData={balancesData}
+      updateBalancesData={updateBalancesData}
       outputToken={outputToken}
       inputToken={inputToken}
       confirm={confirm}
     />
   ) : (
-    <Confirmed />
+    <Confirmed wallet={wallet} team={team} balancesData={balancesData} />
   )
 }
 
-// TODO add PG API and deal with decimals
 Manager.getInitialProps = async context => {
-  const random = Math.round(Math.random() * 100, 0)
-
   const { query, res } = context
   const { buy } = query
 
@@ -323,13 +437,9 @@ Manager.getInitialProps = async context => {
   }
 
   return {
-    reserves: {
-      [Team.UNI]: random * 10000,
-      [Team.PIGI]: (100 - random) * 10000
-    },
-    balances: {
-      [Team.UNI]: 5 * 10000,
-      [Team.PIGI]: 5 * 10000
+    dataNeeds: {
+      [DataNeeds.BALANCES]: true,
+      [DataNeeds.RESERVES]: true
     },
     inputToken,
     outputToken

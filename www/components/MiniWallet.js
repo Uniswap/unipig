@@ -1,6 +1,8 @@
 import styled from 'styled-components'
 import { transparentize, lighten } from 'polished'
+import { formatFixedDecimals } from '@uniswap/sdk'
 
+import { DECIMALS } from '../constants'
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
 
@@ -59,7 +61,7 @@ const TokenValue = styled.span`
   font-size: 16px;
   line-height: 19px;
   flex: 1 1 0;
-  color: ${({ team, theme }) => (team === 'UNI' ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
+  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -107,13 +109,13 @@ export function WalletInfo({ team, wallet }) {
 export function TokenInfo({ balances }) {
   return (
     <Tokens>
-      <TokenValue team={'UNI'}>
-        <span>{balances[Team.UNI]}</span>
+      <TokenValue team={Team.UNI}>
+        <span>{formatFixedDecimals(balances[Team.UNI], DECIMALS)}</span>
         <span>UNI</span>
       </TokenValue>
       <TokenShim />
-      <TokenValue team={'PIG'}>
-        <span>{balances[Team.PIGI]}</span>
+      <TokenValue team={Team.PIGI}>
+        <span>{formatFixedDecimals(balances[Team.PIGI], DECIMALS)}</span>
         <span>PIGI</span>
       </TokenValue>
     </Tokens>

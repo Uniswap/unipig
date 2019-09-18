@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
 import styled, { css } from 'styled-components'
-import Confetti from 'react-dom-confetti'
 
+import { DataNeeds } from '../constants'
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
 import Wallet from '../components/MiniWallet'
-import { config } from '../components/ConfettiConfig'
+import Confetti from '../components/Confetti'
 
 const TweetContainer = styled.div`
   display: flex;
@@ -67,7 +67,7 @@ const StyledBody = styled(Body)`
   margin: 0px;
 `
 
-function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances }) {
+function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesData }) {
   // save the initial addressData
   const initialAddressData = useRef(addressData)
 
@@ -147,65 +147,63 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances 
   }
 
   return (
-    <TradeWrapper>
-      <Title size={32} textStyle="gradient">
-        {justFauceted
-          ? 'TOKENS. IN. YOUR. WALLET.'
-          : alreadyFauceted
-          ? 'Thank you for tweeting.'
-          : 'Tweet at the Unipig to get some tokens.'}
-      </Title>
-      <Shim size={32} />
-      {alreadyFauceted ? (
-        <Wallet wallet={wallet} team={team} balances={balances} />
-      ) : (
-        <TweetPreview>
-          {`༼ つ ◕_◕ ༽つ`}
-          <br />
-          {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${truncateAddress(
-            wallet.address,
-            4
-          )} https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
-        </TweetPreview>
-      )}
-      <InformationContainer>
-        <TweetContainer hide={alreadyFauceted || polling || !twitterLoaded}>
-          <a
-            className="twitter-share-button"
-            href="https://twitter.com/intent/tweet"
-            data-size="large"
-            data-text={`༼ つ ◕_◕ ༽つ
+    <>
+      <Confetti start={justFauceted} />
+      <TradeWrapper>
+        <Title size={32} textStyle="gradient">
+          {justFauceted
+            ? 'TOKENS. IN. YOUR. WALLET.'
+            : alreadyFauceted
+            ? 'Thank you for tweeting.'
+            : 'Tweet at the Unipig to get some tokens.'}
+        </Title>
+        <Shim size={32} />
+        {alreadyFauceted ? (
+          <Wallet wallet={wallet} team={team} balances={balancesData} />
+        ) : (
+          <TweetPreview>
+            {`༼ つ ◕_◕ ༽つ`}
+            <br />
+            {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${truncateAddress(
+              wallet.address,
+              4
+            )} https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+          </TweetPreview>
+        )}
+        <InformationContainer>
+          <TweetContainer hide={alreadyFauceted || polling || !twitterLoaded}>
+            <a
+              className="twitter-share-button"
+              href="https://twitter.com/intent/tweet"
+              data-size="large"
+              data-text={`༼ つ ◕_◕ ༽つ
 @UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
-            data-url="https://unipig.exchange"
-            data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
-            data-dnt="true"
-          >
-            Tweet
-          </a>
-        </TweetContainer>
+              data-url="https://unipig.exchange"
+              data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+              data-dnt="true"
+            >
+              Tweet
+            </a>
+          </TweetContainer>
 
-        {metaInformation()}
-      </InformationContainer>
+          {metaInformation()}
+        </InformationContainer>
 
-      {alreadyFauceted && (
-        <NavButton variant="gradient" href="/">
-          <ButtonText>Dope</ButtonText>
-        </NavButton>
-      )}
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-        <Confetti active={justFauceted} config={config} />
-      </div>
-    </TradeWrapper>
+        {alreadyFauceted && (
+          <NavButton variant="gradient" href="/">
+            <ButtonText>Dope</ButtonText>
+          </NavButton>
+        )}
+      </TradeWrapper>
+    </>
   )
 }
 
-// TODO add PG API and deal with decimals
 TwitterFaucet.getInitialProps = async () => {
   return {
-    balances: {
-      [Team.UNI]: 5,
-      [Team.PIGI]: 5
+    dataNeeds: {
+      [DataNeeds.ADDRESS]: true,
+      [DataNeeds.BALANCES]: true
     }
   }
 }

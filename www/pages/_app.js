@@ -8,6 +8,7 @@ import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
 
+import { OVMWalletInteractions, DataNeeds } from '../constants'
 import { getCookie, getHost, getPermissionString } from '../utils'
 import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
 import Layout from '../components/Layout'
@@ -106,7 +107,33 @@ async function getAddressData(wallet, req) {
   })
 }
 
-function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
+async function getBalancesData(wallet, req) {
+  return await fetch(`${getHost(req)}/api/ovm-wallet`, {
+    method: 'POST',
+    body: JSON.stringify({ interactionType: OVMWalletInteractions.BALANCES, address: wallet.address })
+  }).then(async response => {
+    if (!response.ok) {
+      throw Error(`${response.status} Error: ${response.statusText}`)
+    }
+
+    return await response.json()
+  })
+}
+
+async function getReservesData(req) {
+  return await fetch(`${getHost(req)}/api/ovm-wallet`, {
+    method: 'POST',
+    body: JSON.stringify({ interactionType: OVMWalletInteractions.RESERVES })
+  }).then(async response => {
+    if (!response.ok) {
+      throw Error(`${response.status} Error: ${response.statusText}`)
+    }
+
+    return await response.json()
+  })
+}
+
+function AppStateWrapper({ Component, wallet, team, addressData, balancesData, reservesData, ...rest }) {
   const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
 
   // weird hacky thing to reset wallet modal openness across pages
@@ -124,6 +151,14 @@ function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
     })
   }, [wallet])
 
+  const [updatedBalancesData, setUpdatedBalancesData] = useState(null)
+  // note: must only be called client-side!
+  const updateBalancesData = useCallback(async () => {
+    await getBalancesData(wallet).then(d => {
+      setUpdatedBalancesData(d)
+    })
+  }, [wallet])
+
   return (
     <Layout
       wallet={wallet}
@@ -136,6 +171,9 @@ function AppStateWrapper({ Component, wallet, team, addressData, ...rest }) {
         team={team}
         addressData={updatedAddressData || addressData}
         updateAddressData={updateAddressData}
+        balancesData={updatedBalancesData || balancesData}
+        updateBalancesData={updateBalancesData}
+        reservesData={reservesData}
         walletModalIsOpen={walletModalIsOpen}
         setWalletModalIsOpen={setWalletModalIsOpen}
         {...rest}
@@ -175,17 +213,35 @@ export default class MyApp extends App {
       return {}
     }
 
-    // if we need the data, fetch server data
-    const addressData = ['/', '/twitter-faucet'].includes(pathname)
-      ? await getAddressData(Wallet.fromMnemonic(mnemonic), req)
-      : null
+    const _pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
 
-    const pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
+    const { dataNeeds, ...pageProps } = _pageProps
+    const {
+      [DataNeeds.ADDRESS]: needAddressData,
+      [DataNeeds.BALANCES]: needBalancesData,
+      [DataNeeds.RESERVES]: needReservesData
+    } = dataNeeds || {}
+
+    const _wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
+
+    // start fetching the data we need
+    const addressDataPromise = needAddressData ? await getAddressData(_wallet, req) : null
+    const balancesDataPromise = needBalancesData ? await getBalancesData(_wallet, req) : null
+    const reservesDataPromise = needReservesData ? await getReservesData(req) : null
+
+    // start getting all the async stuff at the same time and wait for it all to return
+    const [addressData, balancesData, reservesData] = await Promise.all([
+      addressDataPromise,
+      balancesDataPromise,
+      reservesDataPromise
+    ])
 
     return {
       mnemonic,
       team,
       addressData,
+      balancesData,
+      reservesData,
       pageProps
     }
   }
@@ -198,7 +254,7 @@ export default class MyApp extends App {
   }
 
   render() {
-    const { mnemonic, team, addressData, Component, pageProps } = this.props
+    const { mnemonic, team, addressData, balancesData, reservesData, Component, pageProps } = this.props
 
     const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
 
@@ -218,6 +274,8 @@ export default class MyApp extends App {
                   wallet={wallet}
                   team={team}
                   addressData={addressData}
+                  balancesData={balancesData}
+                  reservesData={reservesData}
                   {...pageProps}
                 />
               </MUIThemeProvider>

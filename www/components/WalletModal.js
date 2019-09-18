@@ -309,14 +309,12 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
   const router = useRouter()
   const mnemonicExists = useMnemonicExists()
   useEffect(() => {
+    // there might be a race condition here, since `mnemonicExists` might not update sychronously with the cookie...
+    // ..., but i think it does, because the context is above this component in the dom tree
     if (!mnemonicExists) {
       router.push('/welcome')
     }
   }, [mnemonicExists, router])
-
-  if (!mnemonicExists) {
-    return null
-  }
 
   return (
     <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
