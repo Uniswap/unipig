@@ -66,7 +66,7 @@ const Element = styled.div`
   width: ${({ width }) => width || '100vw'};
 
   @media only screen and (max-width: 480px) {
-    width: calc(100% - 32px);
+    padding: ${({ noPadding }) => !noPadding && '0 16px 0 16px;'};
   }
 `
 
@@ -81,7 +81,7 @@ export default function Layout({ wallet, team, children, boostsLeft, setWalletMo
         <AnimatedImg time={'500s'} src="static/blob_3.svg" />
         <AnimatedImg time={'250s'} src="static/blob_1.svg" />
       </BackroundElement>
-      <Element align="flex-start">
+      <Element noPadding align="flex-start">
         <RouteLoader />
       </Element>
       <Element align="flex-start" justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
