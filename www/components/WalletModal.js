@@ -149,7 +149,7 @@ const StyledSnackbarContent = styled(FilteredSnackbarContent)`
   border-radius: 12px;
   width: 448px;
 
-  @media screen only and (max-width: 448) {
+  @media screen and (max-width: 448) {
     width: 100%;
   }
 `
@@ -376,25 +376,27 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
             quietZone="0"
             bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
             fgColor={theme.colors.black}
-            logoImage={team === Team.UNI ? 'static/unicorn.png' : 'static/pig.png'}
+            logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
             qrStyle="squares"
           />
         </QRCodeWrapper>
 
         <Shim size={16} />
         {(addressData.boostsLeft || 0) !== 0 && (
-          <StyledAirdrop>
-            <StyledBadge badgeContent={addressData.boostsLeft}>
-              <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
-                Trigger an Airdrop
-                <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
-              </ScanButton>
-            </StyledBadge>
-          </StyledAirdrop>
+          <>
+            <StyledAirdrop>
+              <StyledBadge badgeContent={addressData.boostsLeft}>
+                <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
+                  Trigger an Airdrop
+                  <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+                </ScanButton>
+              </StyledBadge>
+            </StyledAirdrop>
+            <Description>
+              Scan another player to trigger an airdrop. You will both recieve 10 tokens from the Unipig faucet.
+            </Description>
+          </>
         )}
-        <Description>
-          Scan another player to trigger an airdrop. You will both recieve 10 tokens from the Unipig faucet.
-        </Description>
 
         <Shim size={24} />
         <WalletTitle>

@@ -62,7 +62,7 @@ const InformationContainer = styled.div`
 `
 
 const StyledBody = styled(Body)`
-  text-align: center;
+  /* text-align: center; */
   font-weight: 600;
   margin: 0px;
 `
@@ -128,7 +128,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances 
 
   function metaInformation() {
     if (alreadyFauceted) {
-      return <StyledBody textStyle="gradient">Coming through loud and clear @{addressData.twitterHandle}!</StyledBody>
+      return <StyledBody textStyle="gradient">The Unipig just sent you tokens in 150ms.</StyledBody>
     } else if (updateError) {
       return (
         <>
@@ -154,7 +154,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balances 
     <TradeWrapper>
       <Title size={32} textStyle="gradient">
         {justFauceted
-          ? 'TOKENS. IN. YOUR. WALLET.'
+          ? 'Coming through loud and clear @' + addressData.twitterHandle + '!'
           : alreadyFauceted
           ? 'Thank you for tweeting.'
           : 'Tweet at the Unipig to get some tokens.'}

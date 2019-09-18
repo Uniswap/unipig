@@ -55,6 +55,7 @@ const CloseButton = styled(Button)`
 
 export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
   const [error, setError] = useState()
+  const [legacy, setLegacy] = useState(false)
 
   return (
     <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
@@ -67,12 +68,17 @@ export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
         </ScanHeader>
         <QRReader
           onAddress={onAddress}
+          forceLegacy={legacy}
           onError={error => {
             console.error(error)
             setError(error)
           }}
         />
-        {error && <p>error</p>}
+        {error && !!!legacy && (
+          <p onClick={() => setLegacy(true)}>
+            Camera not working? <u>Upload an image instead</u>
+          </p>
+        )}
       </StyledDialogContent>
     </StyledDialogOverlay>
   )
