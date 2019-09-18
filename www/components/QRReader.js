@@ -51,7 +51,7 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
   }
 
   return (
-    <Wrapper legacyMode={legacyMode || forcelegacy}>
+    <Wrapper legacyMode={legacyMode}>
       <QrReader
         ref={qrRef}
         delay={500}
@@ -62,7 +62,7 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
         onScan={onScan}
         onError={onError}
       />
-      {(legacyMode || forceLegacy) && (
+      {legacyMode && (
         <FixedButton
           variant="outlined"
           color="primary"

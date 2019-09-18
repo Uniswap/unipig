@@ -14,9 +14,12 @@ import { useStyledTheme, usePrevious } from '../hooks'
 import Button from './Button'
 import Emoji from './Emoji'
 import QRScanModal from './QRScanModal'
-import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
+import { AnimatedFrame, containerAnimationNoDelay, snackAnimation } from './Animation'
 import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
+
+import Confetti from 'react-dom-confetti'
+import { config } from '../components/ConfettiConfig'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
@@ -31,7 +34,7 @@ const StyledDialogContent = styled(DialogContent)`
   &[data-reach-dialog-content] {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
     max-width: 448px;
     padding: 0px;
@@ -91,8 +94,8 @@ const StyledAirdrop = styled.span`
 
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
-    color: ${({ theme }) => theme.colors.black};
-    background-color: ${({ theme }) => theme.colors.white};
+    color: ${({ theme }) => theme.colors.white};
+    background-color: ${({ theme }) => theme.colors.link};
   }
 `
 
@@ -112,8 +115,8 @@ const ScanButton = styled(Button)`
   background: rgba(0, 0, 0, 0.9);
   color: white;
   width: initial;
-  :hover{
-    background: rgba(0, 0, 0, 0.7));
+  :hover {
+    background: rgba(0, 0, 0, 0.7);
   }
 `
 
@@ -134,15 +137,26 @@ const SendShim = styled.span`
   height: 8px;
 `
 
+const StyledSnackbar = styled(Snackbar)``
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FilteredSnackbarContent = ({ inError, ...rest }) => <SnackbarContent {...rest} />
 const StyledSnackbarContent = styled(FilteredSnackbarContent)`
-  background-color: ${({ inError, theme }) => inError && theme.colors.error};
+  display: flex;
+  flex-direction: row;
+  background-color: ${({ inError, theme }) => (inError ? theme.colors.error : 'transparent')};
+  ${({ theme }) => theme.gradientBackground};
+  border-radius: 12px;
+  width: 448px;
+
+  @media screen only and (max-width: 448) {
+    width: 100%;
+  }
 `
 
 const Contents = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 `
 
@@ -182,15 +196,17 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
 
   function statusMessage() {
     if (!!!error && !!!success) {
-      return <span>Loading...</span>
+      return <span>Sending transaction...</span>
     } else if (!!error) {
       return <span>Sorry, there was an error.</span>
     } else {
       return (
         <span>
-          Nice! You and{' '}
+          <b>Boom. Airdrop complete.</b> <br /> <Shim size={8} /> You and{' '}
           {(scannedAddress || lastScannedAddress) && truncateAddress(scannedAddress || lastScannedAddress, 4)} just got
-          tokens.
+          tokens. This transaction was completed in 150ms on OVM layer 2 <br />
+          <Shim size={12} />
+          <span style={{ color: 'white' }}>Learn more ↗</span>
         </span>
       )
     }
@@ -210,12 +226,13 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
   }, [success, error, controls])
 
   return (
-    <Snackbar
+    <StyledSnackbar
       anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left'
+        vertical: 'top',
+        horizontal: 'center'
       }}
       open={!!scannedAddress}
+      // open={true}
       autoHideDuration={null}
       onClose={() => {}}
       onMouseEnter={() => {
@@ -239,7 +256,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
         inError={!!error}
         message={
           <Contents>
-            <Emoji style={{ marginRight: '0.3rem' }} emoji="📦" label="airdrop" />
+            <Emoji style={{ marginRight: '.75rem' }} emoji="📦" label="airdrop" />
             {statusMessage()}
           </Contents>
         }
@@ -280,7 +297,8 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
           </ProgressSVG>
         }
       />
-    </Snackbar>
+    </StyledSnackbar>
+    // </AnimatedFrame>
   )
 }
 
@@ -340,6 +358,9 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
 
   return (
     <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <Confetti active={!!scannedAddress} config={config} />
+      </div>
       <StyledWallet team={team}>
         <WalletTitle>
           <span>Wallet</span>
@@ -360,13 +381,7 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
           />
         </QRCodeWrapper>
 
-        <Shim size={12} />
-
-        <WalletButton variant="text" onClick={copyAddress}>
-          {copied ? 'Copied' : 'Copy Address'}
-        </WalletButton>
-
-        <Shim size={8} />
+        <Shim size={16} />
         {(addressData.boostsLeft || 0) !== 0 && (
           <StyledAirdrop>
             <StyledBadge badgeContent={addressData.boostsLeft}>
@@ -397,9 +412,17 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
           </SendButton>
         </SendWrapper>
         <Shim size={24} />
-        <WalletButton variant="text" onClick={manageBurn}>
-          {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
-        </WalletButton>
+        <WalletTitle>
+          <span>Manage Wallet</span>
+        </WalletTitle>
+        <SendWrapper>
+          <WalletButton variant="text" onClick={manageBurn}>
+            {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
+          </WalletButton>
+          <WalletButton variant="text" onClick={copyAddress}>
+            {copied ? 'Copied' : 'Copy Address'}
+          </WalletButton>
+        </SendWrapper>
       </StyledWallet>
     </AnimatedFrame>
   )
@@ -447,7 +470,7 @@ export default function WalletModal({ wallet, team, addressData, updateAddressDa
         setScannedAddress={setScannedAddress}
         lastScannedAddress={lastScannedAddress}
         updateAddressData={updateAddressData}
-      />
+      ></AirdropSnackbar>
       <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
         <StyledDialogContent>
           <ViewManager

@@ -33,6 +33,19 @@ export const containerAnimation = {
   }
 }
 
+export const modalContainerAnimation = {
+  hidden: { opacity: 0, y: '20px' },
+  show: {
+    opacity: 1,
+    y: '48px',
+    transition: {
+      delay: 0.15,
+      when: 'beforeChildren',
+      staggerChildren: 0.15
+    }
+  }
+}
+
 export const childAnimation = {
   hidden: { opacity: 0, y: 24 },
   show: {
