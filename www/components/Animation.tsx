@@ -7,7 +7,7 @@ export const AnimatedFrame = styled(motion.div)`
 `
 
 export const containerAnimationNoDelay = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 1, y: 24 },
   show: {
     opacity: 1,
     y: 0,
@@ -16,8 +16,7 @@ export const containerAnimationNoDelay = {
       when: 'beforeChildren',
       staggerChildren: 0.15
     }
-  },
-  exit: { opacity: 0, y: 24 }
+  }
 }
 
 export const containerAnimation = {

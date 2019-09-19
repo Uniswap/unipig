@@ -62,9 +62,13 @@ const InformationContainer = styled.div`
 `
 
 const StyledBody = styled(Body)`
-  text-align: center;
+  /* text-align: center; */
   font-weight: 600;
   margin: 0px;
+`
+
+const StyledWallet = styled(Wallet)`
+  background-color: rgba(255, 255, 255, 0.1);
 `
 
 function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesData }) {
@@ -124,7 +128,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
 
   function metaInformation() {
     if (alreadyFauceted) {
-      return <StyledBody textStyle="gradient">Coming through loud and clear @{addressData.twitterHandle}!</StyledBody>
+      return <StyledBody textStyle="gradient">The Unipig just sent you tokens in 150ms.</StyledBody>
     } else if (updateError) {
       return (
         <>
@@ -152,14 +156,14 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
       <TradeWrapper>
         <Title size={32} textStyle="gradient">
           {justFauceted
-            ? 'TOKENS. IN. YOUR. WALLET.'
+            ? `Coming through loud and clear @${addressData.twitterHandle}!`
             : alreadyFauceted
             ? 'Thank you for tweeting.'
             : 'Tweet at the Unipig to get some tokens.'}
         </Title>
         <Shim size={32} />
         {alreadyFauceted ? (
-          <Wallet wallet={wallet} team={team} balances={balancesData} />
+          <StyledWallet wallet={wallet} team={team} balances={balancesData} />
         ) : (
           <TweetPreview>
             {`༼ つ ◕_◕ ༽つ`}
@@ -189,8 +193,12 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
           {metaInformation()}
         </InformationContainer>
 
-        {alreadyFauceted && (
+        {alreadyFauceted ? (
           <NavButton variant="gradient" href="/">
+            <ButtonText>Dope</ButtonText>
+          </NavButton>
+        ) : (
+          <NavButton variant="gradient" disabled href="/">
             <ButtonText>Dope</ButtonText>
           </NavButton>
         )}

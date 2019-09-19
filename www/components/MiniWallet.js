@@ -9,7 +9,7 @@ import { Team } from '../contexts/Cookie'
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   padding: 1.5rem;
-  background-color: ${({ theme }) => lighten(0.1, theme.colors.black)};
+  background-color: ${({ theme }) => lighten(0.05, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
   opacity: 0.8;

@@ -8,15 +8,17 @@ import copy from 'copy-to-clipboard'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 
-import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
 import { getPermissionString, truncateAddress } from '../utils'
 import { useStyledTheme, usePrevious } from '../hooks'
+import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
 import Button from './Button'
 import Emoji from './Emoji'
 import QRScanModal from './QRScanModal'
 import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
 import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
+import Confetti from './Confetti'
+import { ButtonText } from './Type'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
@@ -31,9 +33,24 @@ const StyledDialogContent = styled(DialogContent)`
   &[data-reach-dialog-content] {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
+    max-width: 448px;
+    padding: 0px;
+    @media only screen and (max-width: 480px) {
+      width: 100%;
+      margin: 0px;
+    }
   }
+`
+
+const CloseButton = styled(Button)`
+  min-width: unset;
+  min-height: unset;
+  padding: 0.5rem;
+  margin-right: -1rem;
+  width: 3rem;
+  height: 3rem;
 `
 
 const StyledWallet = styled.span`
@@ -69,19 +86,15 @@ const QRCodeWrapper = styled.div`
   margin-bottom: 1rem;
 `
 
-const WalletButton = styled(Button)`
-  min-height: 36px;
-  width: initial;
-  margin: 0 auto;
-  padding: 0 1rem;
-  background: rgba(242, 242, 242, 0.2);
-  color: black;
+const StyledAirdrop = styled.span`
+  display: flex;
+  justify-content: center;
 `
 
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
-    color: ${({ theme }) => theme.colors.black};
-    background-color: ${({ theme }) => theme.colors.white};
+    color: ${({ theme }) => theme.colors.white};
+    background-color: ${({ theme }) => theme.colors.link};
   }
 `
 
@@ -91,10 +104,19 @@ const SendButton = styled(Button)`
   color: black;
 `
 
+const Description = styled.p`
+  font-weight: 500;
+  text-align: center;
+`
+
 const ScanButton = styled(Button)`
   min-height: 36px;
   background: rgba(0, 0, 0, 0.9);
   color: white;
+  width: initial;
+  :hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
 `
 
 const SendWrapper = styled.span`
@@ -105,7 +127,7 @@ const SendWrapper = styled.span`
   flex-direction: row;
 
   ${SendButton} {
-    flex-grow: 1;
+    flex-basis: 50%;
   }
 `
 
@@ -114,15 +136,26 @@ const SendShim = styled.span`
   height: 8px;
 `
 
+const StyledSnackbar = styled(Snackbar)``
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FilteredSnackbarContent = ({ inError, ...rest }) => <SnackbarContent {...rest} />
 const StyledSnackbarContent = styled(FilteredSnackbarContent)`
-  background-color: ${({ inError, theme }) => inError && theme.colors.error};
+  display: flex;
+  flex-direction: row;
+  background-color: ${({ inError, theme }) => (inError ? theme.colors.error : 'transparent')};
+  ${({ theme }) => theme.gradientBackground};
+  border-radius: 12px;
+  width: 448px;
+
+  @media screen and (max-width: 448) {
+    width: 100%;
+  }
 `
 
 const Contents = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 `
 
@@ -131,8 +164,15 @@ const ProgressSVG = styled.svg`
   margin: 0.25rem;
 `
 
-const DURATION = 6
-function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScannedAddress, updateAddressData }) {
+const DURATION = 8
+function AirdropSnackbar({
+  wallet,
+  scannedAddress,
+  setPopConfetti,
+  setScannedAddress,
+  lastScannedAddress,
+  updateAddressData
+}) {
   const [error, setError] = useState()
   const [success, setSuccess] = useState()
 
@@ -162,15 +202,17 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
 
   function statusMessage() {
     if (!!!error && !!!success) {
-      return <span>Loading...</span>
+      return <span>Sending transaction...</span>
     } else if (!!error) {
       return <span>Sorry, there was an error.</span>
     } else {
       return (
         <span>
-          Nice! You and{' '}
+          <b>Boom. Airdrop complete.</b> <br /> <Shim size={8} /> You and{' '}
           {(scannedAddress || lastScannedAddress) && truncateAddress(scannedAddress || lastScannedAddress, 4)} just got
-          tokens.
+          tokens. This transaction was completed in 150ms on OVM layer 2 <br />
+          <Shim size={12} />
+          <span style={{ color: 'white' }}>Learn more ↗</span>
         </span>
       )
     }
@@ -187,13 +229,17 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
     if (success || error) {
       controls.start(animateTo(DURATION))
     }
-  }, [success, error, controls])
+
+    if (success) {
+      setPopConfetti(true)
+    }
+  }, [success, error, controls, setPopConfetti])
 
   return (
-    <Snackbar
+    <StyledSnackbar
       anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left'
+        vertical: 'top',
+        horizontal: 'center'
       }}
       open={!!scannedAddress}
       autoHideDuration={null}
@@ -219,7 +265,7 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
         inError={!!error}
         message={
           <Contents>
-            <Emoji style={{ marginRight: '0.3rem' }} emoji="📦" label="airdrop" />
+            <Emoji style={{ marginRight: '.75rem' }} emoji="📦" label="airdrop" />
             {statusMessage()}
           </Contents>
         }
@@ -254,17 +300,20 @@ function AirdropSnackbar({ wallet, scannedAddress, setScannedAddress, lastScanne
               animate={{ pathLength: isFinished ? 1 : 0 }}
               transition={{ duration: 0.75, ease: 'easeOut' }}
               onAnimationComplete={() => {
-                setScannedAddress()
+                setPopConfetti()
+                setTimeout(() => {
+                  setScannedAddress()
+                }, 750)
               }}
             />
           </ProgressSVG>
         }
       />
-    </Snackbar>
+    </StyledSnackbar>
   )
 }
 
-function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRModal }) {
+function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress, openQRModal }) {
   const theme = useStyledTheme()
 
   const reset = useReset()
@@ -288,11 +337,11 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
     }
   }
 
-  const [copied, setCopied] = useState(false)
+  const [addressCopied, setAddressCopied] = useState(false)
   useEffect(() => {
-    if (copied) {
+    if (addressCopied) {
       const timeout = setTimeout(() => {
-        setCopied(false)
+        setAddressCopied(false)
       }, 1000)
 
       return () => {
@@ -302,7 +351,24 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
   })
   function copyAddress() {
     copy(wallet.address)
-    setCopied(true)
+    setAddressCopied(true)
+  }
+
+  const [mnemonicCopied, setMnemonicCopied] = useState(false)
+  useEffect(() => {
+    if (mnemonicCopied) {
+      const timeout = setTimeout(() => {
+        setMnemonicCopied(false)
+      }, 1000)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+  function copyMnemonic() {
+    copy(wallet.mnemonic)
+    setMnemonicCopied(true)
   }
 
   // handle redirect after reset
@@ -317,66 +383,92 @@ function Wallet({ wallet, team, addressData, balances, scannedAddress, openQRMod
   }, [mnemonicExists, router])
 
   return (
-    <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
-      <StyledWallet team={team}>
-        <WalletTitle>
-          <span>Wallet</span>
-        </WalletTitle>
-        <WalletInfo team={team} wallet={wallet} />
+    <StyledWallet team={team}>
+      <WalletTitle>
+        <span>Wallet</span>
+        <CloseButton
+          onClick={() => {
+            onDismiss()
+          }}
+        >
+          <ButtonText>✗</ButtonText>
+        </CloseButton>
+      </WalletTitle>
+      <WalletInfo team={team} wallet={wallet} />
 
-        <QRCodeWrapper>
-          <QRCode
-            value={`https://unipig.exchange?referrer=${wallet.address}`}
-            ecLevel="M"
-            size="250"
-            quietZone="0"
-            bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
-            fgColor={theme.colors.black}
-            logoImage={team === Team.UNI ? 'static/unicorn.png' : 'static/pig.png'}
-            qrStyle="squares"
-          />
-        </QRCodeWrapper>
+      <QRCodeWrapper>
+        <QRCode
+          value={`https://unipig.exchange?referrer=${wallet.address}`}
+          ecLevel="M"
+          size="250"
+          quietZone="0"
+          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
+          fgColor={theme.colors.black}
+          logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
+          qrStyle="squares"
+        />
+      </QRCodeWrapper>
 
-        <Shim size={8} />
-        {(addressData.boostsLeft || 0) !== 0 && (
-          <StyledBadge badgeContent={addressData.boostsLeft}>
-            <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
-              Trigger an Airdrop
-              <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
-            </ScanButton>
-          </StyledBadge>
-        )}
+      <Shim size={16} />
+      {(addressData.boostsLeft || 0) !== 0 && (
+        <>
+          <StyledAirdrop>
+            <StyledBadge badgeContent={addressData.boostsLeft}>
+              <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
+                Trigger an Airdrop
+                <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+              </ScanButton>
+            </StyledBadge>
+          </StyledAirdrop>
+          <Description>
+            Scan another player to trigger an airdrop. You will both recieve 10 tokens from the Unipig faucet.
+          </Description>
+        </>
+      )}
 
-        <Shim size={12} />
-
-        <WalletButton variant="text" onClick={copyAddress}>
-          {copied ? 'Copied' : 'Copy Address'}
-        </WalletButton>
-        <Shim size={24} />
-        <WalletTitle>
-          <span>Tokens</span>
-        </WalletTitle>
-        <TokenInfo balances={balances} />
-        <Shim size={8} />
-        <SendWrapper>
-          <SendButton variant="text" disabled>
-            Send
-          </SendButton>
-          <SendShim />
-          <SendButton variant="text" disabled>
-            Send
-          </SendButton>
-        </SendWrapper>
-        <Shim size={24} />
-        <WalletButton variant="text" onClick={manageBurn}>
+      <Shim size={24} />
+      <WalletTitle>
+        <span>Tokens</span>
+      </WalletTitle>
+      <TokenInfo balances={balances} />
+      <Shim size={8} />
+      <SendWrapper>
+        <SendButton variant="text" disabled>
+          Send
+        </SendButton>
+        <SendShim />
+        <SendButton variant="text" disabled>
+          Send
+        </SendButton>
+      </SendWrapper>
+      <Shim size={24} />
+      <WalletTitle>
+        <span>Manage Wallet</span>
+      </WalletTitle>
+      <SendWrapper>
+        <SendButton variant="text" onClick={copyAddress}>
+          {addressCopied ? 'Copied' : 'Copy Address'}
+        </SendButton>
+        <SendShim />
+        <SendButton variant="text" onClick={copyMnemonic}>
+          {mnemonicCopied ? 'Copied' : 'Copy Mnemonic'}
+        </SendButton>
+      </SendWrapper>
+      <Shim size={8} />
+      <SendWrapper>
+        <SendButton variant="text" onClick={manageBurn}>
           {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
-        </WalletButton>
-      </StyledWallet>
-    </AnimatedFrame>
+        </SendButton>
+        <SendShim />
+        <SendButton style={{ visibility: 'hidden' }} variant="text">
+          ''
+        </SendButton>
+      </SendWrapper>
+    </StyledWallet>
   )
 }
 
-function ViewManager({ wallet, team, addressData, balances, scannedAddress, setScannedAddress }) {
+function ViewManager({ wallet, team, onDismiss, addressData, balances, scannedAddress, setScannedAddress }) {
   const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
   return (
@@ -395,6 +487,7 @@ function ViewManager({ wallet, team, addressData, balances, scannedAddress, setS
       <Wallet
         wallet={wallet}
         team={team}
+        onDismiss={onDismiss}
         addressData={addressData}
         balances={balances}
         scannedAddress={scannedAddress}
@@ -410,10 +503,14 @@ export default function WalletModal({ wallet, team, addressData, updateAddressDa
   const [scannedAddress, setScannedAddress] = useState()
   const lastScannedAddress = usePrevious(scannedAddress)
 
+  const [popConfetti, setPopConfetti] = useState(false)
+
   return (
     <>
+      <Confetti start={popConfetti} variant="top" />
       <AirdropSnackbar
         wallet={wallet}
+        setPopConfetti={setPopConfetti}
         scannedAddress={scannedAddress}
         setScannedAddress={setScannedAddress}
         lastScannedAddress={lastScannedAddress}
@@ -421,14 +518,17 @@ export default function WalletModal({ wallet, team, addressData, updateAddressDa
       />
       <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
         <StyledDialogContent>
-          <ViewManager
-            wallet={wallet}
-            team={team}
-            addressData={addressData}
-            balances={balances}
-            scannedAddress={scannedAddress}
-            setScannedAddress={setScannedAddress}
-          />
+          <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
+            <ViewManager
+              wallet={wallet}
+              team={team}
+              onDismiss={onDismiss}
+              addressData={addressData}
+              balances={balances}
+              scannedAddress={scannedAddress}
+              setScannedAddress={setScannedAddress}
+            />
+          </AnimatedFrame>
         </StyledDialogContent>
       </StyledDialogOverlay>
     </>

@@ -6,21 +6,19 @@ import Button from '../components/Button'
 
 const Wrapper = styled.div`
   width: 100vh;
-  max-width: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
-  max-height: ${({ legacyMode }) => (legacyMode ? '30%' : '100%')};
+  /* height: 100vh; */
+  max-width: ${({ legacyMode }) => (legacyMode ? '40%' : '100%')};
+  max-height: ${({ legacyMode }) => (legacyMode ? '40%' : '100%')};
   max-width: 100%;
   max-height: 100%;
   margin: auto;
 
   section:first-child {
-    transform: scale(0.5) translateY(40%);
+    ${({ legacyMode }) => legacyMode && `transform: scale(0.8)`};
   }
+
   @media only screen and (max-width: 480px) {
     width: 100%;
-
-    section:first-child {
-      transform: scale(0.9) translateY(20%);
-    }
   }
 `
 
@@ -50,7 +48,7 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
   }
 
   return (
-    <Wrapper>
+    <Wrapper legacyMode={legacyMode}>
       <QrReader
         ref={qrRef}
         delay={500}
@@ -60,17 +58,21 @@ export default function QRReader({ onAddress, onError, forceLegacy }) {
         legacyMode={legacyMode}
         onScan={onScan}
         onError={onError}
+        style={{ height: !!legacyMode ? '0px' : 'auto', opacity: !!legacyMode ? '0' : '1' }}
       />
       {legacyMode && (
-        <FixedButton
-          variant="outlined"
-          color="primary"
-          onClick={() => {
-            qrRef.current.openImageDialog()
-          }}
-        >
-          Upload an image of a Unipig wallet
-        </FixedButton>
+        <>
+          <FixedButton
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+              qrRef.current.openImageDialog()
+            }}
+          >
+            Scan a Unipig wallet.
+          </FixedButton>
+          <p>To send an airdrop, find another Unipig player and ask them to open their wallet to find their QR code.</p>
+        </>
       )}
     </Wrapper>
   )

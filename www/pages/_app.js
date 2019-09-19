@@ -35,6 +35,7 @@ const SCTheme = {
     ),
 
     error: '#FF9494',
+    link: '#2F80ED',
 
     textColor: WHITE,
     backgroundColor: BLACK,
