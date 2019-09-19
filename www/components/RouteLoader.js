@@ -53,6 +53,7 @@ const variants = {
 }
 
 const Loader = styled(motion.div)`
+  position: fixed;
   height: 0.2rem;
   margin-bottom: -0.2rem;
   background-color: ${({ theme }) => theme.colors.uniswap};

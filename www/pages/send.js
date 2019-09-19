@@ -1,14 +1,9 @@
 import { useState, useReducer } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
-import {
-  TRADE_EXACT,
-  BigNumber,
-  getMarketDetails,
-  getTradeDetails,
-  formatSignificant,
-  formatFixedDecimals
-} from '@uniswap/sdk'
+import { BigNumber, formatFixedDecimals } from '@uniswap/sdk'
+
+import { isAddress } from '@ethersproject/address'
 
 import { DECIMALS, DataNeeds, OVMWalletInteractions } from '../constants'
 import { Team } from '../contexts/Cookie'
@@ -20,25 +15,6 @@ import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
-const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
-
-const DUMMY_TOKEN = {
-  decimals: DECIMALS
-}
-
-const DUMMY_ETH = {
-  decimals: 18
-}
-
-const DUMMY_TOKEN_AMOUNT = amount => ({
-  token: DUMMY_TOKEN,
-  amount
-})
-
-const DUMMY_ETH_AMOUNT = amount => ({
-  token: DUMMY_ETH,
-  amount: amount
-})
 
 const TradeWrapper = styled.span`
   width: 100%;
@@ -121,49 +97,52 @@ const HelperText = styled(Desc)`
   font-size: 16px;
 `
 
-const ERROR_MESSAGE = 'ERROR_MESSAGE'
+const ERROR_MESSAGE_INPUT = 'ERROR_MESSAGE_INPUT'
+const ERROR_MESSAGE_RECIPIENT = 'ERROR_MESSAGE_RECIPIENT'
 const INPUT_AMOUNT_RAW = 'INPUT_AMOUNT_RAW'
 const INPUT_AMOUNT_PARSED = 'INPUT_AMOUNT_PARSED'
-const OUTPUT_AMOUNT_RAW = 'OUTPUT_AMOUNT_RAW'
-const OUTPUT_AMOUNT_PARSED = 'OUTPUT_AMOUNT_PARSED'
-const MARKET_RATE_PRE_INVERTED = 'MARKET_RATE_PRE_INVERTED'
-const EXECUTION_RATE_INVERTED = 'EXECUTION_RATE_INVERTED'
+const RECIPIENT = 'RECIPIENT'
 
 const initialSwapState = {
-  [ERROR_MESSAGE]: null,
+  [ERROR_MESSAGE_INPUT]: null,
+  [ERROR_MESSAGE_RECIPIENT]: null,
   [INPUT_AMOUNT_RAW]: '',
   [INPUT_AMOUNT_PARSED]: null,
-  [OUTPUT_AMOUNT_RAW]: '',
-  [OUTPUT_AMOUNT_PARSED]: null,
-  [EXECUTION_RATE_INVERTED]: null
+  [RECIPIENT]: ''
 }
 
-function init(marketRatePreInverted) {
-  return {
-    ...initialSwapState,
-    [MARKET_RATE_PRE_INVERTED]: marketRatePreInverted
-  }
+function init() {
+  return initialSwapState
 }
 
+const RESET_INPUT_AMOUNT = 'RESET_INPUT_AMOUNT'
 const SET_INPUT_AMOUNT = 'SET_INPUT_AMOUNT'
 const SET_INPUT_AMOUNT_INVALID = 'SET_INPUT_AMOUNT_INVALID'
 const SET_INSUFFICIENT_BALANCE = 'SET_INSUFFICIENT_BALANCE'
+const SET_RECIPIENT = 'SET_RECIPIENT'
+const SET_RECIPIENT_INVALID = 'SET_RECIPIENT_INVALID'
 const SET_ERROR = 'SET_ERROR'
-const RESET_INPUT_AMOUNT = 'RESET_INPUT_AMOUNT'
 
 function reducer(state, { type, payload = {} } = {}) {
   switch (type) {
     case SET_INPUT_AMOUNT: {
-      const { rawInputValue, parsedInputValue, rawOutputValue, parsedOutputValue, executionRateInverted } = payload
+      const { rawInputValue, parsedInputValue } = payload
 
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawInputValue,
         [INPUT_AMOUNT_PARSED]: parsedInputValue,
-        [OUTPUT_AMOUNT_RAW]: rawOutputValue,
-        [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
-        [EXECUTION_RATE_INVERTED]: executionRateInverted,
-        [ERROR_MESSAGE]: null
+        [ERROR_MESSAGE_INPUT]: null
+      }
+    }
+    case RESET_INPUT_AMOUNT: {
+      const { rawInputValue } = payload
+
+      return {
+        ...state,
+        [INPUT_AMOUNT_RAW]: rawInputValue || '',
+        [INPUT_AMOUNT_PARSED]: null,
+        [ERROR_MESSAGE_INPUT]: null
       }
     }
     case SET_INPUT_AMOUNT_INVALID: {
@@ -172,35 +151,41 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawValue,
-        [ERROR_MESSAGE]: 'Invalid Input'
+        [ERROR_MESSAGE_INPUT]: 'Invalid Input'
       }
     }
     case SET_INSUFFICIENT_BALANCE: {
-      const { rawInputValue, parsedInputValue, rawOutputValue, parsedOutputValue, executionRateInverted } = payload
+      const { rawInputValue, parsedInputValue } = payload
 
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawInputValue,
         [INPUT_AMOUNT_PARSED]: parsedInputValue,
-        [OUTPUT_AMOUNT_RAW]: rawOutputValue,
-        [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
-        [EXECUTION_RATE_INVERTED]: executionRateInverted,
-        [ERROR_MESSAGE]: 'Insufficient Balance'
+        [ERROR_MESSAGE_INPUT]: 'Insufficient Balance'
+      }
+    }
+    case SET_RECIPIENT: {
+      const { recipient } = payload
+
+      return {
+        ...state,
+        [RECIPIENT]: recipient,
+        [ERROR_MESSAGE_RECIPIENT]: null
+      }
+    }
+    case SET_RECIPIENT_INVALID: {
+      const { recipient } = payload
+
+      return {
+        ...state,
+        [RECIPIENT]: recipient,
+        [ERROR_MESSAGE_RECIPIENT]: 'Invalid Recipient'
       }
     }
     case SET_ERROR: {
       return {
         ...state,
-        [ERROR_MESSAGE]: 'Unknown Error'
-      }
-    }
-    case RESET_INPUT_AMOUNT: {
-      const { rawInputValue } = payload
-
-      return {
-        ...initialSwapState,
-        [INPUT_AMOUNT_RAW]: rawInputValue || '',
-        [MARKET_RATE_PRE_INVERTED]: state[MARKET_RATE_PRE_INVERTED]
+        [ERROR_MESSAGE_INPUT]: 'Unknown Error'
       }
     }
     default: {
@@ -209,46 +194,20 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken, confirm }) {
+function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }) {
   //// parse the props
-  const inputBalance = new BigNumber(balancesData[inputToken])
-  const inputReserve = new BigNumber(reservesData[inputToken])
-  const outputReserve = new BigNumber(reservesData[outputToken])
-  // fake it by pretending the input currency is ETH
-  const marketDetails = getMarketDetails(undefined, {
-    token: DUMMY_TOKEN,
-    ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
-    tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
-  })
+  const balance = new BigNumber(balancesData[token])
 
   // amounts
-  const [swapState, dispatchSwapState] = useReducer(reducer, marketDetails.marketRate.rateInverted, init)
+  const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
 
   function updateValues(rawValue, parsedValue) {
-    let tradeDetails
-    try {
-      tradeDetails = getTradeDetails(TRADE_EXACT.INPUT, parsedValue.times(DUMMY_ETH_FACTOR), marketDetails)
-      if (tradeDetails.outputAmount.amount.isZero()) {
-        throw Error()
-      }
-    } catch (error) {
-      console.error(error)
-      dispatchSwapState({ type: SET_INPUT_AMOUNT_INVALID, payload: { rawValue, errorMessage: 'Invalid Trade' } })
-      return
-    }
-
-    const outputAmount = tradeDetails.outputAmount.amount
-    const formattedOutputAmount = formatFixedDecimals(outputAmount, DECIMALS)
-
-    if (parsedValue.gt(inputBalance)) {
+    if (parsedValue.gt(balance)) {
       dispatchSwapState({
         type: SET_INSUFFICIENT_BALANCE,
         payload: {
           rawInputValue: rawValue,
-          parsedInputValue: parsedValue,
-          rawOutputValue: formattedOutputAmount,
-          parsedOutputValue: outputAmount,
-          executionRateInverted: tradeDetails.executionRate.rateInverted
+          parsedInputValue: parsedValue
         }
       })
       return
@@ -258,10 +217,7 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
       type: SET_INPUT_AMOUNT,
       payload: {
         rawInputValue: rawValue,
-        parsedInputValue: parsedValue,
-        rawOutputValue: formattedOutputAmount,
-        parsedOutputValue: outputAmount,
-        executionRateInverted: tradeDetails.executionRate.rateInverted
+        parsedInputValue: parsedValue
       }
     })
   }
@@ -297,82 +253,99 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
   }
 
   function onMaxInputValue() {
-    updateValues(formatFixedDecimals(inputBalance, DECIMALS), inputBalance)
+    updateValues(formatFixedDecimals(balance, DECIMALS), balance)
+  }
+
+  function onAddress(event) {
+    const typedValue = event.target.value
+
+    if (typedValue === '') {
+      dispatchSwapState({
+        type: SET_RECIPIENT,
+        payload: { recipient: '' }
+      })
+      return
+    }
+
+    if (isAddress(typedValue)) {
+      dispatchSwapState({
+        type: SET_RECIPIENT,
+        payload: { recipient: typedValue }
+      })
+      return
+    }
+
+    dispatchSwapState({
+      type: SET_RECIPIENT_INVALID,
+      payload: { recipient: typedValue }
+    })
   }
 
   return (
     <>
       <Body textStyle="gradient">
-        <b>
-          Boost {Team[outputToken]} by dumping {Team[inputToken]}.
-        </b>
+        <b>Send tokens to a friend.</b>
       </Body>
       <Shim size={12} />
       <TradeWrapper>
         <StyledInputWrapper>
           <Input
             required
-            error={!!swapState[ERROR_MESSAGE]}
+            error={!!swapState[ERROR_MESSAGE_INPUT]}
             type="number"
             min="0"
-            step="0.01"
+            step="0.0001"
             placeholder="0"
             value={swapState[INPUT_AMOUNT_RAW]}
             onChange={onInputAmount}
-            inputColor={inputToken}
+            inputColor={token}
           />
-          <MaxButton inputColor={inputToken} onClick={onMaxInputValue}>
+          <MaxButton inputColor={token} onClick={onMaxInputValue}>
             Max
           </MaxButton>
           <StyledEmoji
-            inputColor={inputToken}
-            emoji={Team[inputToken] === 'UNI' ? '🦄' : '🐷'}
-            label={Team[inputToken] === 'UNI' ? 'unicorn' : 'pig'}
+            inputColor={token}
+            emoji={Team[token] === 'UNI' ? '🦄' : '🐷'}
+            label={Team[token] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
         <ArrowDown>↓</ArrowDown>
         <StyledInputWrapper>
           <Input
-            disabled={true}
-            error={!!swapState[ERROR_MESSAGE]}
-            type="number"
-            min="0"
-            step="0.01"
-            value={swapState[OUTPUT_AMOUNT_RAW]}
-            readOnly={true}
-            placeholder="0"
-            inputColor={outputToken}
-          />
-          <StyledEmoji
-            inputColor={outputToken}
-            emoji={Team[outputToken] === 'UNI' ? '🦄' : '🐷'}
-            label={Team[outputToken] === 'UNI' ? 'unicorn' : 'pig'}
+            required
+            error={!!swapState[ERROR_MESSAGE_RECIPIENT]}
+            type="text"
+            value={swapState[RECIPIENT]}
+            onChange={onAddress}
+            placeholder="0x..."
+            inputColor={token}
           />
         </StyledInputWrapper>
-        {!!swapState[ERROR_MESSAGE] ? (
-          <HelperText error={true}>{swapState[ERROR_MESSAGE]}</HelperText>
-        ) : (
-          <HelperText error={false}>
-            <b>
-              {formatSignificant(swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
-                significantDigits: 3,
-                forceIntegerSignificance: true
-              })}{' '}
-              {Team[inputToken]} = 1 {Team[outputToken]}
-            </b>
-          </HelperText>
-        )}
+        <HelperText
+          style={{
+            visibility: !!swapState[ERROR_MESSAGE_INPUT] || !!swapState[ERROR_MESSAGE_RECIPIENT] ? 'visible' : 'hidden'
+          }}
+          error={true}
+        >
+          {swapState[ERROR_MESSAGE_INPUT] || swapState[ERROR_MESSAGE_RECIPIENT] || 'placeholder'}
+        </HelperText>
         <Button
-          disabled={!!swapState[ERROR_MESSAGE] || !!!swapState[INPUT_AMOUNT_PARSED]}
+          disabled={
+            !!swapState[ERROR_MESSAGE_INPUT] ||
+            !!swapState[ERROR_MESSAGE_RECIPIENT] ||
+            !!!swapState[INPUT_AMOUNT_PARSED] ||
+            !!!swapState[RECIPIENT]
+          }
           variant="gradient"
           stretch
           onClick={() => {
             fetch('/api/ovm-wallet', {
               method: 'POST',
               body: JSON.stringify({
-                interactionType: OVMWalletInteractions.SWAP,
+                interactionType: OVMWalletInteractions.SEND,
                 address: wallet.address,
-                inputToken,
+                recipient: swapState[RECIPIENT],
+                inputToken: token,
                 inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
               })
             })
@@ -389,7 +362,7 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
               })
           }}
         >
-          <ButtonText>Swap</ButtonText>
+          <ButtonText>Send</ButtonText>
         </Button>
       </TradeWrapper>
       <Shim size={32} />
@@ -422,21 +395,19 @@ function Confirmed({ wallet, team, balancesData }) {
   )
 }
 
-function Manager({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken }) {
+function Manager({ wallet, team, balancesData, updateBalancesData, token }) {
   const [showConfirm, setShowConfirm] = useState(false)
   function confirm() {
     setShowConfirm(true)
   }
 
   return !showConfirm ? (
-    <Buy
+    <Send
       wallet={wallet}
       team={team}
-      reservesData={reservesData}
+      token={token}
       balancesData={balancesData}
       updateBalancesData={updateBalancesData}
-      outputToken={outputToken}
-      inputToken={inputToken}
       confirm={confirm}
     />
   ) : (
@@ -446,12 +417,11 @@ function Manager({ wallet, team, reservesData, balancesData, updateBalancesData,
 
 Manager.getInitialProps = async context => {
   const { query, res } = context
-  const { buy } = query
+  const { token: _token } = query
 
-  const outputToken = buy ? (Team[buy] === Team.UNI || Team[buy] === Team.PIGI ? Team[buy] : null) : null
-  const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIGI : Team.UNI) : null
+  const token = _token ? (Team[_token] === Team.UNI || Team[_token] === Team.PIGI ? Team[_token] : null) : null
 
-  if (!inputToken || !outputToken) {
+  if (!token) {
     res.writeHead(302, { Location: '/' })
     res.end()
     return {}
@@ -459,11 +429,9 @@ Manager.getInitialProps = async context => {
 
   return {
     dataNeeds: {
-      [DataNeeds.BALANCES]: true,
-      [DataNeeds.RESERVES]: true
+      [DataNeeds.BALANCES]: true
     },
-    inputToken,
-    outputToken
+    token
   }
 }
 

@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 
 import RouteLoader from './RouteLoader'
 import Header from './Header'
@@ -61,13 +61,22 @@ const Element = styled.div`
   display: flex;
   flex-direction: ${({ direction }) => direction || 'column'};
   justify-content: ${({ justify }) => justify || 'center'};
-  align-items: ${({ align }) => align};
-  flex: ${({ grow }) => (grow ? '1 1 auto' : '0 1 auto')};
-  width: ${({ width }) => width || '100vw'};
+  align-items: 'flex-start';
+  flex: 0 1 auto;
+  width: 100vw;
 
-  @media only screen and (max-width: 480px) {
-    padding: ${({ noPadding }) => !noPadding && '0 16px 0 16px;'};
-  }
+  ${({ header }) =>
+    header &&
+    css`
+      padding: 1rem;
+    `}
+
+  ${({ body }) =>
+    body &&
+    css`
+      max-width: 525px;
+      padding: 0 2rem 2rem 2rem;
+    `}
 `
 
 export default function Layout({ wallet, team, children, boostsLeft, setWalletModalIsOpen }) {
@@ -81,10 +90,10 @@ export default function Layout({ wallet, team, children, boostsLeft, setWalletMo
         <AnimatedImg time={'500s'} src="static/blob_3.svg" />
         <AnimatedImg time={'250s'} src="static/blob_1.svg" />
       </BackroundElement>
-      <Element noPadding align="flex-start">
+      <Element noPadding>
         <RouteLoader />
       </Element>
-      <Element align="flex-start" justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
+      <Element header justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
         <Header
           wallet={wallet}
           team={team}
@@ -93,9 +102,7 @@ export default function Layout({ wallet, team, children, boostsLeft, setWalletMo
           setWalletModalIsOpen={setWalletModalIsOpen}
         />
       </Element>
-      <Element align="flex-start" grow={false} width={'448px'}>
-        {children}
-      </Element>
+      <Element body>{children}</Element>
     </Root>
   )
 }

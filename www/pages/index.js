@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import styled from 'styled-components'
-import { motion, useMotionValue } from 'framer-motion'
+import { motion, useMotionValue, transform } from 'framer-motion'
 
 import { DataNeeds } from '../constants'
 import { useStyledTheme } from '../hooks'
@@ -42,6 +42,40 @@ const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
+const inputRange = [0, 1]
+const outputRange = [0, 100]
+function DominancePercentage({ UNIDominance }) {
+  const [statefulX, setStatefulX] = useState(0)
+  const x = useMotionValue(0)
+
+  useEffect(() => {
+    const unsubscribeX = x.onChange(() =>
+      setStatefulX(Math.round(transform(UNIDominance >= 0.5 ? x.current : 1 - x.current, inputRange, outputRange), 2))
+    )
+    return () => {
+      unsubscribeX()
+    }
+  }, [x, UNIDominance])
+
+  return (
+    <>
+      <motion.div
+        style={{ x }}
+        animate={{
+          x: UNIDominance
+        }}
+        transition={{
+          duration: 1.25,
+          ease: 'easeOut'
+        }}
+      />
+      <FixedNum>
+        {UNIDominance >= 0.5 ? 'Unicorn' : 'Pig'} dominance is at {statefulX}%
+      </FixedNum>
+    </>
+  )
+}
+
 function Home({
   wallet,
   team,
@@ -55,17 +89,6 @@ function Home({
   const UNIDominance = reservesData[Team.PIGI] / (reservesData[Team.UNI] + reservesData[Team.PIGI])
 
   const theme = useStyledTheme()
-
-  const x = useMotionValue(0)
-
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    const unsubscribeX = x.onChange(() => setCount(Math.round(x.current)))
-    return () => {
-      unsubscribeX()
-    }
-  }, [x])
 
   const showFaucet = addressData.canFaucet && balancesData[Team.UNI] === 0 && balancesData[Team.PIGI] === 0
 
@@ -84,23 +107,11 @@ function Home({
       />
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
         <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
-          {UNIDominance >= 0.5 ? (
-            <FixedNum>Unicorn dominance is at {count}%</FixedNum>
-          ) : (
-            <FixedNum>Pig dominance is at {count}%</FixedNum>
-          )}
+          <DominancePercentage UNIDominance={UNIDominance} />
         </Title>
         <Shim size={12} />
 
         <Dominance percent={UNIDominance * 100} />
-
-        <motion.div
-          style={{ x }}
-          animate={{
-            x: UNIDominance >= 0.5 ? Math.round(UNIDominance * 100, 2) : Math.round((1 - UNIDominance) * 100, 2)
-          }}
-          transition={{ ease: 'easeOut', duration: 1 }}
-        ></motion.div>
 
         <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
           {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!

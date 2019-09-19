@@ -8,19 +8,6 @@ import NavButton from './NavButton'
 import Button from './Button'
 import { QRIcon, StatsIcon, ShareIcon } from './NavIcons'
 
-const HeaderWrapper = styled.span`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 1rem;
-
-  @media only screen and (max-width: 480px) {
-    padding: 0;
-    padding-top: 1rem;
-  }
-`
-
 const Uniswap = styled.span`
   margin: 0;
   font-size: 1rem;
@@ -46,9 +33,8 @@ const LinkWrapper = styled.span`
 `
 
 const HomeButton = styled(NavButton)`
-  @media only screen and (max-width: 480px) {
-    padding: 0px;
-  }
+  padding: 1rem;
+  line-height: 0rem;
 `
 
 const IconButton = styled(NavButton)`
@@ -74,8 +60,8 @@ const IconButton = styled(NavButton)`
 
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
-    color: ${({ theme }) => theme.colors.black};
-    background-color: ${({ theme }) => theme.colors.white};
+    color: ${({ theme }) => theme.colors.white};
+    background-color: ${({ theme }) => theme.colors.link};
   }
 `
 
@@ -87,7 +73,7 @@ export default function Header({ wallet, team, showIcons, boostsLeft, setWalletM
   }, [])
 
   return (
-    <HeaderWrapper>
+    <>
       <HomeButton href={wallet && team ? '/' : '/welcome'} variant="text">
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
@@ -124,6 +110,6 @@ export default function Header({ wallet, team, showIcons, boostsLeft, setWalletM
           </StyledBadge>
         </LinkWrapper>
       )}
-    </HeaderWrapper>
+    </>
   )
 }

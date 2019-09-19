@@ -5,7 +5,7 @@ import { useWindowSize } from '../hooks'
 export default function Confetti({ start, variant }) {
   const { width, height } = useWindowSize()
 
-  const _variant = variant ? variant : height && width && height > width ? 'bottom' : variant
+  const _variant = variant ? variant : height && width && height > 1.5 * width ? 'bottom' : variant
 
   return (
     <ReactConfetti
@@ -20,9 +20,9 @@ export default function Confetti({ start, variant }) {
         y: _variant === 'top' ? height * 0.25 : _variant === 'bottom' ? height * 0.75 : height * 0.5
       }}
       initialVelocityX={15}
-      initialVelocityY={25}
-      gravity={0.5}
-      tweenDuration={250}
+      initialVelocityY={30}
+      gravity={0.45}
+      tweenDuration={100}
       wind={0.05}
     />
   )

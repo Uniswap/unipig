@@ -15,7 +15,7 @@ unipigWallet.rollup.connect(new SimpleClient(`http://${HOST}:${PORT}`))
 
 export default async function(req: NowRequest, res: NowResponse): Promise<NowResponse> {
   const { body } = req
-  const { interactionType, address, inputToken, inputAmount } = JSON.parse(body || JSON.stringify({}))
+  const { interactionType, address, inputToken, inputAmount, recipient } = JSON.parse(body || JSON.stringify({}))
 
   if (!interactionType) {
     return res.status(400).send('')
@@ -51,6 +51,21 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
             inputAmount,
             minOutputAmount: 1,
             timeout: Date.now() + 10000
+          },
+          address
+        )
+        return res.status(200).send('')
+      }
+      case OVMWalletInteractions.SEND: {
+        if (!inputToken) {
+          return res.status(400).send('')
+        }
+
+        await unipigWallet.rollup.sendTransaction(
+          {
+            tokenType: inputToken === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE,
+            recipient,
+            amount: inputAmount
           },
           address
         )

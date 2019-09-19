@@ -20,7 +20,8 @@
     "check:all": "yarn lint:check && yarn pretty:check"
   },
   "dependencies": {
-    "@ethersproject/wallet": "^5.0.0-beta.129",
+    "@ethersproject/address": "^5.0.0-beta.129",
+    "@ethersproject/wallet": "^5.0.0-beta.131",
     "@material-ui/core": "^4.4.0",
     "@pigi/core": "^0.0.14",
     "@pigi/wallet": "^0.0.13",

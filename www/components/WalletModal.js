@@ -19,13 +19,10 @@ import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
 import Confetti from './Confetti'
 import { ButtonText } from './Type'
+import NavButton from './NavButton'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 `
 
@@ -34,12 +31,13 @@ const StyledDialogContent = styled(DialogContent)`
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
+    padding: 1rem;
+    width: 100%;
     max-width: 448px;
-    padding: 0px;
-    @media only screen and (max-width: 480px) {
-      width: 100%;
-      margin: 0px;
+    background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
+
+    @media only screen and (max-width: 448px) {
+      margin: 0;
     }
   }
 `
@@ -82,8 +80,7 @@ const QRCodeWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  margin-bottom: 1rem;
+  margin: 1rem;
 `
 
 const StyledAirdrop = styled.span`
@@ -190,7 +187,7 @@ function AirdropSnackbar({
             }
 
             setSuccess(true)
-            await updateAddressData()
+            updateAddressData()
           })
           .catch(error => {
             console.error(error)
@@ -227,11 +224,17 @@ function AirdropSnackbar({
   const [isFinished, setIsFinished] = useState(false)
   useEffect(() => {
     if (success || error) {
-      controls.start(animateTo(DURATION))
-    }
+      const timeout = setTimeout(() => {
+        controls.start(animateTo(DURATION))
 
-    if (success) {
-      setPopConfetti(true)
+        if (success) {
+          setPopConfetti(true)
+        }
+      }, 1000)
+
+      return () => {
+        clearTimeout(timeout)
+      }
     }
   }, [success, error, controls, setPopConfetti])
 
@@ -270,43 +273,53 @@ function AirdropSnackbar({
           </Contents>
         }
         action={
-          <ProgressSVG viewBox="0 0 50 50">
-            <motion.path
-              fill="none"
-              strokeWidth="4"
-              stroke="white"
-              strokeDasharray="0 1"
-              d="M 0, 20 a 20, 20 0 1,0 40,0 a 20, 20 0 1,0 -40,0"
-              initial={false}
-              style={{
-                pathLength,
-                rotate: 90,
-                translateX: 5,
-                translateY: 5,
-                scaleX: -1 // Reverse direction of line animation
+          <>
+            <ProgressSVG viewBox="0 0 50 50">
+              <motion.path
+                fill="none"
+                strokeWidth="4"
+                stroke="white"
+                strokeDasharray="0 1"
+                d="M 0, 20 a 20, 20 0 1,0 40,0 a 20, 20 0 1,0 -40,0"
+                initial={false}
+                style={{
+                  pathLength,
+                  rotate: 90,
+                  translateX: 5,
+                  translateY: 5,
+                  scaleX: -1 // Reverse direction of line animation
+                }}
+                animate={controls}
+                onAnimationComplete={() => {
+                  setIsFinished(true)
+                }}
+              />
+              <motion.path
+                fill="none"
+                strokeWidth="3"
+                stroke="white"
+                d="M14,26 L 22,33 L 35,16"
+                initial={false}
+                strokeDasharray="0 1"
+                animate={{ pathLength: isFinished ? 1 : 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                onAnimationComplete={() => {
+                  setPopConfetti(false)
+                  setTimeout(() => {
+                    setScannedAddress()
+                  }, 500)
+                }}
+              />
+            </ProgressSVG>
+            <CloseButton
+              style={{ margin: '0.25rem' }}
+              onClick={() => {
+                controls.start(animateTo(0.5))
               }}
-              animate={controls}
-              onAnimationComplete={() => {
-                setIsFinished(true)
-              }}
-            />
-            <motion.path
-              fill="none"
-              strokeWidth="3"
-              stroke="white"
-              d="M14,26 L 22,33 L 35,16"
-              initial={false}
-              strokeDasharray="0 1"
-              animate={{ pathLength: isFinished ? 1 : 0 }}
-              transition={{ duration: 0.75, ease: 'easeOut' }}
-              onAnimationComplete={() => {
-                setPopConfetti()
-                setTimeout(() => {
-                  setScannedAddress()
-                }, 750)
-              }}
-            />
-          </ProgressSVG>
+            >
+              <ButtonText>✗</ButtonText>
+            </CloseButton>
+          </>
         }
       />
     </StyledSnackbar>
@@ -401,7 +414,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
           value={`https://unipig.exchange?referrer=${wallet.address}`}
           ecLevel="M"
           size="250"
-          quietZone="0"
+          quietZone="10px"
           bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
           fgColor={theme.colors.black}
           logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
@@ -433,11 +446,21 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
       <TokenInfo balances={balances} />
       <Shim size={8} />
       <SendWrapper>
-        <SendButton variant="text" disabled>
+        <SendButton
+          as={NavButton}
+          href={`/send?token=${Team[Team.UNI]}`}
+          variant="text"
+          disabled={balances[Team.UNI] === 0}
+        >
           Send
         </SendButton>
         <SendShim />
-        <SendButton variant="text" disabled>
+        <SendButton
+          as={NavButton}
+          href={`/send?token=${Team[Team.PIGI]}`}
+          variant="text"
+          disabled={balances[Team.PIGI] === 0}
+        >
           Send
         </SendButton>
       </SendWrapper>
@@ -507,17 +530,17 @@ export default function WalletModal({ wallet, team, addressData, updateAddressDa
 
   return (
     <>
-      <Confetti start={popConfetti} variant="top" />
-      <AirdropSnackbar
-        wallet={wallet}
-        setPopConfetti={setPopConfetti}
-        scannedAddress={scannedAddress}
-        setScannedAddress={setScannedAddress}
-        lastScannedAddress={lastScannedAddress}
-        updateAddressData={updateAddressData}
-      />
       <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
         <StyledDialogContent>
+          <Confetti start={popConfetti} variant="top" />
+          <AirdropSnackbar
+            wallet={wallet}
+            setPopConfetti={setPopConfetti}
+            scannedAddress={scannedAddress}
+            setScannedAddress={setScannedAddress}
+            lastScannedAddress={lastScannedAddress}
+            updateAddressData={updateAddressData}
+          />
           <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
             <ViewManager
               wallet={wallet}

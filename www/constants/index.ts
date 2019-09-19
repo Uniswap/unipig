@@ -18,7 +18,8 @@ export enum OVMWalletInteractions {
   BALANCES = 'BALANCES',
   RESERVES = 'RESERVES',
   FAUCET = 'FAUCET',
-  SWAP = 'SWAP'
+  SWAP = 'SWAP',
+  SEND = 'SEND'
 }
 
 export enum WalletSource {

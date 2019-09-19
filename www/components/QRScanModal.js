@@ -8,7 +8,6 @@ import QRReader from './QRReader'
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
-    z-index: 2;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -35,7 +34,6 @@ const ScanHeader = styled.span`
   justify-content: space-between;
   padding: 1rem;
   font-weight: 600;
-  z-index: 100;
 `
 const StyledHeaderText = styled(Body)`
   padding-top: 1rem;

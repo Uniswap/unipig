@@ -5,6 +5,7 @@ import { formatFixedDecimals } from '@uniswap/sdk'
 import { DECIMALS } from '../constants'
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Cookie'
+import Shim from './Shim'
 
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
@@ -90,8 +91,7 @@ export const OpenWalletLink = styled.span`
 
 const StyledWalletInfo = styled.span`
   display: flex;
-  flex: 1 1 0;
-  margin-bottom: 12px;
+  flex: auto;
 `
 
 export function WalletInfo({ team, wallet }) {
@@ -132,6 +132,7 @@ export default function Wallet({ wallet, team, balances, onClick, ...rest }) {
         </OpenWalletLink>
       )}
       <WalletInfo wallet={wallet} team={team} />
+      <Shim size={12} />
       <TokenInfo balances={balances} />
     </StyledWallet>
   )
