@@ -23,7 +23,7 @@ const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 
 const TradeWrapper = styled.span`
   width: 100%;
-  height: 100%;
+  height: auto;
   display: grid;
   background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
@@ -114,6 +114,10 @@ const Loader = styled(motion.div)`
   width: 1.5rem;
   background-color: ${({ theme }) => theme.colors.white};
   border-radius: 100%;
+`
+
+const StyledTitle = styled(Title)`
+  font-size: 2.5rem;
 `
 
 const variants = {
@@ -496,7 +500,7 @@ function Confirmed({ wallet, team, balancesData }) {
     <TradeWrapper>
       <Body>💸</Body>
       <Shim size={1} />
-      <Title textStyle="gradient">Transaction Confirmed.</Title>
+      <StyledTitle textStyle="gradient">Transaction Confirmed.</StyledTitle>
       <Shim size={12} />
       <Body color={'white'}>
         <i>Yes. It was that fast.</i>
