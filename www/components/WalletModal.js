@@ -161,14 +161,15 @@ const ProgressSVG = styled.svg`
   margin: 0.25rem;
 `
 
-const DURATION = 8
+const DURATION = 7
 function AirdropSnackbar({
   wallet,
   scannedAddress,
   setPopConfetti,
   setScannedAddress,
   lastScannedAddress,
-  updateAddressData
+  updateAddressData,
+  updateBalancesData
 }) {
   const [error, setError] = useState()
   const [success, setSuccess] = useState()
@@ -177,17 +178,23 @@ function AirdropSnackbar({
     if (scannedAddress) {
       const permission = getPermissionString(wallet.address)
       wallet.signMessage(permission.permissionString).then(signature => {
-        fetch('/api/airdrop', {
-          method: 'POST',
-          body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
-        })
-          .then(async response => {
+        Promise.all([
+          fetch('/api/airdrop', {
+            method: 'POST',
+            body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
+          }),
+          new Promise(resolve => {
+            setTimeout(resolve, 1000)
+          })
+        ])
+          .then(([response]) => {
             if (!response.ok) {
               throw Error(`${response.status} Error: ${response.statusText}`)
             }
 
-            setSuccess(true)
             updateAddressData()
+            updateBalancesData()
+            setSuccess(true)
           })
           .catch(error => {
             console.error(error)
@@ -195,7 +202,7 @@ function AirdropSnackbar({
           })
       })
     }
-  }, [scannedAddress, wallet, updateAddressData])
+  }, [scannedAddress, wallet, updateAddressData, updateBalancesData])
 
   function statusMessage() {
     if (!!!error && !!!success) {
@@ -224,16 +231,10 @@ function AirdropSnackbar({
   const [isFinished, setIsFinished] = useState(false)
   useEffect(() => {
     if (success || error) {
-      const timeout = setTimeout(() => {
-        controls.start(animateTo(DURATION))
+      controls.start(animateTo(DURATION))
 
-        if (success) {
-          setPopConfetti(true)
-        }
-      }, 1000)
-
-      return () => {
-        clearTimeout(timeout)
+      if (success) {
+        setPopConfetti(true)
       }
     }
   }, [success, error, controls, setPopConfetti])
@@ -261,7 +262,7 @@ function AirdropSnackbar({
         setError()
         setSuccess()
         setIsFinished(false)
-        pathLength.set(0)
+        controls.set({ pathLength: 0 })
       }}
     >
       <StyledSnackbarContent
@@ -380,7 +381,11 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
     }
   })
   function copyMnemonic() {
-    copy(wallet.mnemonic)
+    copy(
+      `${window.location.href}welcome?mnemonic=${wallet.mnemonic.replace(/ /g, '-')}&team=${
+        Team[team]
+      }&override=${true}`
+    )
     setMnemonicCopied(true)
   }
 
@@ -474,7 +479,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
         </SendButton>
         <SendShim />
         <SendButton variant="text" onClick={copyMnemonic}>
-          {mnemonicCopied ? 'Copied' : 'Copy Mnemonic'}
+          {mnemonicCopied ? 'Copied' : 'Export Mnemonic'}
         </SendButton>
       </SendWrapper>
       <Shim size={8} />
@@ -522,7 +527,16 @@ function ViewManager({ wallet, team, onDismiss, addressData, balances, scannedAd
   )
 }
 
-export default function WalletModal({ wallet, team, addressData, updateAddressData, balances, isOpen, onDismiss }) {
+export default function WalletModal({
+  wallet,
+  team,
+  addressData,
+  updateAddressData,
+  balances,
+  updateBalancesData,
+  isOpen,
+  onDismiss
+}) {
   const [scannedAddress, setScannedAddress] = useState()
   const lastScannedAddress = usePrevious(scannedAddress)
 
@@ -540,6 +554,7 @@ export default function WalletModal({ wallet, team, addressData, updateAddressDa
             setScannedAddress={setScannedAddress}
             lastScannedAddress={lastScannedAddress}
             updateAddressData={updateAddressData}
+            updateBalancesData={updateBalancesData}
           />
           <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
             <ViewManager

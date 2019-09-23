@@ -1,6 +1,9 @@
 import { NowResponse, NowRequest } from '@now/node'
 import crypto from 'crypto'
 import faunadb from 'faunadb'
+import MemDown from 'memdown'
+import { BaseDB, SimpleClient } from '@pigi/core'
+import { UnipigWallet } from '@pigi/wallet'
 
 import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../constants'
 import { canFaucet } from '../../../utils'
@@ -13,12 +16,19 @@ const client = new faunadb.Client({
 })
 const q = faunadb.query
 
-// disbale body parsing to get raw req body
+// disable body parsing to get raw req body
 export const config = {
   api: {
     bodyParser: false
   }
 }
+
+const HOST = 'localhost'
+const PORT = 3001
+
+const db = new BaseDB(MemDown('ovm'))
+const unipigWallet = new UnipigWallet(db)
+unipigWallet.rollup.connect(new SimpleClient(`http://${HOST}:${PORT}`))
 
 export default async function(req: NowRequest, res: NowResponse): Promise<NowResponse> {
   // GET which handles CRC token auth
@@ -146,7 +156,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         }
       }
 
-      // faucet here
+      // faucet
+      await unipigWallet.rollup.requestFaucetFunds(matchedAddress, 10)
 
       // all has gone well, update db
       await client.query(

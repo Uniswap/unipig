@@ -83,6 +83,7 @@ function Home({
   updateAddressData,
   reservesData,
   balancesData,
+  updateBalancesData,
   walletModalIsOpen,
   setWalletModalIsOpen
 }) {
@@ -100,6 +101,7 @@ function Home({
         addressData={addressData}
         updateAddressData={updateAddressData}
         balances={balancesData}
+        updateBalancesData={updateBalancesData}
         isOpen={walletModalIsOpen}
         onDismiss={() => {
           setWalletModalIsOpen(false)

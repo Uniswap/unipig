@@ -60,6 +60,7 @@ const IconButton = styled(NavButton)`
 
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
+    z-index: 0;
     color: ${({ theme }) => theme.colors.white};
     background-color: ${({ theme }) => theme.colors.link};
   }

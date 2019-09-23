@@ -6,7 +6,7 @@ import styled, { css } from 'styled-components'
 import { transparentize } from 'polished'
 
 import { getHost } from '../utils'
-import { useAddMnemonic, useMnemonicExists, useTeamExists } from '../contexts/Cookie'
+import { useAddMnemonic, useMnemonicExists, useTeamExists, Team, useAddTeam } from '../contexts/Cookie'
 import NavLink from '../components/NavLink'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
@@ -38,7 +38,7 @@ const ErrorNavButton = styled(FilteredNavButton)`
     `}
 `
 
-function Welcome({ mnemonic }) {
+function Welcome({ mnemonic, team, override }) {
   // existence checks for cookie data
   const mnemonicExists = useMnemonicExists()
   const teamExists = useTeamExists()
@@ -52,25 +52,33 @@ function Welcome({ mnemonic }) {
   // save the mnemonic (guaranteed to be correct from getInitialProps)
   const addMnemonic = useAddMnemonic()
   useEffect(() => {
-    if (!mnemonicExists) {
+    if (mnemonic && (override || !mnemonicExists)) {
       addMnemonic(mnemonic)
     }
-  }, [mnemonicExists, mnemonic, addMnemonic])
+  }, [mnemonic, override, mnemonicExists, addMnemonic])
 
-  // once a mnemonic exists, clear mnemonic from url if it's there (only if cookies are enabled)
+  // save the team (guaranteed to be correct from getInitialProps)
+  const addTeam = useAddTeam()
+  useEffect(() => {
+    if (team && (override || !teamExists)) {
+      addTeam(team)
+    }
+  }, [team, override, teamExists, addTeam])
+
+  // if cookies are enabled, clear url (everything we need is in props)
   const router = useRouter()
   const { query } = router
   useEffect(() => {
-    if (cookiesEnabled && mnemonicExists && query && query.mnemonic) {
-      router.push('/welcome', '/welcome', { shallow: true })
+    if (cookiesEnabled && Object.keys(query).length > 0) {
+      router.push('/welcome', undefined, { shallow: true })
     }
   })
 
   return (
     <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
-      <Heading>Hello friend.</Heading>
+      <Heading>{teamExists ? 'Nice to see you again.' : 'Hello friend.'}</Heading>
       <Shim size={1} />
-      <Title textStyle="gradient">Welcome to Unipig.</Title>
+      <Title textStyle="gradient">Welcome {teamExists ? 'back!' : 'to Unipig.'}</Title>
       <Shim size={4} />
       <Desc>
         A gamified demo of Uniswap on Ethereum Layer 2.{' '}
@@ -113,7 +121,9 @@ function Welcome({ mnemonic }) {
           disabled={!mnemonicExists || !cookiesEnabled}
           stretch
         >
-          <ButtonText>{cookiesEnabled === false ? 'Enable cookies to continue.' : 'Let me in!'}</ButtonText>
+          <ButtonText>
+            {cookiesEnabled === false ? 'Enable cookies to continue.' : teamExists ? 'Keep playing!' : 'Let me in!'}
+          </ButtonText>
         </ErrorNavButton>
       </AnimatedFrame>
     </AnimatedFrame>
@@ -122,7 +132,7 @@ function Welcome({ mnemonic }) {
 
 Welcome.getInitialProps = async context => {
   const { query, req } = context
-  const { mnemonic } = query || {}
+  const { mnemonic, team, override, referrer } = query || {}
 
   // create a wallet, if mnemonic exists and is valid
   let wallet = null
@@ -148,10 +158,22 @@ Welcome.getInitialProps = async context => {
   }
 
   if (!wallet || !walletIsValid) {
-    return { mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic, paperWallet: false }
+    return {
+      mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic,
+      team: [Team.UNI, Team.PIGI].includes(Team[team]) ? Team[team] : undefined,
+      override: !!override,
+      referrer,
+      paperWallet: false
+    }
   }
 
-  return { mnemonic: wallet.mnemonic, paperWallet: true }
+  return {
+    mnemonic: wallet.mnemonic,
+    team: [Team.UNI, Team.PIGI].includes(Team[team]) ? Team[team] : undefined,
+    override: !!override,
+    referrer,
+    paperWallet: true
+  }
 }
 
 export default Welcome

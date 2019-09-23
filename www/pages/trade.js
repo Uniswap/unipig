@@ -1,4 +1,5 @@
-import { useState, useReducer } from 'react'
+import { useState, useReducer, useEffect } from 'react'
+import { useAnimation, motion } from 'framer-motion'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import {
@@ -121,6 +122,52 @@ const HelperText = styled(Desc)`
   font-size: 16px;
 `
 
+const PriceImpactText = styled(Desc)`
+  color: ${({ theme }) => transparentize(0.5, theme.colors.textColor)};
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 0;
+`
+
+const Percentage = styled.span`
+  color: ${({ theme }) => theme.colors.success};
+  font-size: 16px;
+`
+
+const Loader = styled(motion.div)`
+  height: 1.5rem;
+  width: 1.5rem;
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: 100%;
+`
+
+const variants = {
+  initial: {
+    scale: 1
+  },
+  loading: {
+    scale: [1, 1.5],
+    transition: {
+      yoyo: Infinity,
+      duration: 1,
+      ease: 'linear'
+    }
+  },
+  finished: {
+    scale: 0,
+    transition: {
+      duration: 0.5,
+      ease: 'easeOut'
+    }
+  }
+}
+
+const RESTING = 'RESTING'
+const PENDING = 'PENDING'
+const SUCCESS = 'SUCCESS'
+
 const ERROR_MESSAGE = 'ERROR_MESSAGE'
 const INPUT_AMOUNT_RAW = 'INPUT_AMOUNT_RAW'
 const INPUT_AMOUNT_PARSED = 'INPUT_AMOUNT_PARSED'
@@ -128,6 +175,8 @@ const OUTPUT_AMOUNT_RAW = 'OUTPUT_AMOUNT_RAW'
 const OUTPUT_AMOUNT_PARSED = 'OUTPUT_AMOUNT_PARSED'
 const MARKET_RATE_PRE_INVERTED = 'MARKET_RATE_PRE_INVERTED'
 const EXECUTION_RATE_INVERTED = 'EXECUTION_RATE_INVERTED'
+const MARKET_RATE_PRICE_IMPACT = 'MARKET_RATE_PRICE_IMPACT'
+const SWAP_STATE = 'SWAP_STATE'
 
 const initialSwapState = {
   [ERROR_MESSAGE]: null,
@@ -135,7 +184,9 @@ const initialSwapState = {
   [INPUT_AMOUNT_PARSED]: null,
   [OUTPUT_AMOUNT_RAW]: '',
   [OUTPUT_AMOUNT_PARSED]: null,
-  [EXECUTION_RATE_INVERTED]: null
+  [EXECUTION_RATE_INVERTED]: null,
+  [MARKET_RATE_PRICE_IMPACT]: null,
+  [SWAP_STATE]: RESTING
 }
 
 function init(marketRatePreInverted) {
@@ -150,11 +201,20 @@ const SET_INPUT_AMOUNT_INVALID = 'SET_INPUT_AMOUNT_INVALID'
 const SET_INSUFFICIENT_BALANCE = 'SET_INSUFFICIENT_BALANCE'
 const SET_ERROR = 'SET_ERROR'
 const RESET_INPUT_AMOUNT = 'RESET_INPUT_AMOUNT'
+const SET_PENDING = 'SET_PENDING'
+const SET_SUCCESS = 'SET_SUCCESS'
 
 function reducer(state, { type, payload = {} } = {}) {
   switch (type) {
     case SET_INPUT_AMOUNT: {
-      const { rawInputValue, parsedInputValue, rawOutputValue, parsedOutputValue, executionRateInverted } = payload
+      const {
+        rawInputValue,
+        parsedInputValue,
+        rawOutputValue,
+        parsedOutputValue,
+        executionRateInverted,
+        marketRatePriceImpact
+      } = payload
 
       return {
         ...state,
@@ -163,6 +223,7 @@ function reducer(state, { type, payload = {} } = {}) {
         [OUTPUT_AMOUNT_RAW]: rawOutputValue,
         [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
         [EXECUTION_RATE_INVERTED]: executionRateInverted,
+        [MARKET_RATE_PRICE_IMPACT]: marketRatePriceImpact,
         [ERROR_MESSAGE]: null
       }
     }
@@ -172,6 +233,11 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawValue,
+        [INPUT_AMOUNT_PARSED]: null,
+        [OUTPUT_AMOUNT_RAW]: null,
+        [OUTPUT_AMOUNT_PARSED]: null,
+        [EXECUTION_RATE_INVERTED]: null,
+        [MARKET_RATE_PRICE_IMPACT]: null,
         [ERROR_MESSAGE]: 'Invalid Input'
       }
     }
@@ -185,6 +251,7 @@ function reducer(state, { type, payload = {} } = {}) {
         [OUTPUT_AMOUNT_RAW]: rawOutputValue,
         [OUTPUT_AMOUNT_PARSED]: parsedOutputValue,
         [EXECUTION_RATE_INVERTED]: executionRateInverted,
+        [MARKET_RATE_PRICE_IMPACT]: null,
         [ERROR_MESSAGE]: 'Insufficient Balance'
       }
     }
@@ -192,6 +259,18 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [ERROR_MESSAGE]: 'Unknown Error'
+      }
+    }
+    case SET_PENDING: {
+      return {
+        ...state,
+        [SWAP_STATE]: PENDING
+      }
+    }
+    case SET_SUCCESS: {
+      return {
+        ...state,
+        [SWAP_STATE]: SUCCESS
       }
     }
     case RESET_INPUT_AMOUNT: {
@@ -254,6 +333,11 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
       return
     }
 
+    const marketRatePriceImpact = tradeDetails.marketDetailsPost.marketRate.rateInverted
+      .minus(tradeDetails.marketDetailsPre.marketRate.rateInverted)
+      .dividedBy(tradeDetails.marketDetailsPre.marketRate.rateInverted)
+      .multipliedBy(100)
+
     dispatchSwapState({
       type: SET_INPUT_AMOUNT,
       payload: {
@@ -261,7 +345,8 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
         parsedInputValue: parsedValue,
         rawOutputValue: formattedOutputAmount,
         parsedOutputValue: outputAmount,
-        executionRateInverted: tradeDetails.executionRate.rateInverted
+        executionRateInverted: tradeDetails.executionRate.rateInverted,
+        marketRatePriceImpact
       }
     })
   }
@@ -300,6 +385,18 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
     updateValues(formatFixedDecimals(inputBalance, DECIMALS), inputBalance)
   }
 
+  const controls = useAnimation()
+  const sendState = swapState[SWAP_STATE]
+  useEffect(() => {
+    if (sendState === PENDING) {
+      controls.start('loading')
+    } else if (sendState === SUCCESS) {
+      controls.start('finished')
+    } else {
+      controls.set('initial')
+    }
+  }, [sendState, controls])
+
   return (
     <>
       <Body textStyle="gradient">
@@ -312,6 +409,7 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
         <StyledInputWrapper>
           <Input
             required
+            disabled={swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS}
             error={!!swapState[ERROR_MESSAGE]}
             type="number"
             min="0"
@@ -354,11 +452,12 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
         ) : (
           <HelperText error={false}>
             <b>
+              1 {Team[outputToken]} ={' '}
               {formatSignificant(swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
                 significantDigits: 3,
                 forceIntegerSignificance: true
               })}{' '}
-              {Team[inputToken]} = 1 {Team[outputToken]}
+              {Team[inputToken]}
             </b>
           </HelperText>
         )}
@@ -367,30 +466,67 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
           variant="gradient"
           stretch
           onClick={() => {
-            fetch('/api/ovm-wallet', {
-              method: 'POST',
-              body: JSON.stringify({
-                interactionType: OVMWalletInteractions.SWAP,
-                address: wallet.address,
-                inputToken,
-                inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
-              })
-            })
-              .then(response => {
-                if (!response.ok) {
-                  throw Error(`${response.status} Error: ${response.statusText}`)
-                }
-                updateBalancesData()
-                confirm()
-              })
-              .catch(error => {
-                console.error(error)
-                dispatchSwapState({ type: SET_ERROR })
-              })
+            if (swapState[SWAP_STATE] === RESTING) {
+              dispatchSwapState({ type: SET_PENDING })
+
+              Promise.all([
+                fetch('/api/ovm-wallet', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    interactionType: OVMWalletInteractions.SWAP,
+                    address: wallet.address,
+                    inputToken,
+                    inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
+                  })
+                }),
+                new Promise(resolve => {
+                  setTimeout(resolve, 2000)
+                })
+              ])
+                .then(([response]) => {
+                  if (!response.ok) {
+                    throw Error(`${response.status} Error: ${response.statusText}`)
+                  }
+                  dispatchSwapState({ type: SET_SUCCESS })
+                })
+                .catch(error => {
+                  console.error(error)
+                  dispatchSwapState({ type: SET_ERROR })
+                })
+            }
           }}
         >
-          <ButtonText>Swap</ButtonText>
+          {swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS ? (
+            <Loader
+              variants={variants}
+              animate={controls}
+              initial="initial"
+              onAnimationComplete={() => {
+                updateBalancesData()
+                setTimeout(() => {
+                  confirm()
+                }, 50)
+              }}
+            />
+          ) : (
+            <ButtonText>Swap</ButtonText>
+          )}
         </Button>
+        {swapState[MARKET_RATE_PRICE_IMPACT] && (
+          <PriceImpactText>
+            This trade will boost the value of {Team[outputToken]} by{' '}
+            <b>
+              <Percentage>
+                +
+                {formatSignificant(swapState[MARKET_RATE_PRICE_IMPACT], {
+                  significantDigits: 2,
+                  forceIntegerSignificance: true
+                })}
+                %
+              </Percentage>
+            </b>
+          </PriceImpactText>
+        )}
       </TradeWrapper>
       <Shim size={32} />
       <Wallet wallet={wallet} team={team} balances={balancesData} />

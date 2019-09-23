@@ -1,4 +1,6 @@
-import { useState, useReducer } from 'react'
+import { useState, useReducer, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import { motion, useAnimation } from 'framer-motion'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { BigNumber, formatFixedDecimals } from '@uniswap/sdk'
@@ -13,6 +15,9 @@ import Shim from '../components/Shim'
 import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
+import { QRIcon } from '../components/NavIcons'
+
+const QRScanModal = dynamic(() => import('../components/QRScanModal'), { ssr: false })
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 
@@ -97,18 +102,59 @@ const HelperText = styled(Desc)`
   font-size: 16px;
 `
 
+const IconButton = styled(Button)`
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  padding: 0px;
+`
+
+const Loader = styled(motion.div)`
+  height: 1.5rem;
+  width: 1.5rem;
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: 100%;
+`
+
+const variants = {
+  initial: {
+    scale: 1
+  },
+  loading: {
+    scale: [1, 1.5],
+    transition: {
+      yoyo: Infinity,
+      duration: 1,
+      ease: 'linear'
+    }
+  },
+  finished: {
+    scale: 0,
+    transition: {
+      duration: 0.5,
+      ease: 'easeOut'
+    }
+  }
+}
+
+const RESTING = 'RESTING'
+const PENDING = 'PENDING'
+const SUCCESS = 'SUCCESS'
+
 const ERROR_MESSAGE_INPUT = 'ERROR_MESSAGE_INPUT'
 const ERROR_MESSAGE_RECIPIENT = 'ERROR_MESSAGE_RECIPIENT'
 const INPUT_AMOUNT_RAW = 'INPUT_AMOUNT_RAW'
 const INPUT_AMOUNT_PARSED = 'INPUT_AMOUNT_PARSED'
 const RECIPIENT = 'RECIPIENT'
+const SEND_STATE = 'SEND_STATE'
 
 const initialSwapState = {
   [ERROR_MESSAGE_INPUT]: null,
   [ERROR_MESSAGE_RECIPIENT]: null,
   [INPUT_AMOUNT_RAW]: '',
   [INPUT_AMOUNT_PARSED]: null,
-  [RECIPIENT]: ''
+  [RECIPIENT]: '',
+  [SEND_STATE]: RESTING
 }
 
 function init() {
@@ -122,6 +168,8 @@ const SET_INSUFFICIENT_BALANCE = 'SET_INSUFFICIENT_BALANCE'
 const SET_RECIPIENT = 'SET_RECIPIENT'
 const SET_RECIPIENT_INVALID = 'SET_RECIPIENT_INVALID'
 const SET_ERROR = 'SET_ERROR'
+const SET_PENDING = 'SET_PENDING'
+const SET_SUCCESS = 'SET_SUCCESS'
 
 function reducer(state, { type, payload = {} } = {}) {
   switch (type) {
@@ -151,6 +199,7 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawValue,
+        [INPUT_AMOUNT_PARSED]: null,
         [ERROR_MESSAGE_INPUT]: 'Invalid Input'
       }
     }
@@ -182,9 +231,22 @@ function reducer(state, { type, payload = {} } = {}) {
         [ERROR_MESSAGE_RECIPIENT]: 'Invalid Recipient'
       }
     }
+    case SET_PENDING: {
+      return {
+        ...state,
+        [SEND_STATE]: PENDING
+      }
+    }
+    case SET_SUCCESS: {
+      return {
+        ...state,
+        [SEND_STATE]: SUCCESS
+      }
+    }
     case SET_ERROR: {
       return {
         ...state,
+        [SEND_STATE]: RESTING,
         [ERROR_MESSAGE_INPUT]: 'Unknown Error'
       }
     }
@@ -281,8 +343,35 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
     })
   }
 
+  const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
+
+  const controls = useAnimation()
+  const sendState = swapState[SEND_STATE]
+  useEffect(() => {
+    if (sendState === PENDING) {
+      controls.start('loading')
+    } else if (sendState === SUCCESS) {
+      controls.start('finished')
+    } else {
+      controls.set('initial')
+    }
+  }, [sendState, controls])
+
   return (
     <>
+      <QRScanModal
+        isOpen={QRModalIsOpen}
+        onDismiss={() => {
+          setQRModalIsOpen(false)
+        }}
+        onAddress={address => {
+          dispatchSwapState({
+            type: SET_RECIPIENT,
+            payload: { recipient: address }
+          })
+          setQRModalIsOpen(false)
+        }}
+      />
       <Body textStyle="gradient">
         <b>Send tokens to a friend.</b>
       </Body>
@@ -291,6 +380,7 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
         <StyledInputWrapper>
           <Input
             required
+            disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
             error={!!swapState[ERROR_MESSAGE_INPUT]}
             type="number"
             min="0"
@@ -313,6 +403,7 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
         <StyledInputWrapper>
           <Input
             required
+            disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
             error={!!swapState[ERROR_MESSAGE_RECIPIENT]}
             type="text"
             value={swapState[RECIPIENT]}
@@ -320,6 +411,13 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
             placeholder="0x..."
             inputColor={token}
           />
+          <IconButton
+            onClick={() => {
+              setQRModalIsOpen(true)
+            }}
+          >
+            <QRIcon />
+          </IconButton>
         </StyledInputWrapper>
         <HelperText
           style={{
@@ -339,30 +437,52 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
           variant="gradient"
           stretch
           onClick={() => {
-            fetch('/api/ovm-wallet', {
-              method: 'POST',
-              body: JSON.stringify({
-                interactionType: OVMWalletInteractions.SEND,
-                address: wallet.address,
-                recipient: swapState[RECIPIENT],
-                inputToken: token,
-                inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
-              })
-            })
-              .then(response => {
-                if (!response.ok) {
-                  throw Error(`${response.status} Error: ${response.statusText}`)
-                }
-                updateBalancesData()
-                confirm()
-              })
-              .catch(error => {
-                console.error(error)
-                dispatchSwapState({ type: SET_ERROR })
-              })
+            if (swapState[SEND_STATE] === RESTING) {
+              dispatchSwapState({ type: SET_PENDING })
+
+              Promise.all([
+                fetch('/api/ovm-wallet', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    interactionType: OVMWalletInteractions.SEND,
+                    address: wallet.address,
+                    recipient: swapState[RECIPIENT],
+                    inputToken: token,
+                    inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
+                  })
+                }),
+                new Promise(resolve => {
+                  setTimeout(resolve, 1000)
+                })
+              ])
+                .then(([response]) => {
+                  if (!response.ok) {
+                    throw Error(`${response.status} Error: ${response.statusText}`)
+                  }
+                  dispatchSwapState({ type: SET_SUCCESS })
+                })
+                .catch(error => {
+                  console.error(error)
+                  dispatchSwapState({ type: SET_ERROR })
+                })
+            }
           }}
         >
-          <ButtonText>Send</ButtonText>
+          {swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS ? (
+            <Loader
+              variants={variants}
+              animate={controls}
+              initial="initial"
+              onAnimationComplete={() => {
+                updateBalancesData()
+                setTimeout(() => {
+                  confirm()
+                }, 50)
+              }}
+            />
+          ) : (
+            <ButtonText>Send</ButtonText>
+          )}
         </Button>
       </TradeWrapper>
       <Shim size={32} />

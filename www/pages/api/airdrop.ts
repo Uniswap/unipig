@@ -1,5 +1,8 @@
 import { NowRequest, NowResponse } from '@now/node'
 import faunadb from 'faunadb'
+import MemDown from 'memdown'
+import { BaseDB, SimpleClient } from '@pigi/core'
+import { UnipigWallet } from '@pigi/wallet'
 
 import { AddressDocument } from '../../constants'
 import { validatePermissionString } from '../../utils'
@@ -8,6 +11,13 @@ const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
 })
 const q = faunadb.query
+
+const HOST = 'localhost'
+const PORT = 3001
+
+const db = new BaseDB(MemDown('ovm'))
+const unipigWallet = new UnipigWallet(db)
+unipigWallet.rollup.connect(new SimpleClient(`http://${HOST}:${PORT}`))
 
 export default async function(req: NowRequest, res: NowResponse): Promise<NowResponse> {
   const { body } = req
@@ -40,6 +50,10 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     }
 
     // faucet both here
+    await Promise.all([
+      unipigWallet.rollup.requestFaucetFunds(address, 1000),
+      unipigWallet.rollup.requestFaucetFunds(scannedAddress, 1000)
+    ])
 
     // all has gone well, update db
     await client.query(
