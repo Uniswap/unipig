@@ -2,6 +2,11 @@
   "version": 2,
   "name": "unipig",
   "alias": "unipig.exchange",
+  "build": {
+    "env": {
+      "AGGREGATOR_URL": "@unipig_aggregator_url"
+    }
+  },
   "env": {
     "FAUNADB_SERVER_SECRET": "@unipig_faunadb_server_secret",
     "TWITTER_CONSUMER_SECRET": "@unipig_twitter_consumer_secret"

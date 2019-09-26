@@ -1,16 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import App from 'next/app'
 import Head from 'next/head'
+import { UNISWAP_ADDRESS } from '@pigi/wallet'
 import fetch from 'isomorphic-unfetch'
-import { Wallet } from '@ethersproject/wallet'
 import { createMuiTheme } from '@material-ui/core/styles'
 import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
 
-import { OVMWalletInteractions, DataNeeds } from '../constants'
-import { getCookie, getHost, getPermissionString } from '../utils'
-import CookieContext, { Team, Updater as CookieContextUpdater } from '../contexts/Cookie'
+import { getCookie, getHost, swap, send } from '../utils'
+import ClientContext, {
+  Team,
+  Updater as ClientContextUpdater,
+  useWallet,
+  useOVMWallet,
+  useOVMBalances
+} from '../contexts/Client'
 import Layout from '../components/Layout'
 
 const BLACK = '#000000'
@@ -94,12 +99,10 @@ const MUITheme = createMuiTheme({
   }
 })
 
-async function getAddressData(wallet, req) {
-  const permission = getPermissionString(wallet.address)
-  const signature = await wallet.signMessage(permission.permissionString)
+async function getAddressData(address, permission, req) {
   return await fetch(`${getHost(req)}/api/get-address-data`, {
     method: 'POST',
-    body: JSON.stringify({ address: wallet.address, time: permission.time, signature })
+    body: JSON.stringify({ address, signature: permission })
   }).then(async response => {
     if (!response.ok) {
       throw Error(`${response.status} Error: ${response.statusText}`)
@@ -109,63 +112,58 @@ async function getAddressData(wallet, req) {
   })
 }
 
-async function getBalancesData(wallet, req) {
-  return await fetch(`${getHost(req)}/api/ovm-wallet`, {
-    method: 'POST',
-    body: JSON.stringify({ interactionType: OVMWalletInteractions.BALANCES, address: wallet.address })
-  }).then(async response => {
-    if (!response.ok) {
-      throw Error(`${response.status} Error: ${response.statusText}`)
-    }
-
-    return await response.json()
-  })
-}
-
-async function getReservesData(req) {
-  return await fetch(`${getHost(req)}/api/ovm-wallet`, {
-    method: 'POST',
-    body: JSON.stringify({ interactionType: OVMWalletInteractions.RESERVES })
-  }).then(async response => {
-    if (!response.ok) {
-      throw Error(`${response.status} Error: ${response.statusText}`)
-    }
-
-    return await response.json()
-  })
-}
-
-function AppStateWrapper({ Component, wallet, team, addressData, balancesData, reservesData, ...rest }) {
+function AppStateWrapper({ address, permission, team, addressData, Component, pageProps }) {
   const [walletModalIsOpen, setWalletModalIsOpen] = useState(false)
 
-  // weird hacky thing to reset wallet modal openness across pages
+  // slight hack to reset wallet modal openness across pages
   useEffect(() => {
     return () => {
       setWalletModalIsOpen(false)
     }
   }, [Component])
 
-  const [updatedAddressData, setUpdatedAddressData] = useState(null)
-  // note: must only be called client-side!
-  const updateAddressData = useCallback(async () => {
-    await getAddressData(wallet).then(d => {
-      setUpdatedAddressData(d)
-    })
-  }, [wallet])
+  // set up ability to update address data
+  const [updatedAddressData, setUpdatedAddressData] = useState()
+  const [updater, setUpdater] = useState(0)
+  useEffect(() => {
+    let stale
 
-  const [updatedBalancesData, setUpdatedBalancesData] = useState(null)
-  // note: must only be called client-side!
-  const updateBalancesData = useCallback(async () => {
-    await getBalancesData(wallet).then(d => {
-      setUpdatedBalancesData(d)
+    getAddressData(address, permission).then(data => {
+      if (!stale) {
+        setUpdatedAddressData(data)
+      }
     })
-  }, [wallet])
+
+    return () => {
+      stale = true
+    }
+  }, [updater, address, permission])
+  const updateAddressData = useCallback(() => {
+    setUpdater(updater => updater + 1)
+  }, [])
+
+  const wallet = useWallet()
+  const OVMWallet = useOVMWallet(wallet)
+  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS)
+  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address)
+
+  async function OVMSwap(inputToken, inputAmount) {
+    await swap(OVMWallet, wallet.address, inputToken, inputAmount)
+  }
+
+  async function OVMSend(to, token, amount) {
+    await send(OVMWallet, wallet.address, to, token, amount)
+  }
 
   return (
     <Layout
       wallet={wallet}
       team={team}
-      boostsLeft={updatedAddressData || addressData ? (updatedAddressData || addressData).boostsLeft : 0}
+      addressData={updatedAddressData || addressData}
+      updateAddressData={updateAddressData}
+      OVMBalances={OVMBalances}
+      updateOVMBalances={updateOVMBalances}
+      walletModalIsOpen={walletModalIsOpen}
       setWalletModalIsOpen={setWalletModalIsOpen}
     >
       <Component
@@ -173,12 +171,14 @@ function AppStateWrapper({ Component, wallet, team, addressData, balancesData, r
         team={team}
         addressData={updatedAddressData || addressData}
         updateAddressData={updateAddressData}
-        balancesData={updatedBalancesData || balancesData}
-        updateBalancesData={updateBalancesData}
-        reservesData={reservesData}
-        walletModalIsOpen={walletModalIsOpen}
+        OVMReserves={OVMReserves}
+        updateOVMReserves={updateOVMReserves}
+        OVMBalances={OVMBalances}
+        updateOVMBalances={updateOVMBalances}
+        OVMSwap={OVMSwap}
+        OVMSend={OVMSend}
         setWalletModalIsOpen={setWalletModalIsOpen}
-        {...rest}
+        {...pageProps}
       />
     </Layout>
   )
@@ -192,58 +192,41 @@ export default class MyApp extends App {
     const serverSide = !!req && !!res
 
     const cookie = getCookie(serverSide, context)
-    const { mnemonic, team } = cookie
+    const { address, permission, team } = cookie
 
     // redirect all requests without any cookie data to '/welcome'
-    if (!mnemonic && !team && pathname !== '/welcome') {
+    if (!address && !team && pathname !== '/welcome') {
       res.writeHead(302, { Location: '/welcome' })
       res.end()
       return {}
     }
 
-    // redirect all requests without mnemonic cookie data to '/welcome'
-    if (!mnemonic && pathname !== '/welcome') {
+    // redirect all requests without address cookie data to '/welcome'
+    if (!address && pathname !== '/welcome') {
       res.writeHead(302, { Location: '/welcome' })
       res.end()
       return {}
     }
 
-    // redirect all requests without team cookie data to '/join-team' or '/welcome'
+    // redirect all requests without team cookie data conditionally to either '/join-team' or '/welcome'
     if (!team && !(pathname === '/welcome' || pathname === '/join-team')) {
-      res.writeHead(302, { Location: mnemonic ? '/join-team' : '/welcome' })
+      res.writeHead(302, { Location: address ? '/join-team' : '/welcome' })
       res.end()
       return {}
     }
 
-    const _pageProps = Component.getInitialProps ? await Component.getInitialProps(context) : {}
+    const { addressData: fetchAddressData, ...pageProps } = Component.getInitialProps
+      ? await Component.getInitialProps(context)
+      : {}
 
-    const { dataNeeds, ...pageProps } = _pageProps
-    const {
-      [DataNeeds.ADDRESS]: needAddressData,
-      [DataNeeds.BALANCES]: needBalancesData,
-      [DataNeeds.RESERVES]: needReservesData
-    } = dataNeeds || {}
-
-    const _wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
-
-    // start fetching the data we need
-    const addressDataPromise = needAddressData ? await getAddressData(_wallet, req) : null
-    const balancesDataPromise = needBalancesData ? await getBalancesData(_wallet, req) : null
-    const reservesDataPromise = needReservesData ? await getReservesData(req) : null
-
-    // start getting all the async stuff at the same time and wait for it all to return
-    const [addressData, balancesData, reservesData] = await Promise.all([
-      addressDataPromise,
-      balancesDataPromise,
-      reservesDataPromise
-    ])
+    // fetch address data if it was requested
+    const addressData = fetchAddressData && permission ? await getAddressData(address, permission, req) : {}
 
     return {
-      mnemonic,
+      address,
+      permission,
       team,
       addressData,
-      balancesData,
-      reservesData,
       pageProps
     }
   }
@@ -256,34 +239,31 @@ export default class MyApp extends App {
   }
 
   render() {
-    const { mnemonic, team, addressData, balancesData, reservesData, Component, pageProps } = this.props
-
-    const wallet = mnemonic ? Wallet.fromMnemonic(mnemonic) : null
+    const { address, permission, team, addressData, Component, pageProps } = this.props
 
     return (
       <>
         <Head>
           <title>Unipig Exchange</title>
         </Head>
-        <CookieContext mnemonicInitial={mnemonic} teamInitial={team}>
-          <CookieContextUpdater />
-          <SCThemeProvider theme={SCTheme}>
-            <GlobalStyle />
-            <StylesProvider injectFirst>
-              <MUIThemeProvider theme={MUITheme}>
+        <SCThemeProvider theme={SCTheme}>
+          <GlobalStyle />
+          <StylesProvider injectFirst>
+            <MUIThemeProvider theme={MUITheme}>
+              <ClientContext addressInitial={address} permissionInitial={permission} teamInitial={team}>
+                <ClientContextUpdater />
                 <AppStateWrapper
-                  Component={Component}
-                  wallet={wallet}
+                  address={address}
+                  permission={permission}
                   team={team}
                   addressData={addressData}
-                  balancesData={balancesData}
-                  reservesData={reservesData}
-                  {...pageProps}
+                  Component={Component}
+                  pageProps={pageProps}
                 />
-              </MUIThemeProvider>
-            </StylesProvider>
-          </SCThemeProvider>
-        </CookieContext>
+              </ClientContext>
+            </MUIThemeProvider>
+          </StylesProvider>
+        </SCThemeProvider>
       </>
     )
   }

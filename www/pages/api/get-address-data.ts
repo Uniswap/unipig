@@ -11,21 +11,23 @@ const q = faunadb.query
 
 export default async function(req: NowRequest, res: NowResponse): Promise<NowResponse> {
   const { body } = req
-  const { address, time, signature } = JSON.parse(body || JSON.stringify({}))
+  const { address, signature } = JSON.parse(body || JSON.stringify({}))
 
-  if (!address || !time || !signature) {
+  if (!address || !signature) {
     return res.status(400).send('')
   }
 
-  if (!validatePermissionString(address, time, signature)) {
+  if (!validatePermissionString(address, signature)) {
     return res.status(401).send('')
   }
 
   try {
-    const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), address)))
+    const addressData: any = await client.query(
+      q.Map(q.Paginate(q.Match(q.Index('by-address_addresses'), address)), (ref): any => q.Get(ref))
+    )
 
     // handle new users
-    if (addressRef.data.length === 0) {
+    if (addressData.data.length === 0) {
       const addressDocument: AddressDocument = {
         ethereumAddress: address,
         paperWallet: false,
@@ -46,8 +48,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     }
     // handle existing users
     else {
-      const addressData = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
-      const addressDocument: AddressDocument = addressData[0].data
+      const addressDocument: AddressDocument = addressData.data[0].data
 
       return res.status(200).json({
         ...addressDocument,

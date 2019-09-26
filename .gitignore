@@ -1,3 +1,4 @@
 .env
+.env.build
 www/.next/
 www/node_modules/

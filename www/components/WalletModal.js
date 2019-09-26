@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { QRCode } from 'react-qrcode-logo'
 import { Badge, Snackbar, SnackbarContent } from '@material-ui/core'
@@ -10,16 +11,17 @@ import { transparentize } from 'polished'
 
 import { getPermissionString, truncateAddress } from '../utils'
 import { useStyledTheme, usePrevious } from '../hooks'
-import { useReset, useMnemonicExists, Team } from '../contexts/Cookie'
+import { useReset, useAccountExists, Team } from '../contexts/Client'
+import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
 import Button from './Button'
 import Emoji from './Emoji'
-import QRScanModal from './QRScanModal'
-import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
 import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
 import Confetti from './Confetti'
 import { ButtonText } from './Type'
 import NavButton from './NavButton'
+
+const QRScanModal = dynamic(() => import('./QRScanModal'), { ssr: false })
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {
@@ -133,8 +135,6 @@ const SendShim = styled.span`
   height: 8px;
 `
 
-const StyledSnackbar = styled(Snackbar)``
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FilteredSnackbarContent = ({ inError, ...rest }) => <SnackbarContent {...rest} />
 const StyledSnackbarContent = styled(FilteredSnackbarContent)`
@@ -164,24 +164,24 @@ const ProgressSVG = styled.svg`
 const DURATION = 7
 function AirdropSnackbar({
   wallet,
+  updateAddressData,
+  updateOVMBalances,
   scannedAddress,
-  setPopConfetti,
   setScannedAddress,
   lastScannedAddress,
-  updateAddressData,
-  updateBalancesData
+  setPopConfetti
 }) {
   const [error, setError] = useState()
   const [success, setSuccess] = useState()
 
   useEffect(() => {
     if (scannedAddress) {
-      const permission = getPermissionString(wallet.address)
-      wallet.signMessage(permission.permissionString).then(signature => {
+      const permissionString = getPermissionString(wallet.address)
+      wallet.signMessage(permissionString).then(signature => {
         Promise.all([
           fetch('/api/airdrop', {
             method: 'POST',
-            body: JSON.stringify({ address: wallet.address, time: permission.time, signature, scannedAddress })
+            body: JSON.stringify({ address: wallet.address, signature, scannedAddress })
           }),
           new Promise(resolve => {
             setTimeout(resolve, 1000)
@@ -192,8 +192,8 @@ function AirdropSnackbar({
               throw Error(`${response.status} Error: ${response.statusText}`)
             }
 
+            updateOVMBalances()
             updateAddressData()
-            updateBalancesData()
             setSuccess(true)
           })
           .catch(error => {
@@ -202,7 +202,7 @@ function AirdropSnackbar({
           })
       })
     }
-  }, [scannedAddress, wallet, updateAddressData, updateBalancesData])
+  }, [scannedAddress, wallet, updateOVMBalances, updateAddressData])
 
   function statusMessage() {
     if (!!!error && !!!success) {
@@ -240,7 +240,7 @@ function AirdropSnackbar({
   }, [success, error, controls, setPopConfetti])
 
   return (
-    <StyledSnackbar
+    <Snackbar
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'center'
@@ -306,9 +306,7 @@ function AirdropSnackbar({
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
                 onAnimationComplete={() => {
                   setPopConfetti(false)
-                  setTimeout(() => {
-                    setScannedAddress()
-                  }, 500)
+                  setScannedAddress()
                 }}
               />
             </ProgressSVG>
@@ -323,11 +321,11 @@ function AirdropSnackbar({
           </>
         }
       />
-    </StyledSnackbar>
+    </Snackbar>
   )
 }
 
-function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress, openQRModal }) {
+function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, openQRModal }) {
   const theme = useStyledTheme()
 
   const reset = useReset()
@@ -336,7 +334,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
     if (clickedBurnOnce) {
       const timeout = setTimeout(() => {
         setClickedBurnOnce(false)
-      }, 2500)
+      }, 2000)
 
       return () => {
         clearTimeout(timeout)
@@ -368,11 +366,11 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
     setAddressCopied(true)
   }
 
-  const [mnemonicCopied, setMnemonicCopied] = useState(false)
+  const [accountCopied, setAccountCopied] = useState(false)
   useEffect(() => {
-    if (mnemonicCopied) {
+    if (accountCopied) {
       const timeout = setTimeout(() => {
-        setMnemonicCopied(false)
+        setAccountCopied(false)
       }, 1000)
 
       return () => {
@@ -380,25 +378,25 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
       }
     }
   })
-  function copyMnemonic() {
+  function copyAccount() {
     copy(
-      `${window.location.href}welcome?mnemonic=${wallet.mnemonic.replace(/ /g, '-')}&team=${
-        Team[team]
-      }&override=${true}`
+      `${window.location.href}welcome?account=${
+        wallet.mnemonic ? wallet.mnemonic.replace(/ /g, '-') : wallet.privateKey
+      }&team=${Team[team]}&override=${true}`
     )
-    setMnemonicCopied(true)
+    setAccountCopied(true)
   }
 
   // handle redirect after reset
   const router = useRouter()
-  const mnemonicExists = useMnemonicExists()
+  const accountExists = useAccountExists()
   useEffect(() => {
-    // there might be a race condition here, since `mnemonicExists` might not update sychronously with the cookie...
+    // there might be a race condition here, since `accountExists` might not update sychronously with the cookie...
     // ..., but i think it does, because the context is above this component in the dom tree
-    if (!mnemonicExists) {
+    if (!accountExists) {
       router.push('/welcome')
     }
-  }, [mnemonicExists, router])
+  }, [accountExists, router])
 
   return (
     <StyledWallet team={team}>
@@ -439,7 +437,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
             </StyledBadge>
           </StyledAirdrop>
           <Description>
-            Scan another player to trigger an airdrop. You will both recieve 10 tokens from the Unipig faucet.
+            Scan another player to trigger an airdrop. You will both recieve tokens from the Unipig faucet.
           </Description>
         </>
       )}
@@ -448,14 +446,14 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
       <WalletTitle>
         <span>Tokens</span>
       </WalletTitle>
-      <TokenInfo balances={balances} />
+      <TokenInfo OVMBalances={OVMBalances} />
       <Shim size={8} />
       <SendWrapper>
         <SendButton
           as={NavButton}
           href={`/send?token=${Team[Team.UNI]}`}
           variant="text"
-          disabled={balances[Team.UNI] === 0}
+          disabled={OVMBalances[Team.UNI] === 0}
         >
           Send
         </SendButton>
@@ -464,7 +462,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
           as={NavButton}
           href={`/send?token=${Team[Team.PIGI]}`}
           variant="text"
-          disabled={balances[Team.PIGI] === 0}
+          disabled={OVMBalances[Team.PIGI] === 0}
         >
           Send
         </SendButton>
@@ -478,8 +476,8 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
           {addressCopied ? 'Copied' : 'Copy Address'}
         </SendButton>
         <SendShim />
-        <SendButton variant="text" onClick={copyMnemonic}>
-          {mnemonicCopied ? 'Copied' : 'Export Mnemonic'}
+        <SendButton variant="text" onClick={copyAccount}>
+          {accountCopied ? 'Copied' : 'Export Account'}
         </SendButton>
       </SendWrapper>
       <Shim size={8} />
@@ -496,7 +494,7 @@ function Wallet({ wallet, team, onDismiss, addressData, balances, scannedAddress
   )
 }
 
-function ViewManager({ wallet, team, onDismiss, addressData, balances, scannedAddress, setScannedAddress }) {
+function ViewManager({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, setScannedAddress }) {
   const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
   return (
@@ -511,13 +509,12 @@ function ViewManager({ wallet, team, onDismiss, addressData, balances, scannedAd
           setQRModalIsOpen(false)
         }}
       />
-
       <Wallet
         wallet={wallet}
         team={team}
-        onDismiss={onDismiss}
         addressData={addressData}
-        balances={balances}
+        OVMBalances={OVMBalances}
+        onDismiss={onDismiss}
         scannedAddress={scannedAddress}
         openQRModal={() => {
           setQRModalIsOpen(true)
@@ -532,8 +529,8 @@ export default function WalletModal({
   team,
   addressData,
   updateAddressData,
-  balances,
-  updateBalancesData,
+  OVMBalances,
+  updateOVMBalances,
   isOpen,
   onDismiss
 }) {
@@ -549,20 +546,20 @@ export default function WalletModal({
           <Confetti start={popConfetti} variant="top" />
           <AirdropSnackbar
             wallet={wallet}
-            setPopConfetti={setPopConfetti}
+            updateAddressData={updateAddressData}
+            updateOVMBalances={updateOVMBalances}
             scannedAddress={scannedAddress}
             setScannedAddress={setScannedAddress}
             lastScannedAddress={lastScannedAddress}
-            updateAddressData={updateAddressData}
-            updateBalancesData={updateBalancesData}
+            setPopConfetti={setPopConfetti}
           />
           <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
             <ViewManager
               wallet={wallet}
               team={team}
-              onDismiss={onDismiss}
               addressData={addressData}
-              balances={balances}
+              OVMBalances={OVMBalances}
+              onDismiss={onDismiss}
               scannedAddress={scannedAddress}
               setScannedAddress={setScannedAddress}
             />

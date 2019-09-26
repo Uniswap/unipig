@@ -4,11 +4,10 @@ import { motion, useAnimation } from 'framer-motion'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { BigNumber, formatFixedDecimals } from '@uniswap/sdk'
-
 import { isAddress } from '@ethersproject/address'
 
-import { DECIMALS, DataNeeds, OVMWalletInteractions } from '../constants'
-import { Team } from '../contexts/Cookie'
+import { DECIMALS } from '../constants'
+import { Team } from '../contexts/Client'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
@@ -260,9 +259,9 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }) {
+function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, confirm }) {
   //// parse the props
-  const balance = new BigNumber(balancesData[token])
+  const balance = OVMBalances[token] !== undefined ? new BigNumber(OVMBalances[token]) : null
 
   // amounts
   const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
@@ -384,7 +383,7 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
         <StyledInputWrapper>
           <Input
             required
-            disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
+            disabled={!balance || swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
             error={!!swapState[ERROR_MESSAGE_INPUT]}
             type="number"
             min="0"
@@ -394,7 +393,7 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
             onChange={onInputAmount}
             inputColor={token}
           />
-          <MaxButton inputColor={token} onClick={onMaxInputValue}>
+          <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
             Max
           </MaxButton>
           <StyledEmoji
@@ -445,24 +444,12 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
               dispatchSwapState({ type: SET_PENDING })
 
               Promise.all([
-                fetch('/api/ovm-wallet', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    interactionType: OVMWalletInteractions.SEND,
-                    address: wallet.address,
-                    recipient: swapState[RECIPIENT],
-                    inputToken: token,
-                    inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
-                  })
-                }),
+                OVMSend(swapState[RECIPIENT], token, swapState[INPUT_AMOUNT_PARSED]),
                 new Promise(resolve => {
                   setTimeout(resolve, 1000)
                 })
               ])
-                .then(([response]) => {
-                  if (!response.ok) {
-                    throw Error(`${response.status} Error: ${response.statusText}`)
-                  }
+                .then(() => {
                   dispatchSwapState({ type: SET_SUCCESS })
                 })
                 .catch(error => {
@@ -478,10 +465,8 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
               animate={controls}
               initial="initial"
               onAnimationComplete={() => {
-                updateBalancesData()
-                setTimeout(() => {
-                  confirm()
-                }, 50)
+                updateOVMBalances()
+                confirm()
               }}
             />
           ) : (
@@ -490,12 +475,12 @@ function Send({ wallet, team, token, balancesData, updateBalancesData, confirm }
         </Button>
       </TradeWrapper>
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} balances={balancesData} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </>
   )
 }
 
-function Confirmed({ wallet, team, balancesData }) {
+function Confirmed({ wallet, team, OVMBalances }) {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -514,12 +499,12 @@ function Confirmed({ wallet, team, balancesData }) {
         <ButtonText>Dope</ButtonText>
       </NavButton>
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} balances={balancesData} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </TradeWrapper>
   )
 }
 
-function Manager({ wallet, team, balancesData, updateBalancesData, token }) {
+function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token }) {
   const [showConfirm, setShowConfirm] = useState(false)
   function confirm() {
     setShowConfirm(true)
@@ -529,21 +514,22 @@ function Manager({ wallet, team, balancesData, updateBalancesData, token }) {
     <Send
       wallet={wallet}
       team={team}
+      OVMBalances={OVMBalances}
+      updateOVMBalances={updateOVMBalances}
+      OVMSend={OVMSend}
       token={token}
-      balancesData={balancesData}
-      updateBalancesData={updateBalancesData}
       confirm={confirm}
     />
   ) : (
-    <Confirmed wallet={wallet} team={team} balancesData={balancesData} />
+    <Confirmed wallet={wallet} team={team} OVMBalances={OVMBalances} />
   )
 }
 
 Manager.getInitialProps = async context => {
   const { query, res } = context
-  const { token: _token } = query
 
-  const token = _token ? (Team[_token] === Team.UNI || Team[_token] === Team.PIGI ? Team[_token] : null) : null
+  const parsedTeam = Team[query.token]
+  const token = [Team.UNI, Team.PIGI].includes(parsedTeam) ? parsedTeam : null
 
   if (!token) {
     res.writeHead(302, { Location: '/' })
@@ -552,9 +538,6 @@ Manager.getInitialProps = async context => {
   }
 
   return {
-    dataNeeds: {
-      [DataNeeds.BALANCES]: true
-    },
     token
   }
 }

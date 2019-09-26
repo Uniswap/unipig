@@ -1,9 +1,6 @@
 import { NowResponse, NowRequest } from '@now/node'
 import crypto from 'crypto'
 import faunadb from 'faunadb'
-import MemDown from 'memdown'
-import { BaseDB, SimpleClient } from '@pigi/core'
-import { UnipigWallet } from '@pigi/wallet'
 
 import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../constants'
 import { canFaucet } from '../../../utils'
@@ -22,13 +19,6 @@ export const config = {
     bodyParser: false
   }
 }
-
-const HOST = 'localhost'
-const PORT = 3001
-
-const db = new BaseDB(MemDown('ovm'))
-const unipigWallet = new UnipigWallet(db)
-unipigWallet.rollup.connect(new SimpleClient(`http://${HOST}:${PORT}`))
 
 export default async function(req: NowRequest, res: NowResponse): Promise<NowResponse> {
   // GET which handles CRC token auth
@@ -119,25 +109,27 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     // begin DB logic
     try {
       // ensure that the address exists in our db
-      const addressRef: any = await client.query(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)))
-      if (addressRef.data.length === 0) {
+      const addressData: any = await client.query(
+        q.Map(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)), (ref): any => q.Get(ref))
+      )
+      if (addressData.data.length === 0) {
         console.error(`Address ${matchedAddress} is not recognized.`)
         return res.status(200).send('')
       }
 
       // ensure that the address hasn't used the faucet recently
-      const addressData: any = await client.query(addressRef.data.map((ref: any): any => q.Get(ref)))
-      const addressDocument: AddressDocument = addressData[0].data
+      const addressDocument: AddressDocument = addressData.data[0].data
       if (!canFaucet(addressDocument)) {
         console.error(`Address ${matchedAddress} cannot faucet yet.`)
         return res.status(200).send('')
       }
 
       // ensure that if the twitter id exists in our db, it hasn't used the faucet recently
-      const idRef: any = await client.query(q.Paginate(q.Match(q.Index('by-id_addresses'), userId)))
-      if (idRef.data.length > 0) {
-        const idData: any = await client.query(idRef.data.map((ref: any): any => q.Get(ref)))
-        const idDocument: AddressDocument = idData[0].data
+      const idData: any = await client.query(
+        q.Map(q.Paginate(q.Match(q.Index('by-id_addresses'), userId)), (ref): any => q.Get(ref))
+      )
+      if (idData.data.length > 0) {
+        const idDocument: AddressDocument = idData.data[0].data
 
         if (!canFaucet(idDocument)) {
           console.error(`Account ${userHandle} (${userId}) cannot faucet yet.`)
@@ -146,7 +138,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         // update the db to ensure uniqueness
         else {
           await client.query(
-            q.Update(q.Ref(q.Collection('addresses'), idRef.data[0].id), {
+            q.Update(q.Ref(q.Collection('addresses'), idData.data[0].id), {
               data: {
                 twitterHandle: null,
                 twitterId: null
@@ -157,11 +149,11 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       }
 
       // faucet
-      await unipigWallet.rollup.requestFaucetFunds(matchedAddress, 10)
+      // await unipigWallet.rollup.requestFaucetFunds(matchedAddress, 10)
 
       // all has gone well, update db
       await client.query(
-        q.Update(q.Ref(q.Collection('addresses'), addressRef.data[0].id), {
+        q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].id), {
           data: {
             twitterHandle: userHandle,
             twitterId: userId,

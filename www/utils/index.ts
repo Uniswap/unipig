@@ -1,32 +1,22 @@
 import Cookies from 'js-cookie'
 import nextCookies from 'next-cookies'
 import { verifyMessage } from '@ethersproject/wallet'
+import { BigNumber } from '@uniswap/sdk'
+import { UNI_TOKEN_TYPE, PIGI_TOKEN_TYPE } from '@pigi/wallet'
 
-import { COOKIE_NAME } from '../contexts/Cookie'
-import { SIGNATURE_TIMEOUT, FAUCET_TIMEOUT, AddressDocument, WalletSource } from '../constants'
+import { COOKIE_NAME, Cookie, Team } from '../contexts/Client'
+import { FAUCET_TIMEOUT, AddressDocument, WalletSource } from '../constants'
 
-interface PermissionString {
-  time: number
-  permissionString: string
+export function getPermissionString(address: string): string {
+  return `Proof of ownership over ${address}, provided to https://unipig.exchange.`
 }
 
-export function getPermissionString(address: string, time?: number): PermissionString {
-  const now = Date.now()
-  const permissionString = `Proof of ownership over ${address} for unipig.exchange at ${time || now}.`
-
-  return {
-    time: now,
-    permissionString
-  }
-}
-
-export function validatePermissionString(address: string, time: number, signature: string): boolean {
-  const now = Date.now()
-  const permissionString = getPermissionString(address, time).permissionString
+export function validatePermissionString(address: string, signature: string): boolean {
+  const permissionString = getPermissionString(address)
 
   try {
     const signingAddress = verifyMessage(permissionString, signature)
-    return signingAddress === address && time + SIGNATURE_TIMEOUT > now
+    return signingAddress === address
   } catch {
     return false
   }
@@ -38,7 +28,7 @@ export function formatCookie(o: object): string {
   return base64
 }
 
-function parseCookie(s: string): object {
+function parseCookie(s: string): Cookie {
   const stringified = Buffer.from(s || '', 'base64').toString()
   const asObject = JSON.parse(stringified || JSON.stringify({}))
   return asObject
@@ -52,7 +42,7 @@ function getCookieClient(): string {
   return Cookies.get(COOKIE_NAME)
 }
 
-export function getCookie(serverSide: boolean, context: any): object {
+export function getCookie(serverSide: boolean, context?: any): Cookie {
   return parseCookie(serverSide ? getCookieServer(context) : getCookieClient())
 }
 
@@ -87,4 +77,14 @@ export function addressSource(document: AddressDocument): WalletSource {
 
 export function canFaucet(document: AddressDocument): boolean {
   return document.lastTwitterFaucet + FAUCET_TIMEOUT < Date.now()
+}
+
+export async function swap(OVMWallet: any, address: string, inputToken: Team, inputAmount: BigNumber): Promise<void> {
+  const tokenType = inputToken === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE
+  await OVMWallet.swap(tokenType, address, inputAmount.toNumber(), 0, Date.now() + 10000)
+}
+
+export async function send(OVMWallet: any, from: string, to: string, token: Team, amount: BigNumber): Promise<void> {
+  const tokenType = token === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE
+  await OVMWallet.send(tokenType, from, to, amount.toNumber())
 }

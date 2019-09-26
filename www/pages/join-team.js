@@ -1,13 +1,12 @@
 import styled from 'styled-components'
 
 // eslint-disable-next-line @typescript-eslint/camelcase
-import { Team, useAddTeam, useTeam_UNSAFE } from '../contexts/Cookie'
+import { Team, useTeamExists, useAddTeam, useTeam_UNWISE } from '../contexts/Client'
 import Emoji from '../components/Emoji'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
 import Shim from '../components/Shim'
-
 import { Heading, Title, ButtonText } from '../components/Type'
 import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
 
@@ -16,8 +15,10 @@ const StyledButton = styled(Button)`
 `
 
 export default function JoinTeam() {
-  const team = useTeam_UNSAFE()
+  const teamExists = useTeamExists()
   const addTeam = useAddTeam()
+  const team = useTeam_UNWISE()
+
   function join(teamToJoin) {
     return () => {
       if (teamToJoin !== team) {
@@ -55,7 +56,7 @@ export default function JoinTeam() {
 
       <Progress progress="66%" />
       <AnimatedFrame variants={childAnimation}>
-        <NavButton variant="gradient" disabled={!team} href={'/confirm-wallet'} stretch>
+        <NavButton variant="gradient" disabled={teamExists !== true} href={'/confirm-wallet'} stretch>
           <ButtonText>I pledge allegiance</ButtonText>
         </NavButton>
       </AnimatedFrame>

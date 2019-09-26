@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 
-import { Team } from '../contexts/Cookie'
+import { Team } from '../contexts/Client'
 
 const StyledLine = styled.span`
   width: 100%;

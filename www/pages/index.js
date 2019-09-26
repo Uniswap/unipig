@@ -1,19 +1,15 @@
 import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
 import styled from 'styled-components'
 import { motion, useMotionValue, transform } from 'framer-motion'
 
-import { DataNeeds } from '../constants'
 import { useStyledTheme } from '../hooks'
-import { Team } from '../contexts/Cookie'
+import { Team } from '../contexts/Client'
 import NavButton from '../components/NavButton'
 import WalletComponent from '../components/MiniWallet'
 import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 import { Title, ButtonText, Body } from '../components/Type'
 import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
-
-const WalletModal = dynamic(() => import('../components/WalletModal'), { ssr: false })
 
 const BoostWrapper = styled.div`
   display: flex;
@@ -76,37 +72,18 @@ function DominancePercentage({ UNIDominance }) {
   )
 }
 
-function Home({
-  wallet,
-  team,
-  addressData,
-  updateAddressData,
-  reservesData,
-  balancesData,
-  updateBalancesData,
-  walletModalIsOpen,
-  setWalletModalIsOpen
-}) {
-  const UNIDominance = reservesData[Team.PIGI] / (reservesData[Team.UNI] + reservesData[Team.PIGI])
+function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletModalIsOpen }) {
+  const UNIDominance =
+    OVMReserves[Team.UNI] !== undefined && OVMReserves[Team.PIGI] !== undefined
+      ? OVMReserves[Team.PIGI] / (OVMReserves[Team.UNI] + OVMReserves[Team.PIGI])
+      : null
 
   const theme = useStyledTheme()
 
-  const showFaucet = addressData.canFaucet && balancesData[Team.UNI] === 0 && balancesData[Team.PIGI] === 0
+  const showFaucet = addressData.canFaucet && OVMBalances[Team.UNI] === 0 && OVMBalances[Team.PIGI] === 0
 
   return (
     <>
-      <WalletModal
-        wallet={wallet}
-        team={team}
-        addressData={addressData}
-        updateAddressData={updateAddressData}
-        balances={balancesData}
-        updateBalancesData={updateBalancesData}
-        isOpen={walletModalIsOpen}
-        onDismiss={() => {
-          setWalletModalIsOpen(false)
-        }}
-      />
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
         <Title color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
           <DominancePercentage UNIDominance={UNIDominance} />
@@ -140,7 +117,7 @@ function Home({
         ) : (
           <BoostWrapper>
             <FlexNavButton
-              disabled={balancesData[Team.PIGI] === 0}
+              disabled={!(OVMBalances[Team.PIGI] > 0)}
               flex={Math.round(UNIDominance * 100, 0)}
               href={`/trade?buy=${Team[Team.UNI]}`}
               color={'primary'}
@@ -152,7 +129,7 @@ function Home({
             <BoostShim />
 
             <FlexNavButton
-              disabled={balancesData[Team.UNI] === 0}
+              disabled={!(OVMBalances[Team.UNI] > 0)}
               flex={Math.round((1 - UNIDominance) * 100, 0)}
               href={`/trade?buy=${Team[Team.PIGI]}`}
               color={'secondary'}
@@ -169,8 +146,7 @@ function Home({
           <WalletComponent
             wallet={wallet}
             team={team}
-            balances={balancesData}
-            walletType={'rest'}
+            OVMBalances={OVMBalances}
             onClick={() => {
               setWalletModalIsOpen(true)
             }}
@@ -183,11 +159,7 @@ function Home({
 
 Home.getInitialProps = async () => {
   return {
-    dataNeeds: {
-      [DataNeeds.ADDRESS]: true,
-      [DataNeeds.BALANCES]: true,
-      [DataNeeds.RESERVES]: true
-    }
+    addressData: true
   }
 }
 

@@ -4,7 +4,7 @@ import { formatFixedDecimals } from '@uniswap/sdk'
 
 import { DECIMALS } from '../constants'
 import { truncateAddress } from '../utils'
-import { Team } from '../contexts/Cookie'
+import { Team } from '../contexts/Client'
 import Shim from './Shim'
 
 const StyledWallet = styled.div`
@@ -94,35 +94,39 @@ const StyledWalletInfo = styled.span`
   flex: auto;
 `
 
-export function WalletInfo({ team, wallet }) {
+export function WalletInfo({ wallet, team }) {
   return (
     <StyledWalletInfo>
       <Badge team={team}></Badge>
       <span>
-        <WalletAddress>{truncateAddress(wallet.address, 4)}</WalletAddress>
+        <WalletAddress>{wallet ? truncateAddress(wallet.address, 4) : '...'}</WalletAddress>
         <TeamDesc>Team {team === Team.UNI ? 'UNI' : 'PIGI'} </TeamDesc>
       </span>
     </StyledWalletInfo>
   )
 }
 
-export function TokenInfo({ balances }) {
+export function TokenInfo({ OVMBalances }) {
   return (
     <Tokens>
       <TokenValue team={Team.UNI}>
-        <span>{formatFixedDecimals(balances[Team.UNI], DECIMALS)}</span>
+        <span>
+          {OVMBalances[Team.UNI] !== undefined ? formatFixedDecimals(OVMBalances[Team.UNI], DECIMALS) : '...'}
+        </span>
         <span>UNI</span>
       </TokenValue>
       <TokenShim />
       <TokenValue team={Team.PIGI}>
-        <span>{formatFixedDecimals(balances[Team.PIGI], DECIMALS)}</span>
+        <span>
+          {OVMBalances[Team.PIGI] !== undefined ? formatFixedDecimals(OVMBalances[Team.PIGI], DECIMALS) : '...'}
+        </span>
         <span>PIGI</span>
       </TokenValue>
     </Tokens>
   )
 }
 
-export default function Wallet({ wallet, team, balances, onClick, ...rest }) {
+export default function Wallet({ wallet, team, OVMBalances, onClick, ...rest }) {
   return (
     <StyledWallet team={team} onClick={onClick} {...rest}>
       {!!onClick && (
@@ -133,7 +137,7 @@ export default function Wallet({ wallet, team, balances, onClick, ...rest }) {
       )}
       <WalletInfo wallet={wallet} team={team} />
       <Shim size={12} />
-      <TokenInfo balances={balances} />
+      <TokenInfo OVMBalances={OVMBalances} />
     </StyledWallet>
   )
 }

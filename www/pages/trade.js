@@ -11,8 +11,8 @@ import {
   formatFixedDecimals
 } from '@uniswap/sdk'
 
-import { DECIMALS, DataNeeds, OVMWalletInteractions } from '../constants'
-import { Team } from '../contexts/Cookie'
+import { DECIMALS } from '../constants'
+import { Team } from '../contexts/Client'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
@@ -188,18 +188,17 @@ const initialSwapState = {
   [INPUT_AMOUNT_PARSED]: null,
   [OUTPUT_AMOUNT_RAW]: '',
   [OUTPUT_AMOUNT_PARSED]: null,
+  [MARKET_RATE_PRE_INVERTED]: null,
   [EXECUTION_RATE_INVERTED]: null,
   [MARKET_RATE_PRICE_IMPACT]: null,
   [SWAP_STATE]: RESTING
 }
 
-function init(marketRatePreInverted) {
-  return {
-    ...initialSwapState,
-    [MARKET_RATE_PRE_INVERTED]: marketRatePreInverted
-  }
+function init() {
+  return initialSwapState
 }
 
+const INITIALIZE = 'INITIALIZE'
 const SET_INPUT_AMOUNT = 'SET_INPUT_AMOUNT'
 const SET_INPUT_AMOUNT_INVALID = 'SET_INPUT_AMOUNT_INVALID'
 const SET_INSUFFICIENT_BALANCE = 'SET_INSUFFICIENT_BALANCE'
@@ -210,6 +209,14 @@ const SET_SUCCESS = 'SET_SUCCESS'
 
 function reducer(state, { type, payload = {} } = {}) {
   switch (type) {
+    case INITIALIZE: {
+      const { marketRatePreInverted } = payload
+
+      return {
+        ...state,
+        [MARKET_RATE_PRE_INVERTED]: marketRatePreInverted
+      }
+    }
     case SET_INPUT_AMOUNT: {
       const {
         rawInputValue,
@@ -292,20 +299,37 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken, confirm }) {
+function Buy({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OVMSwap, inputToken, outputToken, confirm }) {
   //// parse the props
-  const inputBalance = new BigNumber(balancesData[inputToken])
-  const inputReserve = new BigNumber(reservesData[inputToken])
-  const outputReserve = new BigNumber(reservesData[outputToken])
+  const inputBalance = OVMBalances[inputToken] !== undefined ? new BigNumber(OVMBalances[inputToken]) : null
+  const inputReserve = OVMReserves[inputToken] !== undefined ? new BigNumber(OVMReserves[inputToken]) : null
+  const outputReserve = OVMReserves[outputToken] !== undefined ? new BigNumber(OVMReserves[outputToken]) : null
   // fake it by pretending the input currency is ETH
-  const marketDetails = getMarketDetails(undefined, {
-    token: DUMMY_TOKEN,
-    ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
-    tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
-  })
+  const marketDetails =
+    inputReserve && outputReserve
+      ? getMarketDetails(undefined, {
+          token: DUMMY_TOKEN,
+          ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
+          tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
+        })
+      : null
 
   // amounts
-  const [swapState, dispatchSwapState] = useReducer(reducer, marketDetails.marketRate.rateInverted, init)
+  const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
+
+  const marketRatePreInverted = marketDetails ? marketDetails.marketRate.rateInverted : null
+  const swapStateMarketRatePreInverted = swapState[MARKET_RATE_PRE_INVERTED]
+  useEffect(() => {
+    if (
+      marketRatePreInverted &&
+      (!swapStateMarketRatePreInverted || !marketRatePreInverted.isEqualTo(swapStateMarketRatePreInverted))
+    ) {
+      dispatchSwapState({
+        type: INITIALIZE,
+        payload: { marketRatePreInverted }
+      })
+    }
+  }, [marketRatePreInverted, swapStateMarketRatePreInverted])
 
   function updateValues(rawValue, parsedValue) {
     let tradeDetails
@@ -457,10 +481,12 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
           <HelperText error={false}>
             <b>
               1 {Team[outputToken]} ={' '}
-              {formatSignificant(swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
-                significantDigits: 3,
-                forceIntegerSignificance: true
-              })}{' '}
+              {swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED]
+                ? formatSignificant(swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
+                    significantDigits: 3,
+                    forceIntegerSignificance: true
+                  })
+                : '...'}{' '}
               {Team[inputToken]}
             </b>
           </HelperText>
@@ -474,23 +500,12 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
               dispatchSwapState({ type: SET_PENDING })
 
               Promise.all([
-                fetch('/api/ovm-wallet', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    interactionType: OVMWalletInteractions.SWAP,
-                    address: wallet.address,
-                    inputToken,
-                    inputAmount: swapState[INPUT_AMOUNT_PARSED].toNumber()
-                  })
-                }),
+                OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]),
                 new Promise(resolve => {
                   setTimeout(resolve, 2000)
                 })
               ])
-                .then(([response]) => {
-                  if (!response.ok) {
-                    throw Error(`${response.status} Error: ${response.statusText}`)
-                  }
+                .then(() => {
                   dispatchSwapState({ type: SET_SUCCESS })
                 })
                 .catch(error => {
@@ -506,10 +521,8 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
               animate={controls}
               initial="initial"
               onAnimationComplete={() => {
-                updateBalancesData()
-                setTimeout(() => {
-                  confirm()
-                }, 50)
+                updateOVMBalances()
+                confirm()
               }}
             />
           ) : (
@@ -533,12 +546,12 @@ function Buy({ wallet, team, reservesData, balancesData, updateBalancesData, inp
         )}
       </TradeWrapper>
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} balances={balancesData} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </>
   )
 }
 
-function Confirmed({ wallet, team, balancesData }) {
+function Confirmed({ wallet, team, OVMBalances }) {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -557,12 +570,12 @@ function Confirmed({ wallet, team, balancesData }) {
         <ButtonText>Dope</ButtonText>
       </NavButton>
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} balances={balancesData} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </TradeWrapper>
   )
 }
 
-function Manager({ wallet, team, reservesData, balancesData, updateBalancesData, inputToken, outputToken }) {
+function Manager({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OVMSwap, inputToken, outputToken }) {
   const [showConfirm, setShowConfirm] = useState(false)
   function confirm() {
     setShowConfirm(true)
@@ -572,23 +585,24 @@ function Manager({ wallet, team, reservesData, balancesData, updateBalancesData,
     <Buy
       wallet={wallet}
       team={team}
-      reservesData={reservesData}
-      balancesData={balancesData}
-      updateBalancesData={updateBalancesData}
-      outputToken={outputToken}
+      OVMReserves={OVMReserves}
+      OVMBalances={OVMBalances}
+      updateOVMBalances={updateOVMBalances}
+      OVMSwap={OVMSwap}
       inputToken={inputToken}
+      outputToken={outputToken}
       confirm={confirm}
     />
   ) : (
-    <Confirmed wallet={wallet} team={team} balancesData={balancesData} />
+    <Confirmed wallet={wallet} team={team} OVMBalances={OVMBalances} />
   )
 }
 
 Manager.getInitialProps = async context => {
   const { query, res } = context
-  const { buy } = query
 
-  const outputToken = buy ? (Team[buy] === Team.UNI || Team[buy] === Team.PIGI ? Team[buy] : null) : null
+  const parsedTeam = Team[query.buy]
+  const outputToken = [Team.UNI, Team.PIGI].includes(parsedTeam) ? parsedTeam : null
   const inputToken = outputToken ? (outputToken === Team.UNI ? Team.PIGI : Team.UNI) : null
 
   if (!inputToken || !outputToken) {
@@ -598,10 +612,6 @@ Manager.getInitialProps = async context => {
   }
 
   return {
-    dataNeeds: {
-      [DataNeeds.BALANCES]: true,
-      [DataNeeds.RESERVES]: true
-    },
     inputToken,
     outputToken
   }

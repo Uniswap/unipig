@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import styled from 'styled-components'
 
-import { DataNeeds } from '../constants'
-import { Team } from '../contexts/Cookie'
+import { Team } from '../contexts/Client'
 import NavButton from '../components/NavButton'
 import Wallet from '../components/MiniWallet'
 import Shim from '../components/Shim'
@@ -16,27 +14,20 @@ const TeamHeader = styled(Title)`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
 `
 
-function ConfirmWallet({ team, wallet, balancesData }) {
-  const [bang, setBang] = useState(false)
-  useEffect(() => {
-    const timeout = setTimeout(() => setBang(true), 300)
-
-    return () => {
-      clearTimeout(timeout)
-    }
-  }, [])
-
+export default function ConfirmWallet({ wallet, team, OVMBalances }) {
   return (
     <>
-      <Confetti start={bang} />
+      <Confetti start={OVMBalances[Team.UNI] !== undefined && OVMBalances[Team.PIGI] !== undefined} />
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
-        <Heading>Here’s a wallet and some tokens!</Heading>
+        <Heading>Here’s a wallet!</Heading>
         <TeamHeader textStyle="gradient" team={team}>
           Welcome to #team{team === Team.UNI ? 'UNI' : 'PIGI'}.
         </TeamHeader>
+
         <Shim size={24} />
-        <Wallet wallet={wallet} team={team} balances={balancesData} />
+        <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
         <Shim size={24} />
+
         <Body textStyle="gradient">
           Dump <b>{team === Team.UNI ? 'PIGI' : 'UNI'}</b> for <b>{team === Team.UNI ? 'UNI' : 'PIGI'}</b> to help your
           team gain price{' '}
@@ -54,13 +45,3 @@ function ConfirmWallet({ team, wallet, balancesData }) {
     </>
   )
 }
-
-ConfirmWallet.getInitialProps = () => {
-  return {
-    dataNeeds: {
-      [DataNeeds.BALANCES]: true
-    }
-  }
-}
-
-export default ConfirmWallet

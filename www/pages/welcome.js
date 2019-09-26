@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import fetch from 'isomorphic-unfetch'
 import { Wallet } from '@ethersproject/wallet'
 import styled, { css } from 'styled-components'
 import { transparentize } from 'polished'
 
-import { getHost } from '../utils'
-import { useAddMnemonic, useMnemonicExists, useTeamExists, Team, useAddTeam } from '../contexts/Cookie'
+import { useAddAccount, useAccountExists, useTeamExists, useAddTeam, getWallet, Team } from '../contexts/Client'
 import NavLink from '../components/NavLink'
 import NavButton from '../components/NavButton'
 import Progress from '../components/Progress'
@@ -38,10 +36,28 @@ const ErrorNavButton = styled(FilteredNavButton)`
     `}
 `
 
-function Welcome({ mnemonic, team, override }) {
-  // existence checks for cookie data
-  const mnemonicExists = useMnemonicExists()
+function Welcome({ accountFromQuery: account, teamFromQuery: team, override, referrer }) {
+  const router = useRouter()
+
+  const accountExists = useAccountExists()
+  const addAccount = useAddAccount()
+
   const teamExists = useTeamExists()
+  const addTeam = useAddTeam()
+
+  // initialize account
+  useEffect(() => {
+    if (accountExists === false || override) {
+      addAccount(account || Wallet.createRandom().mnemonic)
+    }
+  }, [accountExists, override, account, addAccount])
+
+  // initialize (optional) team
+  useEffect(() => {
+    if (team && (teamExists === false || override)) {
+      addTeam(team)
+    }
+  }, [team, teamExists, override, addTeam])
 
   // check if cookies are enabled
   const [cookiesEnabled, setCookiesEnabled] = useState()
@@ -49,30 +65,18 @@ function Welcome({ mnemonic, team, override }) {
     setCookiesEnabled(navigator ? navigator.cookieEnabled : false)
   }, [])
 
-  // save the mnemonic (guaranteed to be correct from getInitialProps)
-  const addMnemonic = useAddMnemonic()
+  // if there is a url, clear it if cookies are enabled
   useEffect(() => {
-    if (mnemonic && (override || !mnemonicExists)) {
-      addMnemonic(mnemonic)
-    }
-  }, [mnemonic, override, mnemonicExists, addMnemonic])
-
-  // save the team (guaranteed to be correct from getInitialProps)
-  const addTeam = useAddTeam()
-  useEffect(() => {
-    if (team && (override || !teamExists)) {
-      addTeam(team)
-    }
-  }, [team, override, teamExists, addTeam])
-
-  // if cookies are enabled, clear url (everything we need is in props)
-  const router = useRouter()
-  const { query } = router
-  useEffect(() => {
-    if (cookiesEnabled && Object.keys(query).length > 0) {
-      router.push('/welcome', undefined, { shallow: true })
+    if (Object.keys(router.query).length > 0 && cookiesEnabled) {
+      router.push('/welcome', '/welcome', { shallow: true })
     }
   })
+
+  useEffect(() => {
+    if (referrer) {
+      console.log(`Referred by ${referrer}`)
+    }
+  }, [referrer])
 
   return (
     <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
@@ -118,7 +122,7 @@ function Welcome({ mnemonic, team, override }) {
           href={teamExists ? '/' : '/join-team'}
           error={cookiesEnabled === false}
           variant={cookiesEnabled === false ? 'outlined' : 'gradient'}
-          disabled={!mnemonicExists || !cookiesEnabled}
+          disabled={!accountExists || !cookiesEnabled}
           stretch
         >
           <ButtonText>
@@ -131,49 +135,34 @@ function Welcome({ mnemonic, team, override }) {
 }
 
 Welcome.getInitialProps = async context => {
-  const { query, req } = context
-  const { mnemonic, team, override, referrer } = query || {}
+  const { query } = context // query can contain: account, team, override, referrer
 
   // create a wallet, if mnemonic exists and is valid
-  let wallet = null
-  if (mnemonic) {
+  let account
+  if (query.account) {
     try {
-      const parsedMnemonic = mnemonic.replace(/-/g, ' ')
-      wallet = Wallet.fromMnemonic(parsedMnemonic)
-    } catch {}
-  }
-
-  // check if the address is whitelisted
-  let walletIsValid = false
-  if (wallet) {
-    walletIsValid = await fetch(`${getHost(req)}/api/validate-paper-wallet`, {
-      method: 'POST',
-      body: JSON.stringify({ address: wallet.address })
-    })
-      .then(response => response.ok || false)
-      .catch(error => {
-        console.error(error)
-        return false
-      })
-  }
-
-  if (!wallet || !walletIsValid) {
-    return {
-      mnemonic: wallet ? wallet.mnemonic : Wallet.createRandom().mnemonic,
-      team: [Team.UNI, Team.PIGI].includes(Team[team]) ? Team[team] : undefined,
-      override: !!override,
-      referrer,
-      paperWallet: false
+      const wallet = getWallet(query.account)
+      account = wallet.mnemonic || wallet.privateKey
+    } catch {
+      account = null
     }
   }
 
-  return {
-    mnemonic: wallet.mnemonic,
-    team: [Team.UNI, Team.PIGI].includes(Team[team]) ? Team[team] : undefined,
-    override: !!override,
-    referrer,
-    paperWallet: true
+  let team
+  if (query.team) {
+    const parsedTeam = Team[query.team]
+    if ([Team.UNI, Team.PIGI].includes(parsedTeam)) {
+      team = parsedTeam
+    } else {
+      team = null
+    }
   }
+
+  const override = query.override ? query.override === 'true' : undefined
+
+  const referrer = query.referrer ? query.referrer : undefined
+
+  return { accountFromQuery: account, teamFromQuery: team, override, referrer }
 }
 
 export default Welcome

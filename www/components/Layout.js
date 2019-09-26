@@ -1,8 +1,9 @@
+import { useRouter } from 'next/router'
 import styled, { css, keyframes } from 'styled-components'
 
 import RouteLoader from './RouteLoader'
 import Header from './Header'
-import { useRouter } from 'next/router'
+import WalletModal from './WalletModal'
 
 const Root = styled.div`
   display: flex;
@@ -79,30 +80,52 @@ const Element = styled.div`
     `}
 `
 
-export default function Layout({ wallet, team, children, boostsLeft, setWalletModalIsOpen }) {
+export default function Layout({
+  wallet,
+  team,
+  addressData,
+  updateAddressData,
+  OVMBalances,
+  updateOVMBalances,
+  walletModalIsOpen,
+  setWalletModalIsOpen,
+  children
+}) {
   const { pathname } = useRouter()
   const showIcons = pathname === '/'
 
   return (
-    <Root>
-      <BackroundElement>
-        <AnimatedImg time={'200s'} src="static/blob_2.svg" />
-        <AnimatedImg time={'500s'} src="static/blob_3.svg" />
-        <AnimatedImg time={'250s'} src="static/blob_1.svg" />
-      </BackroundElement>
-      <Element noPadding>
-        <RouteLoader />
-      </Element>
-      <Element header justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
-        <Header
+    <>
+      <Root>
+        <BackroundElement>
+          <AnimatedImg time={'200s'} src="static/blob_2.svg" />
+          <AnimatedImg time={'500s'} src="static/blob_3.svg" />
+          <AnimatedImg time={'250s'} src="static/blob_1.svg" />
+        </BackroundElement>
+        <Element noPadding>
+          <RouteLoader />
+        </Element>
+        <Element header justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
+          <Header
+            showIcons={showIcons}
+            boostsLeft={addressData.boostsLeft || 0}
+            setWalletModalIsOpen={setWalletModalIsOpen}
+          />
+        </Element>
+        <Element body>{children}</Element>
+        <WalletModal
           wallet={wallet}
           team={team}
-          showIcons={showIcons}
-          boostsLeft={boostsLeft}
-          setWalletModalIsOpen={setWalletModalIsOpen}
+          addressData={addressData}
+          updateAddressData={updateAddressData}
+          OVMBalances={OVMBalances}
+          updateOVMBalances={updateOVMBalances}
+          isOpen={walletModalIsOpen}
+          onDismiss={() => {
+            setWalletModalIsOpen(false)
+          }}
         />
-      </Element>
-      <Element body>{children}</Element>
-    </Root>
+      </Root>
+    </>
   )
 }

@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import styled, { css } from 'styled-components'
 
-import { DataNeeds } from '../constants'
 import { truncateAddress } from '../utils'
-import { Team } from '../contexts/Cookie'
+import { Team } from '../contexts/Client'
 import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
@@ -71,38 +70,25 @@ const StyledWallet = styled(Wallet)`
   background-color: rgba(255, 255, 255, 0.1);
 `
 
-function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesData }) {
+function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalancesData }) {
   // save the initial addressData
   const initialAddressData = useRef(addressData)
 
   // polling logic to check for valid tweet
   const [polling, setPolling] = useState(false)
   const pollInterval = useRef(4000)
-  const [updateError, setUpdateError] = useState()
   useEffect(() => {
     if (polling) {
-      let stale = false
-
       function increasePollInterval() {
         if (pollInterval.current < 60000) {
           pollInterval.current = Math.max(60000, (pollInterval.current / 1000) ** 2 * 1000)
         }
       }
 
-      async function poll() {
-        await updateAddressData().catch(error => {
-          if (!stale) {
-            console.error(error)
-            setUpdateError(error)
-          }
-        })
-      }
-
       const timeout = setTimeout(increasePollInterval, pollInterval.current * 10.5)
-      const interval = setInterval(poll, pollInterval.current)
+      const interval = setInterval(updateAddressData, pollInterval.current)
 
       return () => {
-        stale = true
         clearTimeout(timeout)
         clearInterval(interval)
       }
@@ -129,12 +115,6 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
   function metaInformation() {
     if (alreadyFauceted) {
       return <StyledBody textStyle="gradient">The Unipig just sent you tokens in 150ms.</StyledBody>
-    } else if (updateError) {
-      return (
-        <>
-          <StyledBody textStyle="gradient">An error occurred...</StyledBody>
-        </>
-      )
     } else if (addressData.canFaucet && !twitterLoaded) {
       return (
         <>
@@ -163,15 +143,14 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
         </Title>
         <Shim size={32} />
         {alreadyFauceted ? (
-          <StyledWallet wallet={wallet} team={team} balances={balancesData} />
+          <StyledWallet wallet={wallet} team={team} OVMBalancesData={OVMBalancesData} />
         ) : (
           <TweetPreview>
             {`༼ つ ◕_◕ ༽つ`}
             <br />
-            {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${truncateAddress(
-              wallet.address,
-              4
-            )} https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+            {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${
+              wallet ? truncateAddress(wallet.address, 4) : '...'
+            } https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
           </TweetPreview>
         )}
         <InformationContainer>
@@ -181,7 +160,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
               href="https://twitter.com/intent/tweet"
               data-size="large"
               data-text={`༼ つ ◕_◕ ༽つ
-@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet.address}`}
+@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet ? wallet.address : ''}`}
               data-url="https://unipig.exchange"
               data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
               data-dnt="true"
@@ -209,10 +188,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, balancesD
 
 TwitterFaucet.getInitialProps = async () => {
   return {
-    dataNeeds: {
-      [DataNeeds.ADDRESS]: true,
-      [DataNeeds.BALANCES]: true
-    }
+    addressData: true
   }
 }
 

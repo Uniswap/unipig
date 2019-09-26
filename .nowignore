@@ -1,8 +1,8 @@
 README.md
 LICENSE
 yarn.lock
-.env
 .env.example
+.env.build.example
 .eslintrc
 .eslintignore
 .prettierrc

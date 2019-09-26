@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import { transparentize } from 'polished'
-import GradientText from '../components/GradientText'
+
+import GradientText from './GradientText'
 
 // HEADING
 

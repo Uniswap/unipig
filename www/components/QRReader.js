@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import styled from 'styled-components'
 import QrReader from 'react-qr-reader'
 
-import Button from '../components/Button'
+import Button from './Button'
 
 const Wrapper = styled.div`
   width: 100vh;

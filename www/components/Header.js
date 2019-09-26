@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { Badge } from '@material-ui/core'
 
+import { useAccountExists, useTeamExists } from '../contexts/Client'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
@@ -66,7 +67,10 @@ const StyledBadge = styled(Badge)`
   }
 `
 
-export default function Header({ wallet, team, showIcons, boostsLeft, setWalletModalIsOpen }) {
+export default function Header({ showIcons, boostsLeft, setWalletModalIsOpen }) {
+  const accountExists = useAccountExists()
+  const teamExists = useTeamExists()
+
   // check if sharing is enabled
   const [canShare, setCanShare] = useState()
   useEffect(() => {
@@ -75,7 +79,7 @@ export default function Header({ wallet, team, showIcons, boostsLeft, setWalletM
 
   return (
     <>
-      <HomeButton href={wallet && team ? '/' : '/welcome'} variant="text">
+      <HomeButton href={accountExists && teamExists ? '/' : '/welcome'} variant="text">
         <Emoji emoji={'🦄'} label="unicorn" />
         <Uniswap>Uniswap</Uniswap>
         <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
