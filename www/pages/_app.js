@@ -126,16 +126,18 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
   const [updatedAddressData, setUpdatedAddressData] = useState()
   const [updater, setUpdater] = useState(0)
   useEffect(() => {
-    let stale
+    if (address && permission) {
+      let stale
 
-    getAddressData(address, permission).then(data => {
-      if (!stale) {
-        setUpdatedAddressData(data)
+      getAddressData(address, permission).then(data => {
+        if (!stale) {
+          setUpdatedAddressData(data)
+        }
+      })
+
+      return () => {
+        stale = true
       }
-    })
-
-    return () => {
-      stale = true
     }
   }, [updater, address, permission])
   const updateAddressData = useCallback(() => {
@@ -144,8 +146,8 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   const wallet = useWallet()
   const OVMWallet = useOVMWallet(wallet)
-  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS)
-  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address)
+  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 10 * 1000)
+  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address, 20 * 1000)
 
   async function OVMSwap(inputToken, inputAmount) {
     await swap(OVMWallet, wallet.address, inputToken, inputAmount)
@@ -220,7 +222,7 @@ export default class MyApp extends App {
       : {}
 
     // fetch address data if it was requested
-    const addressData = fetchAddressData && permission ? await getAddressData(address, permission, req) : {}
+    const addressData = fetchAddressData && address && permission ? await getAddressData(address, permission, req) : {}
 
     return {
       address,

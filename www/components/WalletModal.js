@@ -11,7 +11,7 @@ import { transparentize } from 'polished'
 
 import { getPermissionString, truncateAddress } from '../utils'
 import { useStyledTheme, usePrevious } from '../hooks'
-import { useReset, useAccountExists, Team } from '../contexts/Client'
+import { useReset, Team } from '../contexts/Client'
 import { AnimatedFrame, containerAnimationNoDelay } from './Animation'
 import Button from './Button'
 import Emoji from './Emoji'
@@ -387,17 +387,6 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     setAccountCopied(true)
   }
 
-  // handle redirect after reset
-  const router = useRouter()
-  const accountExists = useAccountExists()
-  useEffect(() => {
-    // there might be a race condition here, since `accountExists` might not update sychronously with the cookie...
-    // ..., but i think it does, because the context is above this component in the dom tree
-    if (!accountExists) {
-      router.push('/welcome')
-    }
-  }, [accountExists, router])
-
   return (
     <StyledWallet team={team}>
       <WalletTitle>
@@ -538,6 +527,17 @@ export default function WalletModal({
   const lastScannedAddress = usePrevious(scannedAddress)
 
   const [popConfetti, setPopConfetti] = useState(false)
+
+  // handle redirect after reset
+  const router = useRouter()
+  useEffect(() => {
+    if (wallet === null) {
+      router.push('/welcome')
+    }
+  }, [wallet, router])
+  if (wallet === null) {
+    return null
+  }
 
   return (
     <>

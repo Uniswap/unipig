@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { motion, useMotionValue, transform } from 'framer-motion'
+import { motion, useMotionValue } from 'framer-motion'
 
 import { useStyledTheme } from '../hooks'
 import { Team } from '../contexts/Client'
@@ -38,15 +38,13 @@ const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
-const inputRange = [0, 1]
-const outputRange = [0, 100]
 function DominancePercentage({ UNIDominance }) {
   const [statefulX, setStatefulX] = useState(0)
   const x = useMotionValue(0)
 
   useEffect(() => {
     const unsubscribeX = x.onChange(() =>
-      setStatefulX(Math.round(transform(UNIDominance >= 0.5 ? x.current : 1 - x.current, inputRange, outputRange), 2))
+      setStatefulX(((UNIDominance >= 0.5 ? x.current : 1 - x.current) * 100).toFixed(2))
     )
     return () => {
       unsubscribeX()

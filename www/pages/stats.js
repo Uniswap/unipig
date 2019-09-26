@@ -1,8 +1,5 @@
-import NavButton from '../components/NavButton'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
-
-import { ButtonText } from '../components/Type'
 
 const StyledWallet = styled.span`
   ${({ theme }) => theme.gradientBackground};

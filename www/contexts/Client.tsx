@@ -279,7 +279,6 @@ export function useOVMBalances(OVMWallet: undefined | any | null, address: strin
 
       return (): void => {
         stale = true
-        setOVMBalances(initialOVMBalances)
       }
     }
   }, [OVMWallet, address, updater])

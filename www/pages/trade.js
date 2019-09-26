@@ -299,7 +299,18 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Buy({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OVMSwap, inputToken, outputToken, confirm }) {
+function Buy({
+  wallet,
+  team,
+  OVMReserves,
+  updateOVMReserves,
+  OVMBalances,
+  updateOVMBalances,
+  OVMSwap,
+  inputToken,
+  outputToken,
+  confirm
+}) {
   //// parse the props
   const inputBalance = OVMBalances[inputToken] !== undefined ? new BigNumber(OVMBalances[inputToken]) : null
   const inputReserve = OVMReserves[inputToken] !== undefined ? new BigNumber(OVMReserves[inputToken]) : null
@@ -521,6 +532,7 @@ function Buy({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OVMSwa
               animate={controls}
               initial="initial"
               onAnimationComplete={() => {
+                updateOVMReserves()
                 updateOVMBalances()
                 confirm()
               }}
@@ -575,7 +587,17 @@ function Confirmed({ wallet, team, OVMBalances }) {
   )
 }
 
-function Manager({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OVMSwap, inputToken, outputToken }) {
+function Manager({
+  wallet,
+  team,
+  OVMReserves,
+  updateOVMReserves,
+  OVMBalances,
+  updateOVMBalances,
+  OVMSwap,
+  inputToken,
+  outputToken
+}) {
   const [showConfirm, setShowConfirm] = useState(false)
   function confirm() {
     setShowConfirm(true)
@@ -586,6 +608,7 @@ function Manager({ wallet, team, OVMReserves, OVMBalances, updateOVMBalances, OV
       wallet={wallet}
       team={team}
       OVMReserves={OVMReserves}
+      updateOVMReserves={updateOVMReserves}
       OVMBalances={OVMBalances}
       updateOVMBalances={updateOVMBalances}
       OVMSwap={OVMSwap}
