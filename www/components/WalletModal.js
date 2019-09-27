@@ -17,11 +17,11 @@ import Button from './Button'
 import Emoji from './Emoji'
 import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
-import Confetti from './Confetti'
 import { ButtonText } from './Type'
 import NavButton from './NavButton'
 
 const QRScanModal = dynamic(() => import('./QRScanModal'), { ssr: false })
+const Confetti = dynamic(() => import('./Confetti'), { ssr: false })
 
 const StyledDialogOverlay = styled(DialogOverlay)`
   &[data-reach-dialog-overlay] {

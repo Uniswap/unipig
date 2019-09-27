@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import styled, { css } from 'styled-components'
+import dynamic from 'next/dynamic'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Client'
@@ -7,7 +8,8 @@ import NavButton from '../components/NavButton'
 import Shim from '../components/Shim'
 import { Title, Body, ButtonText } from '../components/Type'
 import Wallet from '../components/MiniWallet'
-import Confetti from '../components/Confetti'
+
+const Confetti = dynamic(() => import('../components/Confetti'), { ssr: false })
 
 const TweetContainer = styled.div`
   display: flex;
@@ -70,7 +72,7 @@ const StyledWallet = styled(Wallet)`
   background-color: rgba(255, 255, 255, 0.1);
 `
 
-function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalancesData }) {
+function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalances, updateOVMBalances }) {
   // save the initial addressData
   const initialAddressData = useRef(addressData)
 
@@ -109,12 +111,22 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
     })
   }, [])
 
-  const justFauceted = initialAddressData.current.canFaucet && !addressData.canFaucet
+  const justFauceted = !!(initialAddressData.current.canFaucet && !addressData.canFaucet)
   const alreadyFauceted = !addressData.canFaucet
+
+  useEffect(() => {
+    if (justFauceted) {
+      updateOVMBalances()
+    }
+  }, [justFauceted, updateOVMBalances])
 
   function metaInformation() {
     if (alreadyFauceted) {
-      return <StyledBody textStyle="gradient">The Unipig just sent you tokens in 150ms.</StyledBody>
+      return (
+        <StyledBody textStyle="gradient">
+          {justFauceted ? 'The Unipig just sent you tokens in 150ms.' : 'Enjoy your tokens responsibly.'}
+        </StyledBody>
+      )
     } else if (addressData.canFaucet && !twitterLoaded) {
       return (
         <>
@@ -143,7 +155,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
         </Title>
         <Shim size={32} />
         {alreadyFauceted ? (
-          <StyledWallet wallet={wallet} team={team} OVMBalancesData={OVMBalancesData} />
+          <StyledWallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
         ) : (
           <TweetPreview>
             {`༼ つ ◕_◕ ༽つ`}

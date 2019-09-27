@@ -12,7 +12,7 @@ export default function Confetti({ start, variant }) {
       style={{ zIndex: 1401 }}
       numberOfPieces={100}
       recycle={false}
-      run={start}
+      run={start === true ? true : false}
       width={width}
       height={height}
       confettiSource={{
