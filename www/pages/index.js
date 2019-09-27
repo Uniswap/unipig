@@ -59,12 +59,14 @@ function DominancePercentage({ UNIDominance }) {
           x: UNIDominance
         }}
         transition={{
-          duration: 1.25,
+          duration: 1.5,
           ease: 'easeOut'
         }}
       />
       <FixedNum>
-        {UNIDominance >= 0.5 ? 'Unicorn' : 'Pig'} dominance is at {statefulX}%
+        {UNIDominance >= 0.5 ? 'Unicorn' : 'Pig'}
+        <br />
+        dominance {statefulX}%
       </FixedNum>
     </>
   )
@@ -89,10 +91,6 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
         <Shim size={12} />
 
         <Dominance percent={UNIDominance * 100} />
-
-        <Body size={18} color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
-          {UNIDominance >= 0.5 ? 'Unicorns' : 'Pigs'} are winning!
-        </Body>
 
         <Shim size={12} />
 

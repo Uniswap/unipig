@@ -1,9 +1,10 @@
 import { NowResponse, NowRequest } from '@now/node'
 import crypto from 'crypto'
 import faunadb from 'faunadb'
+import { Wallet } from 'ethers'
 
 import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../constants'
-import { canFaucet } from '../../../utils'
+import { canFaucet, getFaucetData, faucet } from '../../../utils'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
 const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
@@ -138,7 +139,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         // update the db to ensure uniqueness
         else {
           await client.query(
-            q.Update(q.Ref(q.Collection('addresses'), idData.data[0].id), {
+            q.Update(q.Ref(q.Collection('addresses'), idData.data[0].ref.id), {
               data: {
                 twitterHandle: null,
                 twitterId: null
@@ -149,11 +150,13 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       }
 
       // faucet
-      // await unipigWallet.rollup.requestFaucetFunds(matchedAddress, 10)
+      const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
+      const signature = await faucetWallet.signMessage(getFaucetData(matchedAddress))
+      await faucet(matchedAddress, signature)
 
       // all has gone well, update db
       await client.query(
-        q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].id), {
+        q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
           data: {
             twitterHandle: userHandle,
             twitterId: userId,

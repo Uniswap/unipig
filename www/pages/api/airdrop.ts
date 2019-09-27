@@ -1,8 +1,9 @@
 import { NowRequest, NowResponse } from '@now/node'
 import faunadb from 'faunadb'
+import { Wallet } from '@ethersproject/wallet'
 
 import { AddressDocument } from '../../constants'
-import { validatePermissionString } from '../../utils'
+import { validatePermissionString, getFaucetData, faucet } from '../../utils'
 
 const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
@@ -40,15 +41,15 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       return res.status(401).send('')
     }
 
-    // faucet both here
-    // await Promise.all([
-    //   unipigWallet.rollup.requestFaucetFunds(address, 1000),
-    //   unipigWallet.rollup.requestFaucetFunds(scannedAddress, 1000)
-    // ])
+    // faucet both
+    const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
+    const signature = await faucetWallet.signMessage(getFaucetData(address))
+    const signatureScanned = await faucetWallet.signMessage(getFaucetData(scannedAddress))
+    await Promise.all([faucet(address, signature), faucet(scannedAddress, signatureScanned)])
 
     // all has gone well, update db
     await client.query(
-      q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].id), {
+      q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
         data: {
           boostsLeft: addressDocument.boostsLeft - 1
         }

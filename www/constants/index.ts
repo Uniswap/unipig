@@ -6,6 +6,8 @@ export const UNIPIG_TWITTER_ID = 1169730193260519400
 
 export const DECIMALS = 2
 
+export const FAUCET_AMOUNT = 50 * 10 ** DECIMALS
+
 export enum WalletSource {
   PAPER = 'PAPER',
   GENERATED = 'GENERATED',

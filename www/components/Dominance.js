@@ -40,7 +40,7 @@ export default function Dominance({ percent }) {
           width: `${percent}%`,
           transition: {
             ease: 'easeOut',
-            duration: 1.25
+            duration: 1.5
           }
         }}
       />

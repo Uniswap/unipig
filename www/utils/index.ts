@@ -1,11 +1,14 @@
 import Cookies from 'js-cookie'
 import nextCookies from 'next-cookies'
 import { verifyMessage } from '@ethersproject/wallet'
+import { defaultAbiCoder } from '@ethersproject/abi'
+import fetch from 'isomorphic-unfetch'
 import { BigNumber } from '@uniswap/sdk'
 import { UNI_TOKEN_TYPE, PIGI_TOKEN_TYPE } from '@pigi/wallet'
+import uuid from 'uuid/v4'
 
 import { COOKIE_NAME, Cookie, Team } from '../contexts/Client'
-import { FAUCET_TIMEOUT, AddressDocument, WalletSource } from '../constants'
+import { FAUCET_TIMEOUT, FAUCET_AMOUNT, AddressDocument, WalletSource } from '../constants'
 
 export function getPermissionString(address: string): string {
   return `Proof of ownership over ${address}, provided to https://unipig.exchange.`
@@ -87,4 +90,32 @@ export async function swap(OVMWallet: any, address: string, inputToken: Team, in
 export async function send(OVMWallet: any, from: string, to: string, token: Team, amount: BigNumber): Promise<void> {
   const tokenType = token === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE
   await OVMWallet.send(tokenType, from, to, amount.toNumber())
+}
+
+export function getFaucetData(address: string): string {
+  return defaultAbiCoder.encode(['address', 'uint256'], [address, FAUCET_AMOUNT])
+}
+
+export async function faucet(recipient: string, signature: string): Promise<void> {
+  await fetch(process.env.AGGREGATOR_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      id: uuid(),
+      jsonrpc: '2.0',
+      method: 'requestFaucetFunds',
+      params: [
+        {
+          signature,
+          transaction: {
+            sender: recipient,
+            amount: FAUCET_AMOUNT
+          }
+        }
+      ]
+    })
+  }).then((response): void => {
+    if (!response.ok) {
+      throw Error(`${response.status} Error: ${response.statusText}`)
+    }
+  })
 }
