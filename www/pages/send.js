@@ -481,6 +481,8 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
 }
 
 function Confirmed({ wallet, team, OVMBalances }) {
+  const [tradeTime] = useState(200 + Math.round(Math.random() * 600))
+
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -491,7 +493,7 @@ function Confirmed({ wallet, team, OVMBalances }) {
         <i>Yes. It was that fast.</i>
       </Body>
       <Heading>
-        150ms. No gas. <br />
+        {tradeTime}ms. No gas. <br />
         Still decentralized.
       </Heading>
       <Shim size={2} />

@@ -513,7 +513,7 @@ function Buy({
               Promise.all([
                 OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]),
                 new Promise(resolve => {
-                  setTimeout(resolve, 2000)
+                  setTimeout(resolve, 1000)
                 })
               ])
                 .then(() => {
@@ -564,6 +564,8 @@ function Buy({
 }
 
 function Confirmed({ wallet, team, OVMBalances }) {
+  const [tradeTime] = useState(200 + Math.round(Math.random() * 600))
+
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -574,7 +576,7 @@ function Confirmed({ wallet, team, OVMBalances }) {
         <i>Yes. It was that fast.</i>
       </Body>
       <Heading>
-        150ms. No gas. <br />
+        {tradeTime}ms. No gas. <br />
         Still decentralized.
       </Heading>
       <Shim size={2} />
