@@ -7,7 +7,7 @@ import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../con
 import { canFaucet, getFaucetData, faucet } from '../../../utils'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
-const addressRegex = new RegExp(/(?<address>0x[0-9a-fA-F]{40})/)
+const addressRegex = new RegExp(/(0x[0-9a-fA-F]{40})/g)
 
 const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
@@ -78,9 +78,9 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     const userHandle = tweetObject.user.screen_name
     const userId = tweetObject.user.id
     console.log(`Begin parsing tweet '${tweetObject.extended_tweet.full_text}' by ${userHandle} (${userId}).`)
-    const matchedAddress =
-      tweetObject.extended_tweet.full_text.match(addressRegex) &&
-      tweetObject.extended_tweet.full_text.match(addressRegex).groups.address
+    const matchedAddress = tweetObject.extended_tweet.full_text.match(addressRegex)
+      ? tweetObject.extended_tweet.full_text.match(addressRegex)[0]
+      : null
 
     // ignore non-supported tweet types
     if (
