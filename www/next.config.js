@@ -8,7 +8,7 @@ module.exports = phase => ({
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      config.node = { ...(config.node || {}), fs: 'empty', net: 'empty', express: 'empty' }
+      config.node = { ...(config.node || {}), fs: 'empty', net: 'empty' }
     }
 
     config.externals = [...(config.externals || []), ...['express']]

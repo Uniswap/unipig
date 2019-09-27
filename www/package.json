@@ -3,7 +3,7 @@
   "license": "GPL-3.0-or-later",
   "private": true,
   "engines": {
-    "node": "10.x"
+    "node": "8.10.x"
   },
   "scripts": {
     "dev": "next",
@@ -28,11 +28,12 @@
     "@reach/dialog": "^0.2.9",
     "@uniswap/sdk": "^1.0.0-beta.4",
     "copy-to-clipboard": "^3.2.0",
+    "ethers": "^4.0.37",
     "faunadb": "^2.8.0",
     "framer-motion": "^1.6.7",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^2.2.1",
-    "next": "^9.0.5",
+    "next": "^9.0.6",
     "next-cookies": "^1.1.2",
     "polished": "^3.4.1",
     "react": "^16.9.0",

@@ -207,6 +207,7 @@ export function useOVMWallet(wallet: undefined | Wallet | null): undefined | any
   const unipigWallet = useMemo((): any | null => {
     if (wallet) {
       const oldWallet: OldWallet = new OldWallet(wallet.privateKey)
+
       const signatureDB = newInMemoryDB()
       const signedByDB = new SignedByDB(signatureDB)
       const signedByDecider = new SignedByDecider(signedByDB, Buffer.from(oldWallet.address))
