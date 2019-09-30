@@ -119,3 +119,21 @@ export async function faucet(recipient: string, signature: string): Promise<void
     }
   })
 }
+
+// https://italonascimento.github.io/applying-a-timeout-to-your-promises/
+export async function timeoutPromise<T>(promise: Promise<T>, timeToWait: number = 5000): Promise<T> {
+  let timeout: number
+  const dummyTimeoutPromise = new Promise<void>((_, reject): void => {
+    timeout = setTimeout((): void => {
+      reject(`Timed out in ${timeToWait} milliseconds.`)
+    }, timeToWait)
+  })
+
+  return Promise.race([promise, dummyTimeoutPromise]).then(
+    (result): T => {
+      clearTimeout(timeout)
+
+      return result as T // ok to cast here because dummyTimeoutPromise never resolves
+    }
+  )
+}

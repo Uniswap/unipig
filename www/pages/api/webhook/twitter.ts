@@ -4,7 +4,7 @@ import faunadb from 'faunadb'
 import { Wallet } from 'ethers'
 
 import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../constants'
-import { canFaucet, getFaucetData, faucet } from '../../../utils'
+import { canFaucet, getFaucetData, faucet, timeoutPromise } from '../../../utils'
 
 const secret = process.env.TWITTER_CONSUMER_SECRET
 const addressRegex = new RegExp(/(0x[0-9a-fA-F]{40})/g)
@@ -136,8 +136,22 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
           console.error(`Account ${userHandle} (${userId}) cannot faucet yet.`)
           return res.status(200).send('')
         }
-        // update the db to ensure uniqueness
-        else {
+      }
+
+      // faucet
+      let faucetError = false
+      try {
+        const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
+        const signature = await faucetWallet.signMessage(getFaucetData(matchedAddress))
+        await timeoutPromise(faucet(matchedAddress, signature))
+      } catch (error) {
+        console.error(error)
+        // faucetError = true
+      }
+
+      if (!faucetError) {
+        // ensure if the twitter id was previously associated with an account, it gets removed to ensure uniqueness
+        if (idData.data.length > 0) {
           await client.query(
             q.Update(q.Ref(q.Collection('addresses'), idData.data[0].ref.id), {
               data: {
@@ -147,26 +161,31 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
             })
           )
         }
+
+        // update the address account with this faucet
+        await client.query(
+          q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
+            data: {
+              twitterHandle: userHandle,
+              twitterId: userId,
+              lastTwitterFaucet: now,
+              ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
+            }
+          })
+        )
+
+        return res.status(200).send('')
+      } else {
+        await client.query(
+          q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
+            data: {
+              twitterFaucetError: true
+            }
+          })
+        )
+
+        return res.status(500).send('An unknown error occurred.')
       }
-
-      // faucet
-      const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
-      const signature = await faucetWallet.signMessage(getFaucetData(matchedAddress))
-      await faucet(matchedAddress, signature)
-
-      // all has gone well, update db
-      await client.query(
-        q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
-          data: {
-            twitterHandle: userHandle,
-            twitterId: userId,
-            lastTwitterFaucet: now,
-            ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
-          }
-        })
-      )
-
-      return res.status(200).send('')
     } catch (error) {
       console.error(error)
       return res.status(500).send('An unknown error occurred.')

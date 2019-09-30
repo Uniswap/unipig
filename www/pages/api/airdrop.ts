@@ -3,7 +3,7 @@ import faunadb from 'faunadb'
 import { Wallet } from '@ethersproject/wallet'
 
 import { AddressDocument } from '../../constants'
-import { validatePermissionString, getFaucetData, faucet } from '../../utils'
+import { validatePermissionString, getFaucetData, faucet, timeoutPromise } from '../../utils'
 
 const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
@@ -42,21 +42,33 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     }
 
     // faucet both
-    const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
-    const signature = await faucetWallet.signMessage(getFaucetData(address))
-    const signatureScanned = await faucetWallet.signMessage(getFaucetData(scannedAddress))
-    await Promise.all([faucet(address, signature), faucet(scannedAddress, signatureScanned)])
+    let faucetError = false
+    try {
+      const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
+      const signature = await faucetWallet.signMessage(getFaucetData(address))
+      const signatureScanned = await faucetWallet.signMessage(getFaucetData(scannedAddress))
+      await Promise.all([
+        timeoutPromise(faucet(address, signature)),
+        timeoutPromise(faucet(scannedAddress, signatureScanned))
+      ])
+    } catch (error) {
+      console.error(error)
+      // faucetError = true
+    }
 
-    // all has gone well, update db
-    await client.query(
-      q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
-        data: {
-          boostsLeft: addressDocument.boostsLeft - 1
-        }
-      })
-    )
+    if (!faucetError) {
+      await client.query(
+        q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
+          data: {
+            boostsLeft: addressDocument.boostsLeft - 1
+          }
+        })
+      )
 
-    return res.status(200).send('')
+      return res.status(200).send('')
+    } else {
+      return res.status(500).send('An unknown error occurred.')
+    }
   } catch (error) {
     console.error(error)
     return res.status(500).send('An unknown error occurred.')

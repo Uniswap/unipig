@@ -73,8 +73,6 @@ const StyledWallet = styled(Wallet)`
 `
 
 function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalances, updateOVMBalances }) {
-  const [tradeTime] = useState(200 + Math.round(Math.random() * 600))
-
   // save the initial addressData
   const initialAddressData = useRef(addressData)
 
@@ -126,13 +124,19 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
     if (alreadyFauceted) {
       return (
         <StyledBody textStyle="gradient">
-          {justFauceted ? `The Unipig just sent you tokens in ${tradeTime}ms.` : 'Enjoy your tokens responsibly.'}
+          {justFauceted ? `The Unipig just granted you tokens.` : 'Enjoy your tokens responsibly.'}
         </StyledBody>
       )
     } else if (addressData.canFaucet && !twitterLoaded) {
       return (
         <>
           <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
+        </>
+      )
+    } else if (addressData.twitterFaucetError) {
+      return (
+        <>
+          <StyledBody textStyle="gradient">Sorry, an error occurred. Try again soon!</StyledBody>
         </>
       )
     } else if (polling && !justFauceted) {

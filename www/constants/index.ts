@@ -21,6 +21,7 @@ export interface AddressDocument {
   lastTwitterFaucet: number
   twitterId?: number
   twitterHandle?: string
+  twitterFaucetError?: boolean
 }
 
 export interface AugmentedAddressDocument extends AddressDocument {
