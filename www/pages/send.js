@@ -197,13 +197,13 @@ function reducer(state, { type, payload = {} } = {}) {
       }
     }
     case SET_INPUT_AMOUNT_INVALID: {
-      const { rawValue } = payload
+      const { rawValue, errorMessage } = payload
 
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawValue,
         [INPUT_AMOUNT_PARSED]: null,
-        [ERROR_MESSAGE_INPUT]: 'Invalid Input'
+        [ERROR_MESSAGE_INPUT]: errorMessage || 'Invalid Input'
       }
     }
     case SET_INSUFFICIENT_BALANCE: {
@@ -311,6 +311,14 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
 
     if (parsedValue.isZero()) {
       dispatchSwapState({ type: RESET_INPUT_AMOUNT, payload: { rawInputValue: typedValue } })
+      return
+    }
+
+    if (!parsedValue.minus(parsedValue.integerValue()).isZero()) {
+      dispatchSwapState({
+        type: SET_INPUT_AMOUNT_INVALID,
+        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places.' }
+      })
       return
     }
 

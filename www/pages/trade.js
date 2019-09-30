@@ -239,17 +239,17 @@ function reducer(state, { type, payload = {} } = {}) {
       }
     }
     case SET_INPUT_AMOUNT_INVALID: {
-      const { rawValue } = payload
+      const { rawValue, errorMessage } = payload
 
       return {
         ...state,
         [INPUT_AMOUNT_RAW]: rawValue,
         [INPUT_AMOUNT_PARSED]: null,
-        [OUTPUT_AMOUNT_RAW]: null,
+        [OUTPUT_AMOUNT_RAW]: '',
         [OUTPUT_AMOUNT_PARSED]: null,
         [EXECUTION_RATE_INVERTED]: null,
         [MARKET_RATE_PRICE_IMPACT]: null,
-        [ERROR_MESSAGE]: 'Invalid Input'
+        [ERROR_MESSAGE]: errorMessage || 'Invalid Input'
       }
     }
     case SET_INSUFFICIENT_BALANCE: {
@@ -351,7 +351,10 @@ function Buy({
       }
     } catch (error) {
       console.error(error)
-      dispatchSwapState({ type: SET_INPUT_AMOUNT_INVALID, payload: { rawValue, errorMessage: 'Invalid Trade' } })
+      dispatchSwapState({
+        type: SET_INPUT_AMOUNT_INVALID,
+        payload: { rawValue, errorMessage: 'Please enter a larger amount.' }
+      })
       return
     }
 
@@ -417,7 +420,23 @@ function Buy({
       return
     }
 
-    updateValues(typedValue, parsedValue)
+    if (parsedValue.integerValue().isZero()) {
+      dispatchSwapState({
+        type: SET_INPUT_AMOUNT_INVALID,
+        payload: { rawValue: typedValue, errorMessage: 'Please enter a larger value.' }
+      })
+      return
+    }
+
+    if (!parsedValue.minus(parsedValue.integerValue()).isZero()) {
+      dispatchSwapState({
+        type: SET_INPUT_AMOUNT_INVALID,
+        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places.' }
+      })
+      return
+    }
+
+    updateValues(typedValue, parsedValue.integerValue())
   }
 
   function onMaxInputValue() {

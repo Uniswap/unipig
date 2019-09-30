@@ -14,7 +14,7 @@ const StyledButton = styled(Button)`
   margin-bottom: 24px;
 `
 
-export default function JoinTeam() {
+function JoinTeam({ skipConfirm }) {
   const teamExists = useTeamExists()
   const addTeam = useAddTeam()
   const team = useTeam_UNWISE()
@@ -56,10 +56,25 @@ export default function JoinTeam() {
 
       <Progress progress="66%" />
       <AnimatedFrame variants={childAnimation}>
-        <NavButton variant="gradient" disabled={teamExists !== true} href={'/confirm-wallet'} stretch>
+        <NavButton
+          variant="gradient"
+          disabled={teamExists !== true}
+          href={skipConfirm ? '/' : '/confirm-wallet'}
+          stretch
+        >
           <ButtonText>I pledge allegiance</ButtonText>
         </NavButton>
       </AnimatedFrame>
     </AnimatedFrame>
   )
 }
+
+JoinTeam.getInitialProps = async context => {
+  const { query } = context // query can contain: skipConfirm
+
+  const skipConfirm = query.skipConfirm ? query.skipConfirm === 'true' : undefined
+
+  return { skipConfirm }
+}
+
+export default JoinTeam

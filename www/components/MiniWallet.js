@@ -6,6 +6,8 @@ import { DECIMALS } from '../constants'
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Client'
 import Shim from './Shim'
+import { useState, useEffect } from 'react'
+import { useMotionValue, motion } from 'framer-motion'
 
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
@@ -106,23 +108,51 @@ export function WalletInfo({ wallet, team }) {
   )
 }
 
-export function TokenInfo({ OVMBalances }) {
+function StatefulBalance({ balance }) {
+  const [statefulX, setStatefulX] = useState(balance)
+  const x = useMotionValue(balance)
+  useEffect(() => {
+    const unsubscribeX = x.onChange(() => setStatefulX(Math.round(x.current)))
+    return () => {
+      unsubscribeX()
+    }
+  }, [x])
+
   return (
-    <Tokens>
-      <TokenValue team={Team.UNI}>
-        <span>
-          {OVMBalances[Team.UNI] !== undefined ? formatFixedDecimals(OVMBalances[Team.UNI], DECIMALS) : '...'}
-        </span>
-        <span>UNI</span>
-      </TokenValue>
-      <TokenShim />
-      <TokenValue team={Team.PIGI}>
-        <span>
-          {OVMBalances[Team.PIGI] !== undefined ? formatFixedDecimals(OVMBalances[Team.PIGI], DECIMALS) : '...'}
-        </span>
-        <span>PIGI</span>
-      </TokenValue>
-    </Tokens>
+    <>
+      <motion.span
+        style={{ x }}
+        animate={{
+          x: balance
+        }}
+        transition={{
+          duration: 1.25,
+          ease: 'easeOut'
+        }}
+      />
+      <span>{formatFixedDecimals(statefulX, DECIMALS)}</span>
+    </>
+  )
+}
+
+export function TokenInfo({ OVMBalances }) {
+  const UNIBalance = OVMBalances[Team.UNI]
+  const PIGIBalance = OVMBalances[Team.PIGI]
+
+  return (
+    <>
+      <Tokens>
+        <TokenValue team={Team.UNI}>
+          <span>{UNIBalance !== undefined ? <StatefulBalance balance={UNIBalance} /> : '...'}</span>
+          <span>UNI</span>
+        </TokenValue>
+        <TokenShim />
+        <TokenValue team={Team.PIGI}>
+          <span>{PIGIBalance !== undefined ? <StatefulBalance balance={PIGIBalance} /> : '...'}</span>
+          <span>PIGI</span>
+        </TokenValue>
+      </Tokens>
+    </>
   )
 }
 

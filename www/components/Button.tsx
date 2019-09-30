@@ -11,7 +11,7 @@ const StyledButton = styled(FilteredButton)`
   border-radius: 20px;
   text-transform: initial;
   min-height: 60px;
-  opacity: ${({ disabled }): string => (disabled ? '0.4' : '1')};
+  opacity: ${({ disabled }): string => (disabled ? '0.7' : '1')};
   width: ${({ stretch }): string => (stretch ? '100%' : 'initial')};
 `
 

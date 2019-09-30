@@ -328,33 +328,12 @@ function AirdropSnackbar({
 function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, openQRModal }) {
   const theme = useStyledTheme()
 
-  const reset = useReset()
-  const [clickedBurnOnce, setClickedBurnOnce] = useState(false)
-  useEffect(() => {
-    if (clickedBurnOnce) {
-      const timeout = setTimeout(() => {
-        setClickedBurnOnce(false)
-      }, 2000)
-
-      return () => {
-        clearTimeout(timeout)
-      }
-    }
-  })
-  function manageBurn() {
-    if (!clickedBurnOnce) {
-      setClickedBurnOnce(true)
-    } else {
-      reset()
-    }
-  }
-
   const [addressCopied, setAddressCopied] = useState(false)
   useEffect(() => {
     if (addressCopied) {
       const timeout = setTimeout(() => {
         setAddressCopied(false)
-      }, 1000)
+      }, 1500)
 
       return () => {
         clearTimeout(timeout)
@@ -371,7 +350,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     if (accountCopied) {
       const timeout = setTimeout(() => {
         setAccountCopied(false)
-      }, 1000)
+      }, 1500)
 
       return () => {
         clearTimeout(timeout)
@@ -385,6 +364,40 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
       }&team=${Team[team]}&override=${true}`
     )
     setAccountCopied(true)
+  }
+
+  const [clickedChangeTeam, setClickedChangeTeam] = useState(false)
+  useEffect(() => {
+    if (clickedChangeTeam) {
+      const timeout = setTimeout(() => {
+        setClickedChangeTeam(false)
+      }, 1500)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+
+  const reset = useReset()
+  const [clickedBurnOnce, setClickedBurnOnce] = useState(false)
+  useEffect(() => {
+    if (clickedBurnOnce) {
+      const timeout = setTimeout(() => {
+        setClickedBurnOnce(false)
+      }, 1500)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+  function manageBurn() {
+    if (!clickedBurnOnce) {
+      setClickedBurnOnce(true)
+    } else {
+      reset()
+    }
   }
 
   return (
@@ -471,12 +484,23 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
       </SendWrapper>
       <Shim size={8} />
       <SendWrapper>
-        <SendButton variant="text" onClick={manageBurn}>
-          {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
+        <SendButton
+          as={clickedChangeTeam ? NavButton : undefined}
+          href={clickedChangeTeam ? '/join-team?skipConfirm=true' : undefined}
+          variant="text"
+          onClick={
+            clickedChangeTeam
+              ? undefined
+              : () => {
+                  setClickedChangeTeam(true)
+                }
+          }
+        >
+          {clickedChangeTeam ? 'Traitor!' : 'Change Teams'}
         </SendButton>
         <SendShim />
-        <SendButton style={{ visibility: 'hidden' }} variant="text">
-          ''
+        <SendButton variant="text" onClick={manageBurn}>
+          {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
         </SendButton>
       </SendWrapper>
     </StyledWallet>
