@@ -126,7 +126,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
   const [updatedAddressData, setUpdatedAddressData] = useState()
   const [updater, setUpdater] = useState(0)
   useEffect(() => {
-    if (address && permission) {
+    if (address && permission && updater > 0) {
       let stale
 
       getAddressData(address, permission).then(data => {

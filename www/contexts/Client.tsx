@@ -311,7 +311,7 @@ export function Updater(): null {
   // create permission string if it doesn't exist
   const wallet = useWallet()
   useEffect((): void | (() => void) => {
-    if (wallet && !state.permission) {
+    if (wallet) {
       let stale: boolean
 
       const permissionString = getPermissionString(wallet.address)
@@ -325,7 +325,7 @@ export function Updater(): null {
         stale = true
       }
     }
-  }, [wallet, state.permission, addPermission])
+  }, [wallet, addPermission])
 
   // pin account to localstorage
   useMemo((): void => {
