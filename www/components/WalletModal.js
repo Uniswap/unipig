@@ -19,6 +19,7 @@ import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
 import { ButtonText } from './Type'
 import NavButton from './NavButton'
+import NavLink from './NavLink'
 
 const QRScanModal = dynamic(() => import('./QRScanModal'), { ssr: false })
 const Confetti = dynamic(() => import('./Confetti'), { ssr: false })
@@ -31,16 +32,13 @@ const StyledDialogOverlay = styled(DialogOverlay)`
 const StyledDialogContent = styled(DialogContent)`
   &[data-reach-dialog-content] {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
     width: 100%;
+    min-height: 100%;
+    align-items: center;
+    padding: 1rem;
+    margin: 0 auto 0 auto;
     max-width: 448px;
     background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
-
-    @media only screen and (max-width: 448px) {
-      margin: 0;
-    }
   }
 `
 
@@ -161,62 +159,24 @@ const ProgressSVG = styled.svg`
   margin: 0.25rem;
 `
 
-const DURATION = 7
-function AirdropSnackbar({
-  wallet,
-  updateAddressData,
-  updateOVMBalances,
-  scannedAddress,
-  setScannedAddress,
-  lastScannedAddress,
-  setPopConfetti
-}) {
-  const [error, setError] = useState()
-  const [success, setSuccess] = useState()
-
-  useEffect(() => {
-    if (scannedAddress) {
-      const permissionString = getPermissionString(wallet.address)
-      wallet.signMessage(permissionString).then(signature => {
-        Promise.all([
-          fetch('/api/airdrop', {
-            method: 'POST',
-            body: JSON.stringify({ address: wallet.address, signature, scannedAddress })
-          }),
-          new Promise(resolve => {
-            setTimeout(resolve, 1000)
-          })
-        ])
-          .then(([response]) => {
-            if (!response.ok) {
-              throw Error(`${response.status} Error: ${response.statusText}`)
-            }
-
-            updateOVMBalances()
-            updateAddressData()
-            setSuccess(true)
-          })
-          .catch(error => {
-            console.error(error)
-            setError(error)
-          })
-      })
-    }
-  }, [scannedAddress, wallet, updateOVMBalances, updateAddressData])
-
+const DURATION = 8
+function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   function statusMessage() {
-    if (!!!error && !!!success) {
-      return <span>Sending transaction...</span>
-    } else if (!!error) {
+    if (isError) {
       return <span>Sorry, there was an error.</span>
     } else {
       return (
         <span>
           <b>Boom. Airdrop complete.</b> <br /> <Shim size={8} /> You and{' '}
-          {(scannedAddress || lastScannedAddress) && truncateAddress(scannedAddress || lastScannedAddress, 4)} just got
-          tokens. This transaction was completed in 150ms on OVM layer 2 <br />
+          {scannedAddress && truncateAddress(scannedAddress, 4)} just got tokens on the OVM. Layer two-kens, if you
+          will.
+          <br />
           <Shim size={12} />
-          <span style={{ color: 'white' }}>Learn more ↗</span>
+          <NavLink href="/welcome" target="_blank" rel="noopener noreferrer">
+            <b>
+              <span style={{ color: 'white' }}>Learn more ↗</span>
+            </b>
+          </NavLink>
         </span>
       )
     }
@@ -230,14 +190,8 @@ function AirdropSnackbar({
   })
   const [isFinished, setIsFinished] = useState(false)
   useEffect(() => {
-    if (success || error) {
-      controls.start(animateTo(DURATION))
-
-      if (success) {
-        setPopConfetti(true)
-      }
-    }
-  }, [success, error, controls, setPopConfetti])
+    controls.start(animateTo(DURATION))
+  }, [controls])
 
   return (
     <Snackbar
@@ -245,7 +199,7 @@ function AirdropSnackbar({
         vertical: 'top',
         horizontal: 'center'
       }}
-      open={!!scannedAddress}
+      open={true}
       autoHideDuration={null}
       onClose={() => {}}
       onMouseEnter={() => {
@@ -259,14 +213,12 @@ function AirdropSnackbar({
         }
       }}
       onExited={() => {
-        setError()
-        setSuccess()
         setIsFinished(false)
         controls.set({ pathLength: 0 })
       }}
     >
       <StyledSnackbarContent
-        inError={!!error}
+        inError={isError}
         message={
           <Contents>
             <Emoji style={{ marginRight: '.75rem' }} emoji="📦" label="airdrop" />
@@ -305,8 +257,7 @@ function AirdropSnackbar({
                 animate={{ pathLength: isFinished ? 1 : 0 }}
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
                 onAnimationComplete={() => {
-                  setPopConfetti(false)
-                  setScannedAddress()
+                  onCompletion()
                 }}
               />
             </ProgressSVG>
@@ -550,7 +501,58 @@ export default function WalletModal({
   const [scannedAddress, setScannedAddress] = useState()
   const lastScannedAddress = usePrevious(scannedAddress)
 
-  const [popConfetti, setPopConfetti] = useState(false)
+  const [error, setError] = useState()
+  const [success, setSuccess] = useState()
+
+  const [signature, setSignature] = useState()
+  useEffect(() => {
+    if (!signature && wallet && scannedAddress) {
+      const permissionString = getPermissionString(wallet.address)
+      wallet.signMessage(permissionString).then(signature => {
+        setSignature(signature)
+      })
+    }
+  }, [signature, wallet, scannedAddress])
+
+  const walletAddress = wallet && wallet.address
+  useEffect(() => {
+    if (walletAddress && scannedAddress && signature) {
+      Promise.all([
+        fetch('/api/airdrop', {
+          method: 'POST',
+          body: JSON.stringify({ address: walletAddress, signature, scannedAddress })
+        }),
+        new Promise(resolve => {
+          setTimeout(resolve, 500)
+        })
+      ])
+        .then(([response]) => {
+          if (!response.ok) {
+            throw Error(`${response.status} Error: ${response.statusText}`)
+          }
+
+          updateOVMBalances()
+          updateAddressData()
+          setSuccess(true)
+        })
+        .catch(error => {
+          console.error(error)
+          setError(true)
+        })
+    }
+  }, [walletAddress, scannedAddress, signature, updateOVMBalances, updateAddressData])
+
+  function onCompletion() {
+    setError()
+    setSuccess()
+    setScannedAddress()
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      onCompletion()
+    }
+  }, [isOpen])
 
   // handle redirect after reset
   const router = useRouter()
@@ -567,16 +569,14 @@ export default function WalletModal({
     <>
       <StyledDialogOverlay isOpen={isOpen} onDismiss={onDismiss}>
         <StyledDialogContent>
-          <Confetti start={popConfetti} variant="top" />
-          <AirdropSnackbar
-            wallet={wallet}
-            updateAddressData={updateAddressData}
-            updateOVMBalances={updateOVMBalances}
-            scannedAddress={scannedAddress}
-            setScannedAddress={setScannedAddress}
-            lastScannedAddress={lastScannedAddress}
-            setPopConfetti={setPopConfetti}
-          />
+          <Confetti start={success} variant="top" />
+          {!!(error || success) && (
+            <AirdropSnackbar
+              isError={!!error}
+              scannedAddress={scannedAddress || lastScannedAddress}
+              onCompletion={onCompletion}
+            />
+          )}
           <AnimatedFrame variants={containerAnimationNoDelay} initial="hidden" animate="show">
             <ViewManager
               wallet={wallet}

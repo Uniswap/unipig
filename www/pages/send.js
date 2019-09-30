@@ -144,6 +144,7 @@ const RESTING = 'RESTING'
 const PENDING = 'PENDING'
 const SUCCESS = 'SUCCESS'
 
+const ERROR_MESSAGE_GENERAL = 'ERROR_MESSAGE_GENERAL'
 const ERROR_MESSAGE_INPUT = 'ERROR_MESSAGE_INPUT'
 const ERROR_MESSAGE_RECIPIENT = 'ERROR_MESSAGE_RECIPIENT'
 const INPUT_AMOUNT_RAW = 'INPUT_AMOUNT_RAW'
@@ -152,6 +153,7 @@ const RECIPIENT = 'RECIPIENT'
 const SEND_STATE = 'SEND_STATE'
 
 const initialSwapState = {
+  [ERROR_MESSAGE_GENERAL]: null,
   [ERROR_MESSAGE_INPUT]: null,
   [ERROR_MESSAGE_RECIPIENT]: null,
   [INPUT_AMOUNT_RAW]: '',
@@ -183,7 +185,8 @@ function reducer(state, { type, payload = {} } = {}) {
         ...state,
         [INPUT_AMOUNT_RAW]: rawInputValue,
         [INPUT_AMOUNT_PARSED]: parsedInputValue,
-        [ERROR_MESSAGE_INPUT]: null
+        [ERROR_MESSAGE_INPUT]: null,
+        [ERROR_MESSAGE_GENERAL]: null
       }
     }
     case RESET_INPUT_AMOUNT: {
@@ -193,7 +196,8 @@ function reducer(state, { type, payload = {} } = {}) {
         ...state,
         [INPUT_AMOUNT_RAW]: rawInputValue || '',
         [INPUT_AMOUNT_PARSED]: null,
-        [ERROR_MESSAGE_INPUT]: null
+        [ERROR_MESSAGE_INPUT]: null,
+        [ERROR_MESSAGE_GENERAL]: null
       }
     }
     case SET_INPUT_AMOUNT_INVALID: {
@@ -222,7 +226,8 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [RECIPIENT]: recipient,
-        [ERROR_MESSAGE_RECIPIENT]: null
+        [ERROR_MESSAGE_RECIPIENT]: null,
+        [ERROR_MESSAGE_GENERAL]: null
       }
     }
     case SET_RECIPIENT_INVALID: {
@@ -250,7 +255,7 @@ function reducer(state, { type, payload = {} } = {}) {
       return {
         ...state,
         [SEND_STATE]: RESTING,
-        [ERROR_MESSAGE_INPUT]: 'Unknown Error'
+        [ERROR_MESSAGE_GENERAL]: 'Unknown Error'
       }
     }
     default: {
@@ -259,7 +264,7 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, confirm }) {
+function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTradeTime }) {
   //// parse the props
   const balance = OVMBalances[token] !== undefined ? new BigNumber(OVMBalances[token]) : null
 
@@ -432,16 +437,25 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
         </StyledInputWrapper>
         <HelperText
           style={{
-            visibility: !!swapState[ERROR_MESSAGE_INPUT] || !!swapState[ERROR_MESSAGE_RECIPIENT] ? 'visible' : 'hidden'
+            visibility:
+              !!swapState[ERROR_MESSAGE_INPUT] ||
+              !!swapState[ERROR_MESSAGE_RECIPIENT] ||
+              !!swapState[ERROR_MESSAGE_GENERAL]
+                ? 'visible'
+                : 'hidden'
           }}
           error={true}
         >
-          {swapState[ERROR_MESSAGE_INPUT] || swapState[ERROR_MESSAGE_RECIPIENT] || 'placeholder'}
+          {swapState[ERROR_MESSAGE_INPUT] ||
+            swapState[ERROR_MESSAGE_RECIPIENT] ||
+            swapState[ERROR_MESSAGE_GENERAL] ||
+            'placeholder'}
         </HelperText>
         <Button
           disabled={
             !!swapState[ERROR_MESSAGE_INPUT] ||
             !!swapState[ERROR_MESSAGE_RECIPIENT] ||
+            !!swapState[ERROR_MESSAGE_GENERAL] ||
             !!!swapState[INPUT_AMOUNT_PARSED] ||
             !!!swapState[RECIPIENT]
           }
@@ -451,10 +465,14 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
             if (swapState[SEND_STATE] === RESTING) {
               dispatchSwapState({ type: SET_PENDING })
 
+              const now = Date.now()
+
               Promise.all([
-                OVMSend(swapState[RECIPIENT], token, swapState[INPUT_AMOUNT_PARSED]),
+                OVMSend(swapState[RECIPIENT], token, swapState[INPUT_AMOUNT_PARSED]).then(() => {
+                  setTradeTime(Date.now() - now)
+                }),
                 new Promise(resolve => {
-                  setTimeout(resolve, 1000)
+                  setTimeout(resolve, 750)
                 })
               ])
                 .then(() => {
@@ -482,15 +500,11 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
           )}
         </Button>
       </TradeWrapper>
-      <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </>
   )
 }
 
-function Confirmed({ wallet, team, OVMBalances }) {
-  const [tradeTime] = useState(200 + Math.round(Math.random() * 600))
-
+function Confirmed({ tradeTime }) {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -508,8 +522,6 @@ function Confirmed({ wallet, team, OVMBalances }) {
       <NavButton variant="gradient" href="/">
         <ButtonText>Dope</ButtonText>
       </NavButton>
-      <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </TradeWrapper>
   )
 }
@@ -520,18 +532,27 @@ function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token 
     setShowConfirm(true)
   }
 
-  return !showConfirm ? (
-    <Send
-      wallet={wallet}
-      team={team}
-      OVMBalances={OVMBalances}
-      updateOVMBalances={updateOVMBalances}
-      OVMSend={OVMSend}
-      token={token}
-      confirm={confirm}
-    />
-  ) : (
-    <Confirmed wallet={wallet} team={team} OVMBalances={OVMBalances} />
+  const [tradeTime, setTradeTime] = useState()
+
+  return (
+    <>
+      {!showConfirm ? (
+        <Send
+          wallet={wallet}
+          team={team}
+          OVMBalances={OVMBalances}
+          updateOVMBalances={updateOVMBalances}
+          OVMSend={OVMSend}
+          token={token}
+          confirm={confirm}
+          setTradeTime={setTradeTime}
+        />
+      ) : (
+        <Confirmed tradeTime={tradeTime} />
+      )}
+      <Shim size={32} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Token Balances" />
+    </>
   )
 }
 

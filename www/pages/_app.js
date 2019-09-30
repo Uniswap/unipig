@@ -27,7 +27,7 @@ const GRADIENT_BACKGROUND = css`
   background: linear-gradient(45deg, ${GRADIENT_LEFT}, ${GRADIENT_RIGHT});
 `
 
-const UNI = '#DC6BE5'
+const UNI = '#FE6DDE'
 const PIGI = '#FAC4B6'
 
 const SCTheme = {
@@ -146,8 +146,8 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   const wallet = useWallet()
   const OVMWallet = useOVMWallet(wallet)
-  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 4 * 1000)
-  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address, 4 * 1000)
+  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 6 * 1000)
+  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address, 6 * 1000)
 
   async function OVMSwap(inputToken, inputAmount) {
     await swap(OVMWallet, wallet.address, inputToken, inputAmount)

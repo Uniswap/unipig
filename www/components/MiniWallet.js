@@ -15,7 +15,7 @@ const StyledWallet = styled.div`
   background-color: ${({ theme }) => lighten(0.05, theme.colors.black)};
   border-radius: 20px;
   width: 100%;
-  opacity: 0.8;
+  opacity: ${({ onClick }) => (onClick ? 0.8 : 1)};
   transition: opacity 0.125s ease;
   text-decoration: none !important;
 
@@ -156,7 +156,7 @@ export function TokenInfo({ OVMBalances }) {
   )
 }
 
-export default function Wallet({ wallet, team, OVMBalances, onClick, ...rest }) {
+export default function Wallet({ wallet, team, OVMBalances, onClick, alternateTitle, ...rest }) {
   return (
     <StyledWallet team={team} onClick={onClick} {...rest}>
       {!!onClick && (
@@ -165,7 +165,13 @@ export default function Wallet({ wallet, team, OVMBalances, onClick, ...rest }) 
           <span>↗</span>
         </OpenWalletLink>
       )}
-      <WalletInfo wallet={wallet} team={team} />
+      {alternateTitle ? (
+        <OpenWalletLink>
+          <span>{alternateTitle}</span>
+        </OpenWalletLink>
+      ) : (
+        <WalletInfo wallet={wallet} team={team} />
+      )}
       <Shim size={12} />
       <TokenInfo OVMBalances={OVMBalances} />
     </StyledWallet>

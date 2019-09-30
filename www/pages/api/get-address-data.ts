@@ -35,11 +35,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         boostsLeft: 0
       }
 
-      await client.query(
-        q.Create(q.Collection('addresses'), {
-          data: addressDocument
-        })
-      )
+      await client.query(q.Create(q.Collection('addresses'), { data: addressDocument }))
+
       return res.status(200).json({
         ...addressDocument,
         addressSource: addressSource(addressDocument),

@@ -300,8 +300,6 @@ function reducer(state, { type, payload = {} } = {}) {
 }
 
 function Buy({
-  wallet,
-  team,
   OVMReserves,
   updateOVMReserves,
   OVMBalances,
@@ -309,7 +307,8 @@ function Buy({
   OVMSwap,
   inputToken,
   outputToken,
-  confirm
+  confirm,
+  setTradeTime
 }) {
   //// parse the props
   const inputBalance = OVMBalances[inputToken] !== undefined ? new BigNumber(OVMBalances[inputToken]) : null
@@ -350,7 +349,6 @@ function Buy({
         throw Error()
       }
     } catch (error) {
-      console.error(error)
       dispatchSwapState({
         type: SET_INPUT_AMOUNT_INVALID,
         payload: { rawValue, errorMessage: 'Please enter a larger amount' }
@@ -529,10 +527,14 @@ function Buy({
             if (swapState[SWAP_STATE] === RESTING) {
               dispatchSwapState({ type: SET_PENDING })
 
+              const now = Date.now()
+
               Promise.all([
-                OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]),
+                OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]).then(() => {
+                  setTradeTime(Date.now() - now)
+                }),
                 new Promise(resolve => {
-                  setTimeout(resolve, 1000)
+                  setTimeout(resolve, 750)
                 })
               ])
                 .then(() => {
@@ -576,15 +578,11 @@ function Buy({
           </PriceImpactText>
         )}
       </TradeWrapper>
-      <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </>
   )
 }
 
-function Confirmed({ wallet, team, OVMBalances }) {
-  const [tradeTime] = useState(200 + Math.round(Math.random() * 600))
-
+function Confirmed({ tradeTime }) {
   return (
     <TradeWrapper>
       <Body>💸</Body>
@@ -602,8 +600,6 @@ function Confirmed({ wallet, team, OVMBalances }) {
       <NavButton variant="gradient" href="/">
         <ButtonText>Dope</ButtonText>
       </NavButton>
-      <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} />
     </TradeWrapper>
   )
 }
@@ -624,21 +620,28 @@ function Manager({
     setShowConfirm(true)
   }
 
-  return !showConfirm ? (
-    <Buy
-      wallet={wallet}
-      team={team}
-      OVMReserves={OVMReserves}
-      updateOVMReserves={updateOVMReserves}
-      OVMBalances={OVMBalances}
-      updateOVMBalances={updateOVMBalances}
-      OVMSwap={OVMSwap}
-      inputToken={inputToken}
-      outputToken={outputToken}
-      confirm={confirm}
-    />
-  ) : (
-    <Confirmed wallet={wallet} team={team} OVMBalances={OVMBalances} />
+  const [tradeTime, setTradeTime] = useState()
+
+  return (
+    <>
+      {!showConfirm ? (
+        <Buy
+          OVMReserves={OVMReserves}
+          updateOVMReserves={updateOVMReserves}
+          OVMBalances={OVMBalances}
+          updateOVMBalances={updateOVMBalances}
+          OVMSwap={OVMSwap}
+          inputToken={inputToken}
+          outputToken={outputToken}
+          confirm={confirm}
+          setTradeTime={setTradeTime}
+        />
+      ) : (
+        <Confirmed tradeTime={tradeTime} />
+      )}
+      <Shim size={32} />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Token Balances" />
+    </>
   )
 }
 

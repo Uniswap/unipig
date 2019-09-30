@@ -7,12 +7,12 @@ export default function Confetti({ start, variant }) {
 
   const _variant = variant ? variant : height && width && height > 1.5 * width ? 'bottom' : variant
 
-  return (
+  return start ? (
     <ReactConfetti
       style={{ zIndex: 1401 }}
       numberOfPieces={100}
       recycle={false}
-      run={start === true ? true : false}
+      run={true}
       width={width}
       height={height}
       confettiSource={{
@@ -25,5 +25,5 @@ export default function Confetti({ start, variant }) {
       tweenDuration={100}
       wind={0.05}
     />
-  )
+  ) : null
 }
