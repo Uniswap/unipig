@@ -317,7 +317,7 @@ function Send({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token, co
     if (!parsedValue.minus(parsedValue.integerValue()).isZero()) {
       dispatchSwapState({
         type: SET_INPUT_AMOUNT_INVALID,
-        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places.' }
+        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places' }
       })
       return
     }

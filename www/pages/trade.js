@@ -353,7 +353,7 @@ function Buy({
       console.error(error)
       dispatchSwapState({
         type: SET_INPUT_AMOUNT_INVALID,
-        payload: { rawValue, errorMessage: 'Please enter a larger amount.' }
+        payload: { rawValue, errorMessage: 'Please enter a larger amount' }
       })
       return
     }
@@ -423,7 +423,7 @@ function Buy({
     if (parsedValue.integerValue().isZero()) {
       dispatchSwapState({
         type: SET_INPUT_AMOUNT_INVALID,
-        payload: { rawValue: typedValue, errorMessage: 'Please enter a larger value.' }
+        payload: { rawValue: typedValue, errorMessage: 'Please enter a larger value' }
       })
       return
     }
@@ -431,7 +431,7 @@ function Buy({
     if (!parsedValue.minus(parsedValue.integerValue()).isZero()) {
       dispatchSwapState({
         type: SET_INPUT_AMOUNT_INVALID,
-        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places.' }
+        payload: { rawValue: typedValue, errorMessage: 'Please specify fewer decimal places' }
       })
       return
     }
