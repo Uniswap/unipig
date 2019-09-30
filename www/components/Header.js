@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { Badge } from '@material-ui/core'
 
@@ -6,8 +5,9 @@ import { useAccountExists, useTeamExists } from '../contexts/Client'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
+import NavLink from './NavLink'
+import { Body } from './Type'
 import Button from './Button'
-import { QRIcon, StatsIcon, ShareIcon } from './NavIcons'
 
 const Uniswap = styled.span`
   margin: 0;
@@ -27,6 +27,11 @@ const StyledChip = styled(Chip)`
   height: 100%;
 `
 
+const TextLink = styled(NavLink)`
+  font-weight: 600;
+  margin-right: ${({ noMargin }) => !noMargin && '1.25rem'};
+`
+
 const LinkWrapper = styled.span`
   display: flex;
   flex-direction: row;
@@ -38,27 +43,6 @@ const HomeButton = styled(NavButton)`
   line-height: 0rem;
 `
 
-const IconButton = styled(NavButton)`
-  height: 40px;
-  width: 40px;
-  min-height: 60px;
-  min-width: 60px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0px;
-  transition: scale 0.3s ease;
-
-  @media only screen and (max-width: 480px) {
-    min-width: 50px;
-    padding: 0px;
-  }
-
-  :hover {
-    transform: scale(0.99);
-  }
-`
-
 const StyledBadge = styled(Badge)`
   .MuiBadge-badge {
     z-index: 0;
@@ -67,15 +51,18 @@ const StyledBadge = styled(Badge)`
   }
 `
 
+const WalletButton = styled(Button)`
+  min-height: unset;
+`
+
+const WalletText = styled(Body)`
+  font-weight: 600;
+  padding: 0.25rem;
+`
+
 export default function Header({ showIcons, boostsLeft, setWalletModalIsOpen }) {
   const accountExists = useAccountExists()
   const teamExists = useTeamExists()
-
-  // check if sharing is enabled
-  const [canShare, setCanShare] = useState()
-  useEffect(() => {
-    setCanShare(navigator ? !!navigator.share : false)
-  }, [])
 
   return (
     <>
@@ -87,31 +74,18 @@ export default function Header({ showIcons, boostsLeft, setWalletModalIsOpen }) 
 
       {showIcons && (
         <LinkWrapper>
-          {canShare && (
-            <IconButton
-              as={Button}
-              onClick={() => {
-                navigator.share({
-                  title: 'Unipig Exchange',
-                  url: 'https://unipig.exchange/'
-                })
-              }}
-            >
-              <ShareIcon />
-            </IconButton>
-          )}
-          <IconButton href="/stats">
-            <StatsIcon />
-          </IconButton>
-          <StyledBadge badgeContent={boostsLeft}>
-            <IconButton
-              as={Button}
+          <TextLink href="/stats">
+            <Body textStyle="gradient">L2 Stats</Body>
+          </TextLink>
+          <StyledBadge style={{ marginRight: '0.5rem' }} badgeContent={boostsLeft}>
+            <WalletButton
+              variant="text"
               onClick={() => {
                 setWalletModalIsOpen(true)
               }}
             >
-              <QRIcon />
-            </IconButton>
+              <WalletText textStyle="gradient">Wallet</WalletText>
+            </WalletButton>
           </StyledBadge>
         </LinkWrapper>
       )}

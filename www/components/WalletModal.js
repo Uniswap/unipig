@@ -447,7 +447,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
                 }
           }
         >
-          {clickedChangeTeam ? 'Traitor!' : 'Change Teams'}
+          {clickedChangeTeam ? 'Traitor!' : 'Change Team'}
         </SendButton>
         <SendShim />
         <SendButton variant="text" onClick={manageBurn}>
