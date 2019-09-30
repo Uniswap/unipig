@@ -77,10 +77,6 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
     const tweetObject = body.tweet_create_events[0]
     const userHandle = tweetObject.user.screen_name
     const userId = tweetObject.user.id
-    console.log(`Begin parsing tweet '${tweetObject.extended_tweet.full_text}' by ${userHandle} (${userId}).`)
-    const matchedAddress = tweetObject.extended_tweet.full_text.match(addressRegex)
-      ? tweetObject.extended_tweet.full_text.match(addressRegex)[0]
-      : null
 
     // ignore non-supported tweet types
     if (
@@ -92,6 +88,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       return res.status(200).send('')
     }
 
+    console.log(`Begin parsing tweet '${tweetObject.extended_tweet.full_text}' by ${userHandle} (${userId}).`)
+
     // if account is too new return error
     const now = Date.now()
     const creationWindow = 1000 * 60 * 60 * 24 * 2 // 2 days
@@ -100,6 +98,10 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       console.error('Account is too new.')
       return res.status(200).send('')
     }
+
+    const matchedAddress = tweetObject.extended_tweet.full_text.match(addressRegex)
+      ? tweetObject.extended_tweet.full_text.match(addressRegex)[0]
+      : null
 
     // if there wasn't an address in the tweet return error
     if (!matchedAddress) {
@@ -134,6 +136,15 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
 
         if (!canFaucet(idDocument)) {
           console.error(`Account ${userHandle} (${userId}) cannot faucet yet.`)
+
+          await client.query(
+            q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
+              data: {
+                twitterFaucetError: true
+              }
+            })
+          )
+
           return res.status(200).send('')
         }
       }
