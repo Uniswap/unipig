@@ -32,21 +32,27 @@ const Circle = styled(motion.div)`
 function Circles({ total }): JSX.Element {
   const circlesToShow = useRef([])
 
-  if (!circlesToShow.current.includes(total)) {
-    circlesToShow.current = circlesToShow.current.concat([total])
+  if (
+    !circlesToShow.current.map((c): number => c.total).includes(total) &&
+    (circlesToShow.current.length === 0 ||
+      circlesToShow.current[circlesToShow.current.length - 1].time < Date.now() - 1 * 1000)
+  ) {
+    circlesToShow.current = circlesToShow.current.concat([{ total, time: Date.now() }])
   }
+
+  console.log(circlesToShow.current)
 
   return (
     <>
       {circlesToShow.current.map(
         (i): JSX.Element => (
           <Circle
-            key={i}
+            key={i.total}
             variants={variants}
             initial="from"
             animate="to"
             onAnimationComplete={(): void => {
-              circlesToShow.current = circlesToShow.current.filter((c): boolean => c !== i)
+              circlesToShow.current = circlesToShow.current.filter((c): boolean => c.total !== i.total)
             }}
           />
         )

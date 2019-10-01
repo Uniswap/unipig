@@ -27,7 +27,9 @@ const StyledChip = styled(Chip)`
   height: 100%;
 `
 
-const HeaderButton = styled(Button)`
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const FilteredButton = ({ noMargin, ...rest }) => <Button {...rest} />
+const HeaderButton = styled(FilteredButton)`
   min-height: unset;
   padding: 0.25rem;
   font-weight: 600;
