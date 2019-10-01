@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 
 import { Team } from '../contexts/Client'
 import Emoji from './Emoji'
+import Updater from './Updater'
 
 const StyledLine = styled.span`
   width: 100%;
@@ -37,7 +38,13 @@ const LineAnimated = styled(motion.div)`
   /* padding: 0.25rem; */
 `
 
-export default function Dominance({ team, UNIDominance, PIGIDominance }) {
+const StyledUpdater = styled(Updater)`
+  position: absolute;
+  top: 2px;
+  left: 2px;
+`
+
+export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominance }) {
   return (
     <StyledLine>
       <Line team={team} percent={'100%'} />
@@ -52,6 +59,7 @@ export default function Dominance({ team, UNIDominance, PIGIDominance }) {
           }
         }}
       >
+        <StyledUpdater team={team} total={updateTotal} />
         <Emoji emoji={team === Team.UNI ? '🦄' : '🐷'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
       </LineAnimated>
     </StyledLine>

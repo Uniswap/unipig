@@ -188,6 +188,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
         OVMSwap={OVMSwap}
         OVMSend={OVMSend}
         setWalletModalIsOpen={setWalletModalIsOpen}
+        updateTotal={updaterReserves + updaterBalances + updater}
         {...pageProps}
       />
     </Layout>

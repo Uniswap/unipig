@@ -8,6 +8,7 @@ import NavButton from './NavButton'
 import { Body } from './Type'
 import Button from './Button'
 import Updater from './Updater'
+import { QRIcon } from './NavIcons'
 
 const Uniswap = styled.span`
   margin: 0;
@@ -49,6 +50,7 @@ const StyledBadge = styled(Badge)`
     z-index: 0;
     color: ${({ theme }) => theme.colors.white};
     background-color: ${({ theme }) => theme.colors.link};
+    margin: 8px 8px 0 0;
   }
 `
 
@@ -56,7 +58,7 @@ const StyledUpdater = styled(Updater)`
   margin: 0 1.5rem 0 2rem;
 `
 
-export default function Header({ team, updateTotal, showIcons, showWallet, boostsLeft, setWalletModalIsOpen }) {
+export default function Header({ team, updateTotal, showIcons, showUpdater, boostsLeft, setWalletModalIsOpen }) {
   const accountExists = useAccountExists()
   const teamExists = useTeamExists()
 
@@ -67,33 +69,34 @@ export default function Header({ team, updateTotal, showIcons, showWallet, boost
         <Uniswap>Uniswap</Uniswap>
         <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
       </HomeButton>
-      {showIcons && (
+      {(showIcons || showUpdater) && (
         <ButtonWrapper>
-          <HeaderButton style={showWallet ? { marginRight: '1rem' } : {}} as={NavButton} variant="text" href="/info">
-            <Body size="14" textStyle="gradient">
-              Info
-            </Body>
-          </HeaderButton>
-          <HeaderButton style={showWallet ? { marginRight: '1rem' } : {}} as={NavButton} variant="text" href="/stats">
-            <Body size="14" textStyle="gradient">
-              Stats
-            </Body>
-          </HeaderButton>
-          {showWallet && (
-            <StyledBadge badgeContent={boostsLeft}>
-              <HeaderButton
-                variant="text"
-                onClick={() => {
-                  setWalletModalIsOpen(true)
-                }}
-              >
+          {showIcons && (
+            <>
+              <HeaderButton as={NavButton} variant="text" href="/info">
                 <Body size="14" textStyle="gradient">
-                  Wallet
+                  FAQ
                 </Body>
               </HeaderButton>
-            </StyledBadge>
+              <HeaderButton as={NavButton} variant="text" href="/stats">
+                <Body size="14" textStyle="gradient">
+                  Stats
+                </Body>
+              </HeaderButton>
+              <StyledBadge badgeContent={boostsLeft}>
+                <Button
+                  style={{ margin: 0, padding: 0 }}
+                  variant="text"
+                  onClick={() => {
+                    setWalletModalIsOpen(true)
+                  }}
+                >
+                  <QRIcon />
+                </Button>
+              </StyledBadge>
+            </>
           )}
-          <StyledUpdater team={team} total={updateTotal} />
+          {showUpdater && <StyledUpdater team={team} total={updateTotal} />}
         </ButtonWrapper>
       )}
     </>

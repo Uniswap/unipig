@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { motion, useMotionValue } from 'framer-motion'
+import { BigNumber, getMarketDetails, formatSignificant } from '@uniswap/sdk'
 
+import { DECIMALS } from '../constants'
 import { useStyledTheme } from '../hooks'
 import { Team } from '../contexts/Client'
 import NavButton from '../components/NavButton'
@@ -10,6 +12,26 @@ import Dominance from '../components/Dominance'
 import Shim from '../components/Shim'
 import { Title, ButtonText, Body } from '../components/Type'
 import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
+
+const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
+
+const DUMMY_TOKEN = {
+  decimals: DECIMALS
+}
+
+const DUMMY_ETH = {
+  decimals: 18
+}
+
+const DUMMY_TOKEN_AMOUNT = amount => ({
+  token: DUMMY_TOKEN,
+  amount
+})
+
+const DUMMY_ETH_AMOUNT = amount => ({
+  token: DUMMY_ETH,
+  amount: amount
+})
 
 const BoostWrapper = styled.div`
   display: flex;
@@ -70,7 +92,7 @@ function DominancePercentage({ UNIDominance, PIGIDominance }) {
   )
 }
 
-function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletModalIsOpen }) {
+function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletModalIsOpen, updateTotal }) {
   const UNIDominance =
     OVMReserves[Team.UNI] !== undefined && OVMReserves[Team.PIGI] !== undefined
       ? OVMReserves[Team.PIGI] / (OVMReserves[Team.UNI] + OVMReserves[Team.PIGI])
@@ -81,6 +103,22 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
 
   const showFaucet = addressData.canFaucet && OVMBalances[Team.UNI] === 0 && OVMBalances[Team.PIGI] === 0
 
+  //// parse the props
+  const inputReserve =
+    OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI] !== undefined
+      ? new BigNumber(OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI])
+      : null
+  const outputReserve = OVMReserves[team] !== undefined ? new BigNumber(OVMReserves[team]) : null
+  // fake it by pretending the input currency is ETH
+  const marketDetails =
+    inputReserve && outputReserve
+      ? getMarketDetails(undefined, {
+          token: DUMMY_TOKEN,
+          ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
+          tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
+        })
+      : null
+
   return (
     <>
       <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
@@ -89,7 +127,7 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
         </Title>
         <Shim size={12} />
 
-        <Dominance team={team} UNIDominance={UNIDominance} PIGIDominance={PIGIDominance} />
+        <Dominance team={team} updateTotal={updateTotal} UNIDominance={UNIDominance} PIGIDominance={PIGIDominance} />
 
         <Shim size={12} />
 
@@ -144,6 +182,19 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
               setWalletModalIsOpen(true)
             }}
           />
+        </AnimatedFrame>
+
+        <AnimatedFrame variants={childAnimation}>
+          <div>
+            1 {Team[team]} ={' '}
+            {marketDetails && marketDetails.marketRate.rateInverted
+              ? formatSignificant(marketDetails.marketRate.rateInverted, {
+                  significantDigits: 3,
+                  forceIntegerSignificance: true
+                })
+              : '...'}{' '}
+            {Team[team === Team.UNI ? Team.PIGI : Team.UNI]}
+          </div>
         </AnimatedFrame>
       </AnimatedFrame>
     </>

@@ -93,8 +93,8 @@ export default function Layout({
   children
 }) {
   const { pathname } = useRouter()
-  const showIcons = !['/welcome', '/join-team', 'confirm-wallet'].includes(pathname)
-  const showWallet = pathname === '/'
+  const showIcons = pathname === '/'
+  const showUpdater = !showIcons && !['/welcome', '/join-team', 'confirm-wallet'].includes(pathname)
 
   return (
     <>
@@ -107,12 +107,12 @@ export default function Layout({
         <Element noPadding>
           <RouteLoader />
         </Element>
-        <Element header justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
+        <Element header justify={showIcons || showUpdater ? 'space-between' : 'flex-start'} direction="row">
           <Header
             team={team}
             updateTotal={updateTotal}
             showIcons={showIcons}
-            showWallet={showWallet}
+            showUpdater={showUpdater}
             boostsLeft={addressData.boostsLeft || 0}
             setWalletModalIsOpen={setWalletModalIsOpen}
           />
