@@ -284,7 +284,7 @@ export function useOVMBalances(OVMWallet: undefined | any | null, address: strin
     }
   }, [OVMWallet, address, updater])
 
-  return [OVMBalances, updateOVMBalances]
+  return [OVMBalances, updateOVMBalances, updater]
 }
 
 export function Updater(): null {

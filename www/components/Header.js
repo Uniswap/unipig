@@ -5,9 +5,9 @@ import { useAccountExists, useTeamExists } from '../contexts/Client'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
-import NavLink from './NavLink'
 import { Body } from './Type'
 import Button from './Button'
+import Updater from './Updater'
 
 const Uniswap = styled.span`
   margin: 0;
@@ -27,13 +27,14 @@ const StyledChip = styled(Chip)`
   height: 100%;
 `
 
-const TextLink = styled(NavLink)`
-  font-size: 1rem;
+const HeaderButton = styled(Button)`
+  min-height: unset;
+  padding: 0.25rem;
   font-weight: 600;
-  margin-right: ${({ noMargin }) => !noMargin && '1.25rem'};
+  margin-right: ${({ noMargin }) => !noMargin && '1rem'};
 `
 
-const LinkWrapper = styled.span`
+const ButtonWrapper = styled.span`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -52,17 +53,11 @@ const StyledBadge = styled(Badge)`
   }
 `
 
-const WalletButton = styled(Button)`
-  min-height: unset;
+const StyledUpdater = styled(Updater)`
+  margin: 0 1.5rem 0 2rem;
 `
 
-const WalletText = styled(Body)`
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.25rem;
-`
-
-export default function Header({ showIcons, boostsLeft, setWalletModalIsOpen }) {
+export default function Header({ team, updateTotal, showIcons, showWallet, boostsLeft, setWalletModalIsOpen }) {
   const accountExists = useAccountExists()
   const teamExists = useTeamExists()
 
@@ -73,23 +68,26 @@ export default function Header({ showIcons, boostsLeft, setWalletModalIsOpen }) 
         <Uniswap>Uniswap</Uniswap>
         <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
       </HomeButton>
-
       {showIcons && (
-        <LinkWrapper>
-          <TextLink href="/stats">
+        <ButtonWrapper>
+          <HeaderButton as={NavButton} variant="text" href="/stats">
             <Body textStyle="gradient">L2 Stats</Body>
-          </TextLink>
-          <StyledBadge style={{ marginRight: '0.5rem' }} badgeContent={boostsLeft}>
-            <WalletButton
-              variant="text"
-              onClick={() => {
-                setWalletModalIsOpen(true)
-              }}
-            >
-              <WalletText textStyle="gradient">Wallet</WalletText>
-            </WalletButton>
-          </StyledBadge>
-        </LinkWrapper>
+          </HeaderButton>
+          {showWallet && (
+            <StyledBadge badgeContent={boostsLeft}>
+              <HeaderButton
+                variant="text"
+                noMargin
+                onClick={() => {
+                  setWalletModalIsOpen(true)
+                }}
+              >
+                <Body textStyle="gradient">Wallet</Body>
+              </HeaderButton>
+            </StyledBadge>
+          )}
+          <StyledUpdater team={team} total={updateTotal} />
+        </ButtonWrapper>
       )}
     </>
   )

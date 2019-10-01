@@ -148,8 +148,12 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   const wallet = useWallet()
   const OVMWallet = useOVMWallet(wallet)
-  const [OVMReserves, updateOVMReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 6 * 1000)
-  const [OVMBalances, updateOVMBalances] = useOVMBalances(OVMWallet, wallet && wallet.address, 6 * 1000)
+  const [OVMReserves, updateOVMReserves, updaterReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 6 * 1000)
+  const [OVMBalances, updateOVMBalances, updaterBalances] = useOVMBalances(
+    OVMWallet,
+    wallet && wallet.address,
+    6 * 1000
+  )
 
   async function OVMSwap(inputToken, inputAmount) {
     await swap(OVMWallet, wallet.address, inputToken, inputAmount)
@@ -169,6 +173,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
       updateOVMBalances={updateOVMBalances}
       walletModalIsOpen={walletModalIsOpen}
       setWalletModalIsOpen={setWalletModalIsOpen}
+      updateTotal={updaterReserves + updaterBalances + updater}
     >
       <Component
         wallet={wallet}

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import styled, { css, keyframes } from 'styled-components'
+import styled, { css } from 'styled-components'
 
 import RouteLoader from './RouteLoader'
 import Header from './Header'
@@ -16,47 +16,47 @@ const Root = styled.div`
   justify-content: flex-start;
 `
 
-const BackroundElement = styled.div`
-  width: 100vw;
-  height: 100vh;
-  overflow: none;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  z-index: -1;
-  overflow: hidden;
-  filter: brightness(30%);
-  transform: scale(1.2);
+// const BackroundElement = styled.div`
+//   width: 100vw;
+//   height: 100vh;
+//   overflow: none;
+//   position: fixed;
+//   top: 0px;
+//   left: 0px;
+//   z-index: -1;
+//   overflow: hidden;
+//   filter: brightness(30%);
+//   transform: scale(1.2);
 
-  img {
-    position: absolute;
-    top: -30%;
-    right: -400px;
-  }
+//   img {
+//     position: absolute;
+//     top: -30%;
+//     right: -400px;
+//   }
 
-  @media only screen and (max-width: 480px) {
-    transform: scale(1);
-    img {
-      top: -50%;
-      right: -40vw;
-    }
-  }
-`
+//   @media only screen and (max-width: 480px) {
+//     transform: scale(1);
+//     img {
+//       top: -50%;
+//       right: -40vw;
+//     }
+//   }
+// `
 
-const rotate = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
+// const rotate = keyframes`
+//   from {
+//     transform: rotate(0deg);
+//   }
 
-  to {
-    transform: rotate(360deg);
-  }
-`
+//   to {
+//     transform: rotate(360deg);
+//   }
+// `
 
-const AnimatedImg = styled.img`
-  animation: ${rotate} ${({ time }) => time} linear infinite;
-  user-select: none;
-`
+// const AnimatedImg = styled.img`
+//   animation: ${rotate} ${({ time }) => time} linear infinite;
+//   user-select: none;
+// `
 
 const Element = styled.div`
   display: flex;
@@ -89,10 +89,12 @@ export default function Layout({
   updateOVMBalances,
   walletModalIsOpen,
   setWalletModalIsOpen,
+  updateTotal,
   children
 }) {
   const { pathname } = useRouter()
-  const showIcons = pathname === '/'
+  const showIcons = !['/welcome', '/join-team', 'confirm-wallet'].includes(pathname)
+  const showWallet = pathname === '/'
 
   return (
     <>
@@ -107,7 +109,10 @@ export default function Layout({
         </Element>
         <Element header justify={showIcons ? 'space-between' : 'flex-start'} direction="row">
           <Header
+            team={team}
+            updateTotal={updateTotal}
             showIcons={showIcons}
+            showWallet={showWallet}
             boostsLeft={addressData.boostsLeft || 0}
             setWalletModalIsOpen={setWalletModalIsOpen}
           />

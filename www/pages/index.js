@@ -106,35 +106,35 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
 
         <Shim size={32} />
 
-        {showFaucet ? (
+        {showFaucet && (
           <TwitterButton href={`/twitter-faucet`} stretch>
             <ButtonText>Get Tokens from Twitter</ButtonText>
           </TwitterButton>
-        ) : (
-          <BoostWrapper>
-            <FlexNavButton
-              disabled={!(OVMBalances[Team.PIGI] > 0)}
-              flex={Math.round(UNIDominance * 100, 0)}
-              href={`/trade?buy=${Team[Team.UNI]}`}
-              color={'primary'}
-              variant={team === Team.UNI ? 'contained' : 'outlined'}
-            >
-              <ButtonText>Dump PIGI</ButtonText>
-            </FlexNavButton>
-
-            <BoostShim />
-
-            <FlexNavButton
-              disabled={!(OVMBalances[Team.UNI] > 0)}
-              flex={Math.round((1 - UNIDominance) * 100, 0)}
-              href={`/trade?buy=${Team[Team.PIGI]}`}
-              color={'secondary'}
-              variant={team === Team.PIGI ? 'contained' : 'outlined'}
-            >
-              <ButtonText>Dump UNI</ButtonText>
-            </FlexNavButton>
-          </BoostWrapper>
         )}
+
+        <BoostWrapper>
+          <FlexNavButton
+            disabled={!(OVMBalances[Team.PIGI] > 0)}
+            flex={Math.round(UNIDominance * 100, 0)}
+            href={`/trade?buy=${Team[Team.UNI]}`}
+            color={'primary'}
+            variant={team === Team.UNI ? 'contained' : 'outlined'}
+          >
+            <ButtonText>Dump PIGI</ButtonText>
+          </FlexNavButton>
+
+          <BoostShim />
+
+          <FlexNavButton
+            disabled={!(OVMBalances[Team.UNI] > 0)}
+            flex={Math.round((1 - UNIDominance) * 100, 0)}
+            href={`/trade?buy=${Team[Team.PIGI]}`}
+            color={'secondary'}
+            variant={team === Team.PIGI ? 'contained' : 'outlined'}
+          >
+            <ButtonText>Dump UNI</ButtonText>
+          </FlexNavButton>
+        </BoostWrapper>
 
         <Shim size={36} />
 
