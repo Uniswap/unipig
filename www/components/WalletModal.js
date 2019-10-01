@@ -290,7 +290,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         clearTimeout(timeout)
       }
     }
-  })
+  }, [addressCopied])
   function copyAddress() {
     copy(wallet.address)
     setAddressCopied(true)
@@ -307,7 +307,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         clearTimeout(timeout)
       }
     }
-  })
+  }, [accountCopied])
   function copyAccount() {
     copy(
       `${window.location.href}welcome?account=${
@@ -328,7 +328,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         clearTimeout(timeout)
       }
     }
-  })
+  }, [clickedChangeTeam])
 
   const reset = useReset()
   const [clickedBurnOnce, setClickedBurnOnce] = useState(false)
@@ -342,7 +342,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         clearTimeout(timeout)
       }
     }
-  })
+  }, [clickedBurnOnce])
   function manageBurn() {
     if (!clickedBurnOnce) {
       setClickedBurnOnce(true)
@@ -369,9 +369,9 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         <QRCode
           value={`https://unipig.exchange?referrer=${wallet.address}`}
           ecLevel="M"
-          size="250"
-          quietZone="10px"
-          bgColor={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}
+          size={250}
+          quietZone={10}
+          bgColor={theme.colors[team]} // lighten(0.1, theme.colors[team])
           fgColor={theme.colors.black}
           logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
           qrStyle="squares"
@@ -399,23 +399,18 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
       <WalletTitle>
         <span>Tokens</span>
       </WalletTitle>
-      <TokenInfo OVMBalances={OVMBalances} />
+      <TokenInfo team={team} OVMBalances={OVMBalances} />
       <Shim size={8} />
       <SendWrapper>
-        <SendButton
-          as={NavButton}
-          href={`/send?token=${Team[Team.UNI]}`}
-          variant="text"
-          disabled={OVMBalances[Team.UNI] === 0}
-        >
+        <SendButton as={NavButton} href={`/send?token=${Team[team]}`} variant="text" disabled={OVMBalances[team] === 0}>
           Send
         </SendButton>
         <SendShim />
         <SendButton
           as={NavButton}
-          href={`/send?token=${Team[Team.PIGI]}`}
+          href={`/send?token=${Team[team === Team.UNI ? Team.PIGI : Team.UNI]}`}
           variant="text"
-          disabled={OVMBalances[Team.PIGI] === 0}
+          disabled={OVMBalances[team === Team.UNI ? Team.PIGI : Team.UNI] === 0}
         >
           Send
         </SendButton>
@@ -447,7 +442,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
                 }
           }
         >
-          {clickedChangeTeam ? 'Traitor!' : 'Change Team'}
+          {clickedChangeTeam ? 'Just like that?' : 'Change Teams'}
         </SendButton>
         <SendShim />
         <SendButton variant="text" onClick={manageBurn}>

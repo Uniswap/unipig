@@ -27,13 +27,10 @@ const StyledChip = styled(Chip)`
   height: 100%;
 `
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FilteredButton = ({ noMargin, ...rest }) => <Button {...rest} />
-const HeaderButton = styled(FilteredButton)`
+const HeaderButton = styled(Button)`
   min-height: unset;
   padding: 0.25rem;
   font-weight: 600;
-  margin-right: ${({ noMargin }) => !noMargin && '1rem'};
 `
 
 const ButtonWrapper = styled.span`
@@ -72,14 +69,13 @@ export default function Header({ team, updateTotal, showIcons, showWallet, boost
       </HomeButton>
       {showIcons && (
         <ButtonWrapper>
-          <HeaderButton as={NavButton} variant="text" href="/stats">
+          <HeaderButton style={showWallet ? { marginRight: '1rem' } : {}} as={NavButton} variant="text" href="/stats">
             <Body textStyle="gradient">L2 Stats</Body>
           </HeaderButton>
           {showWallet && (
             <StyledBadge badgeContent={boostsLeft}>
               <HeaderButton
                 variant="text"
-                noMargin
                 onClick={() => {
                   setWalletModalIsOpen(true)
                 }}

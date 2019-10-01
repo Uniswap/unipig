@@ -40,8 +40,6 @@ function Circles({ total }): JSX.Element {
     circlesToShow.current = circlesToShow.current.concat([{ total, time: Date.now() }])
   }
 
-  console.log(circlesToShow.current)
-
   return (
     <>
       {circlesToShow.current.map(

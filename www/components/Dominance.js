@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { motion } from 'framer-motion'
 
 import { Team } from '../contexts/Client'
+import Emoji from './Emoji'
 
 const StyledLine = styled.span`
   width: 100%;
@@ -18,7 +19,7 @@ const Line = styled.div`
   border-radius: 20px;
   top: 12px;
   left: 4px;
-  background-color: ${({ theme }) => theme.colors[Team.PIGI]};
+  background-color: ${({ theme, team }) => (team === Team.UNI ? theme.colors[Team.PIGI] : theme.colors[Team.UNI])};
   transition: width 0.5s ease;
   padding: 0.25rem;
 `
@@ -30,27 +31,28 @@ const LineAnimated = styled(motion.div)`
   border-radius: 20px;
   top: 12px;
   left: 4px;
-  background-color: ${({ theme }) => theme.colors[Team.UNI]};
+  background-color: ${({ theme, team }) => theme.colors[team]};
   text-align: right;
   padding-right: 4px;
   /* padding: 0.25rem; */
 `
 
-export default function Dominance({ percent }) {
+export default function Dominance({ team, UNIDominance, PIGIDominance }) {
   return (
     <StyledLine>
-      <Line percent={'100%'} />
+      <Line team={team} percent={'100%'} />
       <LineAnimated
+        team={team}
         initial={{ width: 0 }}
         animate={{
-          width: `${percent}%`,
+          width: `${(team === Team.UNI ? UNIDominance : PIGIDominance) * 100}%`,
           transition: {
             ease: 'easeOut',
             duration: 1.5
           }
         }}
       >
-        🦄
+        <Emoji emoji={team === Team.UNI ? '🦄' : '🐷'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
       </LineAnimated>
     </StyledLine>
   )

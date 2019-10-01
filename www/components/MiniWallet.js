@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { transparentize, lighten } from 'polished'
+import { transparentize } from 'polished'
 import { formatFixedDecimals } from '@uniswap/sdk'
 
 import { DECIMALS } from '../constants'
@@ -73,10 +73,9 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.8, theme.colors.black)};
+  background-color: ${({ theme }) => transparentize(0.25, theme.colors.black)};
   border: 1px solid
-    ${({ team, theme }) =>
-      team === Team.UNI ? transparentize(0.8, theme.colors[Team.UNI]) : transparentize(0.8, theme.colors[Team.PIGI])};
+    ${({ team, theme }) => transparentize(0.75, team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])};
   padding: 0.5rem 1rem;
   border-radius: 20px;
   display: flex;
@@ -88,7 +87,7 @@ const TokenShim = styled.span`
   height: 8px;
 `
 
-export const OpenWalletLink = styled(GradientText)`
+const OpenWalletLink = styled(GradientText)`
   text-decoration: none;
   color: white;
   font-weight: 500;
@@ -100,6 +99,10 @@ export const OpenWalletLink = styled(GradientText)`
   top: 24px;
   margin-top: -4px;
   margin-bottom: 1rem;
+`
+
+const AlternateTitle = styled(GradientText)`
+  margin-top: -4px;
 `
 
 const StyledWalletInfo = styled.span`
@@ -146,21 +149,24 @@ function StatefulBalance({ balance }) {
   )
 }
 
-export function TokenInfo({ OVMBalances }) {
-  const UNIBalance = OVMBalances[Team.UNI]
-  const PIGIBalance = OVMBalances[Team.PIGI]
-
+export function TokenInfo({ team, OVMBalances }) {
   return (
     <>
       <Tokens>
-        <TokenValue team={Team.UNI}>
-          <span>{UNIBalance !== undefined ? <StatefulBalance balance={UNIBalance} /> : '...'}</span>
-          <span>UNI</span>
+        <TokenValue team={team}>
+          <span>{OVMBalances[team] !== undefined ? <StatefulBalance balance={OVMBalances[team]} /> : '...'}</span>
+          <span>{team === Team.UNI ? 'UNI' : 'PIGI'}</span>
         </TokenValue>
         <TokenShim />
-        <TokenValue team={Team.PIGI}>
-          <span>{PIGIBalance !== undefined ? <StatefulBalance balance={PIGIBalance} /> : '...'}</span>
-          <span>PIGI</span>
+        <TokenValue team={team === Team.UNI ? Team.PIGI : Team.UNI}>
+          <span>
+            {OVMBalances[team] !== undefined ? (
+              <StatefulBalance balance={OVMBalances[team === Team.UNI ? Team.PIGI : Team.UNI]} />
+            ) : (
+              '...'
+            )}
+          </span>
+          <span>{team === Team.PIGI ? 'UNI' : 'PIGI'}</span>
         </TokenValue>
       </Tokens>
     </>
@@ -177,14 +183,14 @@ export default function Wallet({ wallet, team, OVMBalances, onClick, alternateTi
         </OpenWalletLink>
       )}
       {alternateTitle ? (
-        <OpenWalletLink>
+        <AlternateTitle>
           <span>{alternateTitle}</span>
-        </OpenWalletLink>
+        </AlternateTitle>
       ) : (
         <WalletInfo wallet={wallet} team={team} />
       )}
       <Shim size={12} />
-      <TokenInfo OVMBalances={OVMBalances} />
+      <TokenInfo team={team} OVMBalances={OVMBalances} />
     </StyledWallet>
   )
 }
