@@ -28,6 +28,7 @@ const StyledChip = styled(Chip)`
 `
 
 const TextLink = styled(NavLink)`
+  font-size: 1rem;
   font-weight: 600;
   margin-right: ${({ noMargin }) => !noMargin && '1.25rem'};
 `
@@ -56,6 +57,7 @@ const WalletButton = styled(Button)`
 `
 
 const WalletText = styled(Body)`
+  font-size: 1rem;
   font-weight: 600;
   padding: 0.25rem;
 `

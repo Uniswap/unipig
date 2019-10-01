@@ -21,8 +21,9 @@ export function Heading({ children }) {
 
 const StyledTitle = styled.h1`
   margin: 0;
-  font-size: ${({ size }) => (size ? size + 'px' : '4rem')};
-  font-weight: 600;
+  font-size: ${({ size }) => (size ? size + 'px' : '5rem')};
+  font-weight: 900;
+  font-style: italic;
   color: ${({ color }) => (color ? color : 'initial')} !important;
   @media only screen and (max-width: 480px) {
     font-size: ${({ size }) => (size ? size + 'px' : '3.5rem')};

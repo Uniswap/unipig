@@ -8,19 +8,27 @@ import { Team } from '../contexts/Client'
 import Shim from './Shim'
 import { useState, useEffect } from 'react'
 import { useMotionValue, motion } from 'framer-motion'
+import GradientText from './GradientText'
 
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  padding: 1.5rem;
-  background-color: ${({ theme }) => lighten(0.05, theme.colors.black)};
+  padding: 1.5rem 1.5rem 1.25rem 1.5rem;
+  background: ${({ theme }) => theme.gradient};
+  background-color: none;
   border-radius: 20px;
   width: 100%;
-  opacity: ${({ onClick }) => (onClick ? 0.8 : 1)};
+  border: 1px solid ${({ theme }) => transparentize(0.9, theme.colors.black)};
+
   transition: opacity 0.125s ease;
   text-decoration: none !important;
+  position: relative;
+  box-sizing: border-box;
 
   :hover {
     opacity: 1;
+    border: 1px solid
+      ${({ team, theme }) =>
+        team === Team.UNI ? transparentize(0.9, theme.colors[Team.UNI]) : transparentize(0.9, theme.colors[Team.PIGI])};
     cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
   }
 `
@@ -28,7 +36,7 @@ const StyledWallet = styled.div`
 const Badge = styled.div`
   width: 40px;
   height: 40px;
-  margin-right: 1.5rem;
+  margin-right: 0.75rem;
   border-radius: 8px;
   background-image: url('static/UniMoji.gif');
   background-size: contain;
@@ -65,7 +73,10 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  background-color: ${({ theme }) => transparentize(0.8, theme.colors.black)};
+  border: 1px solid
+    ${({ team, theme }) =>
+      team === Team.UNI ? transparentize(0.8, theme.colors[Team.UNI]) : transparentize(0.8, theme.colors[Team.PIGI])};
   padding: 0.5rem 1rem;
   border-radius: 20px;
   display: flex;
@@ -77,16 +88,16 @@ const TokenShim = styled.span`
   height: 8px;
 `
 
-export const OpenWalletLink = styled.span`
+export const OpenWalletLink = styled(GradientText)`
   text-decoration: none;
   color: white;
   font-weight: 500;
-  opacity: 0.6;
+  font-size: 12px;
+  /* opacity: 0.6; */
   height: 24px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  position: absolute;
+  right: 24px;
+  top: 24px;
   margin-top: -4px;
   margin-bottom: 1rem;
 `

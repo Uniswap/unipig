@@ -97,11 +97,11 @@ export default function Layout({
   return (
     <>
       <Root>
-        <BackroundElement>
+        {/* <BackroundElement>
           <AnimatedImg time={'200s'} src="static/blob_2.svg" />
           <AnimatedImg time={'500s'} src="static/blob_3.svg" />
           <AnimatedImg time={'250s'} src="static/blob_1.svg" />
-        </BackroundElement>
+        </BackroundElement> */}
         <Element noPadding>
           <RouteLoader />
         </Element>

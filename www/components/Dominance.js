@@ -12,22 +12,28 @@ const StyledLine = styled.span`
 
 const Line = styled.div`
   width: calc(${({ percent }) => percent} - 8px);
-  height: 12px;
+  margin-top: 3.5px;
+  height: 20px;
   position: absolute;
   border-radius: 20px;
   top: 12px;
   left: 4px;
   background-color: ${({ theme }) => theme.colors[Team.PIGI]};
   transition: width 0.5s ease;
+  padding: 0.25rem;
 `
 
 const LineAnimated = styled(motion.div)`
-  height: 12px;
+  height: 28px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   position: absolute;
   border-radius: 20px;
   top: 12px;
   left: 4px;
   background-color: ${({ theme }) => theme.colors[Team.UNI]};
+  text-align: right;
+  padding-right: 4px;
+  /* padding: 0.25rem; */
 `
 
 export default function Dominance({ percent }) {
@@ -43,7 +49,9 @@ export default function Dominance({ percent }) {
             duration: 1.5
           }
         }}
-      />
+      >
+        🦄
+      </LineAnimated>
     </StyledLine>
   )
 }

@@ -23,6 +23,7 @@ const WHITE = '#FFFFFF'
 
 const GRADIENT_LEFT = '#FE6DDE'
 const GRADIENT_RIGHT = '#FE6D6D'
+const GRADIENT = `linear-gradient(90deg, rgba(254, 109, 222, 0.1) 0%, rgba(254, 109, 109, 0.1) 100%);`
 const GRADIENT_BACKGROUND = css`
   background: linear-gradient(45deg, ${GRADIENT_LEFT}, ${GRADIENT_RIGHT});
 `
@@ -56,7 +57,8 @@ const SCTheme = {
     gradientRight: GRADIENT_RIGHT
   },
 
-  gradientBackground: GRADIENT_BACKGROUND
+  gradientBackground: GRADIENT_BACKGROUND,
+  gradient: GRADIENT
 }
 
 const GlobalStyle = createGlobalStyle`
@@ -77,7 +79,7 @@ const GlobalStyle = createGlobalStyle`
   html {
     font-family: 'Inter', sans-serif;
     color: ${({ theme }) => theme.colors.white};
-    background-color: ${({ theme }) => theme.colors.greys[9]};
+    background-color: ${({ theme }) => theme.colors.black};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
