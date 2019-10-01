@@ -69,8 +69,15 @@ export default function Header({ team, updateTotal, showIcons, showWallet, boost
       </HomeButton>
       {showIcons && (
         <ButtonWrapper>
+          <HeaderButton style={showWallet ? { marginRight: '1rem' } : {}} as={NavButton} variant="text" href="/info">
+            <Body size="14" textStyle="gradient">
+              Info
+            </Body>
+          </HeaderButton>
           <HeaderButton style={showWallet ? { marginRight: '1rem' } : {}} as={NavButton} variant="text" href="/stats">
-            <Body textStyle="gradient">L2 Stats</Body>
+            <Body size="14" textStyle="gradient">
+              Stats
+            </Body>
           </HeaderButton>
           {showWallet && (
             <StyledBadge badgeContent={boostsLeft}>
@@ -80,7 +87,9 @@ export default function Header({ team, updateTotal, showIcons, showWallet, boost
                   setWalletModalIsOpen(true)
                 }}
               >
-                <Body textStyle="gradient">Wallet</Body>
+                <Body size="14" textStyle="gradient">
+                  Wallet
+                </Body>
               </HeaderButton>
             </StyledBadge>
           )}

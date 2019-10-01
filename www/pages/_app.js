@@ -79,7 +79,8 @@ const GlobalStyle = createGlobalStyle`
   html {
     font-family: 'Inter var', sans-serif;
     color: ${({ theme }) => theme.colors.white};
-    background-color: ${({ theme }) => theme.colors.black};
+    /* background-color: ${({ theme }) => theme.colors.black}; */
+    background: linear-gradient(60.06deg, #121212 -3.57%, #24021C 96.96%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
