@@ -52,7 +52,7 @@ export function Title({ children, textStyle, ...rest }) {
 
 const StyledGradientBody = styled(GradientText)`
   /* width: 100%; */
-  font-size: 18px;
+  font-size: ${({ size }) => (size ? size + 'px' : '18px')};
   line-height: 150%;
   margin: 0.125rem;
 `

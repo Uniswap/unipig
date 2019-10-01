@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import styled from 'styled-components'
 
 import { useStyledTheme } from '../hooks'
+import color from '@material-ui/core/colors/blue'
 
 const variants = {
   from: {
@@ -25,11 +26,11 @@ const Circle = styled(motion.div)`
   z-index: -1 !important;
   width: 0.75rem;
   height: 0.75rem;
-  background-color: ${({ theme }): string => theme.colors.white};
+  background-color: ${({ theme, color }): string => color};
   border-radius: 10rem;
 `
 
-function Circles({ total }): JSX.Element {
+function Circles({ total, color }): JSX.Element {
   const circlesToShow = useRef([])
   const largestSoFar = useRef(total - 1)
 
@@ -48,6 +49,7 @@ function Circles({ total }): JSX.Element {
       {circlesToShow.current.map(
         (i): JSX.Element => (
           <Circle
+            color={color}
             key={i.total}
             variants={variants}
             initial="from"
@@ -74,7 +76,7 @@ export default function Updater({ team, total, ...rest }): JSX.Element {
 
   return (
     <UpdaterBase color={theme.colors[team]} {...rest}>
-      <Circles total={total} />
+      <Circles total={total} color={theme.colors[team]} />
     </UpdaterBase>
   )
 }

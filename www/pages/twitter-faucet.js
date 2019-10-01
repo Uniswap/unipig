@@ -182,6 +182,8 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
               data-url="https://unipig.exchange"
               data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
               data-dnt="true"
+              width="200"
+              height="300"
             >
               Tweet
             </a>
