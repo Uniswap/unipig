@@ -32,13 +32,13 @@ const Stat = styled.span`
 `
 
 const Question = styled.p`
-  font-size: 14px;
+  font-size: 16px;
   margin: 0;
   margin-bottom: 2px;
 `
 
 const Answer = styled.p`
-  font-size: 14px;
+  font-size: 16px;
   color: #bcbcbe;
   margin: 0;
 `
