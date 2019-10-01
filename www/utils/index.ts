@@ -1,7 +1,6 @@
 import Cookies from 'js-cookie'
 import nextCookies from 'next-cookies'
 import { verifyMessage } from '@ethersproject/wallet'
-import { defaultAbiCoder } from '@ethersproject/abi'
 import fetch from 'isomorphic-unfetch'
 import { BigNumber } from '@uniswap/sdk'
 import { UNI_TOKEN_TYPE, PIGI_TOKEN_TYPE } from '@pigi/wallet'
@@ -92,26 +91,28 @@ export async function send(OVMWallet: any, from: string, to: string, token: Team
   await OVMWallet.send(tokenType, from, to, amount.toNumber())
 }
 
-export function getFaucetData(address: string): string {
-  return defaultAbiCoder.encode(['address', 'uint256'], [address, FAUCET_AMOUNT])
+export function getFaucetData(recipient: string): string {
+  return JSON.stringify({ sender: recipient, amount: FAUCET_AMOUNT })
 }
 
 export async function faucet(recipient: string, signature: string): Promise<void> {
+  const uuidv4 = uuid()
   await fetch(process.env.AGGREGATOR_URL, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
-      id: uuid(),
+      id: uuidv4,
       jsonrpc: '2.0',
       method: 'requestFaucetFunds',
-      params: [
-        {
-          signature,
-          transaction: {
-            sender: recipient,
-            amount: FAUCET_AMOUNT
-          }
+      params: {
+        signature,
+        transaction: {
+          sender: recipient,
+          amount: FAUCET_AMOUNT
         }
-      ]
+      }
     })
   }).then((response): void => {
     if (!response.ok) {

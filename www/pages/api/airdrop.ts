@@ -53,7 +53,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       ])
     } catch (error) {
       console.error(error)
-      // faucetError = true
+      faucetError = true
     }
 
     if (!faucetError) {

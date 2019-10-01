@@ -167,7 +167,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
             q.Update(q.Ref(q.Collection('addresses'), idData.data[0].ref.id), {
               data: {
                 twitterHandle: null,
-                twitterId: null
+                twitterId: null,
+                twitterFaucetError: false
               }
             })
           )
@@ -180,6 +181,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
               twitterHandle: userHandle,
               twitterId: userId,
               lastTwitterFaucet: now,
+              twitterFaucetError: false,
               ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
             }
           })

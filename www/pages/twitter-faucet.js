@@ -73,8 +73,12 @@ const StyledWallet = styled(Wallet)`
 `
 
 function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalances, updateOVMBalances }) {
+  const alreadyFauceted = !addressData.canFaucet
   // save the initial addressData
   const initialAddressData = useRef(addressData)
+  const justFauceted = !!(initialAddressData.current.canFaucet && !addressData.canFaucet)
+
+  const oldError = initialAddressData.current.twitterFaucetError
 
   // polling logic to check for valid tweet
   const [polling, setPolling] = useState(false)
@@ -111,12 +115,10 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
     })
   }, [])
 
-  const justFauceted = !!(initialAddressData.current.canFaucet && !addressData.canFaucet)
-  const alreadyFauceted = !addressData.canFaucet
-
   useEffect(() => {
     if (justFauceted) {
       updateOVMBalances()
+      setPolling(false)
     }
   }, [justFauceted, updateOVMBalances])
 
@@ -127,22 +129,22 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
           {justFauceted ? `The Unipig just granted you tokens.` : 'Enjoy your tokens responsibly.'}
         </StyledBody>
       )
-    } else if (addressData.canFaucet && !twitterLoaded) {
+    } else if (!twitterLoaded) {
       return (
         <>
           <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
         </>
       )
-    } else if (addressData.twitterFaucetError) {
+    } else if (polling) {
       return (
         <>
-          <StyledBody textStyle="gradient">Sorry, an error occurred. Try again soon!</StyledBody>
-        </>
-      )
-    } else if (polling && !justFauceted) {
-      return (
-        <>
-          <StyledBody textStyle="gradient">Listening for your tweet...</StyledBody>
+          <StyledBody textStyle="gradient">
+            {addressData.twitterFaucetError
+              ? oldError
+                ? 'Something went wrong last time, trying again...'
+                : 'Sorry, an error occurred. Try again soon!'
+              : 'Listening for your tweet...'}
+          </StyledBody>
         </>
       )
     }
@@ -153,10 +155,10 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
       <Confetti start={justFauceted} />
       <TradeWrapper>
         <Title size={32} textStyle="gradient">
-          {justFauceted
-            ? `Coming through loud and clear @${addressData.twitterHandle}!`
-            : alreadyFauceted
-            ? 'Thank you for tweeting.'
+          {alreadyFauceted
+            ? justFauceted
+              ? `Coming through loud and clear @${addressData.twitterHandle}!`
+              : 'Thank you for tweeting.'
             : 'Tweet at the Unipig to get some tokens.'}
         </Title>
         <Shim size={32} />
@@ -190,15 +192,9 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
           {metaInformation()}
         </InformationContainer>
 
-        {alreadyFauceted ? (
-          <NavButton variant="gradient" href="/">
-            <ButtonText>Dope</ButtonText>
-          </NavButton>
-        ) : (
-          <NavButton variant="gradient" disabled href="/">
-            <ButtonText>Dope</ButtonText>
-          </NavButton>
-        )}
+        <NavButton variant="gradient" disabled={!alreadyFauceted} href="/">
+          <ButtonText>Dope</ButtonText>
+        </NavButton>
       </TradeWrapper>
     </>
   )

@@ -77,7 +77,7 @@ const GlobalStyle = createGlobalStyle`
   }
 
   html {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter var', sans-serif;
     color: ${({ theme }) => theme.colors.white};
     background-color: ${({ theme }) => theme.colors.black};
     -webkit-font-smoothing: antialiased;
