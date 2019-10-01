@@ -31,13 +31,16 @@ const Circle = styled(motion.div)`
 
 function Circles({ total }): JSX.Element {
   const circlesToShow = useRef([])
+  const largestSoFar = useRef(total - 1)
 
   if (
     !circlesToShow.current.map((c): number => c.total).includes(total) &&
     (circlesToShow.current.length === 0 ||
-      circlesToShow.current[circlesToShow.current.length - 1].time < Date.now() - 1 * 1000)
+      circlesToShow.current[circlesToShow.current.length - 1].time < Date.now() - 0.75 * 1000) &&
+    total > largestSoFar.current
   ) {
     circlesToShow.current = circlesToShow.current.concat([{ total, time: Date.now() }])
+    largestSoFar.current = total
   }
 
   return (
