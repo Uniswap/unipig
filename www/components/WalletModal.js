@@ -284,7 +284,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     if (addressCopied) {
       const timeout = setTimeout(() => {
         setAddressCopied(false)
-      }, 1500)
+      }, 1000)
 
       return () => {
         clearTimeout(timeout)
@@ -301,7 +301,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     if (accountCopied) {
       const timeout = setTimeout(() => {
         setAccountCopied(false)
-      }, 1500)
+      }, 1000)
 
       return () => {
         clearTimeout(timeout)
@@ -322,7 +322,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     if (clickedChangeTeam) {
       const timeout = setTimeout(() => {
         setClickedChangeTeam(false)
-      }, 1500)
+      }, 2000)
 
       return () => {
         clearTimeout(timeout)
@@ -336,7 +336,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
     if (clickedBurnOnce) {
       const timeout = setTimeout(() => {
         setClickedBurnOnce(false)
-      }, 1500)
+      }, 2000)
 
       return () => {
         clearTimeout(timeout)
