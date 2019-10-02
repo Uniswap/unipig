@@ -104,30 +104,56 @@ function TwitterFaucet({ wallet, address, team, addressData, updateAddressData, 
 
   const [showDespiteOldError, setShowDespiteOldError] = useState(false)
   useEffect(() => {
-    if (polling && !!oldError) {
+    if (polling) {
       const timeout = setTimeout(() => {
         setShowDespiteOldError(true)
-      }, 4000)
+      }, 12000)
       return () => {
         clearTimeout(timeout)
       }
     }
-  })
+  }, [polling])
 
   // initialize twitter stuff
   const [twitterLoaded, setTwitterLoaded] = useState(false)
   const [twitterLoadedError, setTwitterLoadedError] = useState(false)
   useEffect(() => {
-    if (!window.twttr) {
-      setTwitterLoadedError(true)
-    } else {
-      window.twttr.events.bind('loaded', () => {
+    function initializeTwitter() {
+      window.twttr.ready().then(() => {
         setTwitterLoaded(true)
-      })
 
-      window.twttr.events.bind('tweet', () => {
-        setPolling(true)
+        window.twttr.events.bind('tweet', () => {
+          setPolling(true)
+        })
       })
+    }
+
+    if (!window.twttr) {
+      let stale = false
+
+      setTimeout(() => {
+        if (!stale) {
+          if (window.twttr) {
+            initializeTwitter()
+          } else {
+            setTimeout(() => {
+              if (!stale) {
+                if (window.twttr) {
+                  initializeTwitter()
+                } else {
+                  setTwitterLoadedError(true)
+                }
+              }
+            }, 4000)
+          }
+        }
+      }, 1000)
+
+      return () => {
+        stale = true
+      }
+    } else {
+      initializeTwitter()
     }
   }, [])
 
@@ -138,7 +164,7 @@ function TwitterFaucet({ wallet, address, team, addressData, updateAddressData, 
     }
   }, [justFauceted, updateOVMBalances])
 
-  function metaInformation() {
+  function MetaInformation() {
     if (alreadyFauceted) {
       return (
         <StyledBody textStyle="gradient">
@@ -153,16 +179,20 @@ function TwitterFaucet({ wallet, address, team, addressData, updateAddressData, 
       return (
         <>
           <StyledBody textStyle="gradient">
-            {addressData.twitterFaucetError
-              ? oldError
-                ? showDespiteOldError
-                  ? `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
-                  : "Something went wrong last time, let's try again..."
-                : `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
-              : 'Listening for your tweet...'}
+            {!!addressData.twitterFaucetError && !!oldError
+              ? showDespiteOldError
+                ? `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
+                : "Something went wrong last time, let's try again..."
+              : null}
+            {!!addressData.twitterFaucetError && !!!oldError
+              ? `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
+              : null}
+            {!!!addressData.twitterFaucetError ? 'Listening for your tweet...' : null}
           </StyledBody>
         </>
       )
+    } else {
+      return null
     }
   }
 
@@ -212,12 +242,17 @@ Hey @UnipigExchange it's ${address}, give me some 🦄UNI and 🐷PIGI tokens on
               Tweet
             </a>
           </TweetContainer>
-
-          {metaInformation()}
+          <MetaInformation />
         </InformationContainer>
 
-        <NavButton variant="gradient" disabled={!alreadyFauceted} href="/">
-          <ButtonText>Dope</ButtonText>
+        <NavButton
+          variant="gradient"
+          disabled={!(alreadyFauceted || (!!addressData.twitterFaucetError && (!!!oldError || showDespiteOldError)))}
+          href="/"
+        >
+          <ButtonText>
+            {!!addressData.twitterFaucetError && (!!!oldError || showDespiteOldError) ? 'Bummer' : 'Dope'}
+          </ButtonText>
         </NavButton>
       </TradeWrapper>
     </>

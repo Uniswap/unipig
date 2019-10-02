@@ -66,20 +66,18 @@ const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
     padding: 0;
+    outline-width: thin;
+    outline-color: ${({ theme }) => theme.colors.white};
   }
 
   *,
   *::before,
   *::after {
     box-sizing: border-box;
-    outline-width: thin;
-    outline-color: ${({ theme }) => theme.colors.white};
   }
 
   html {
-    font-family: 'Inter var', sans-serif;
     color: ${({ theme }) => theme.colors.white};
-    /* background-color: ${({ theme }) => theme.colors.black}; */
     background: linear-gradient(60.06deg, #121212 -3.57%, #24021C 96.96%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
