@@ -69,14 +69,14 @@ const Element = styled.div`
   ${({ header }) =>
     header &&
     css`
-      padding: 1rem;
+      padding: 0.75rem;
     `}
 
   ${({ body }) =>
     body &&
     css`
       max-width: 525px;
-      padding: 0 2rem 2rem 2rem;
+      padding: 0 1.75rem 2rem 1.75rem;
     `}
 `
 

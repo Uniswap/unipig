@@ -11,10 +11,27 @@ const StyledHeading = styled.p`
   font-size: 20px;
   line-height: 24px;
   width: 100%;
+  @media only screen and (max-width: 480px) {
+    opacity: 0;
+    height: 0px;
+    margin: 0px;
+  }
 `
 
-export function Heading({ children }) {
-  return <StyledHeading>{children}</StyledHeading>
+const StyledBoldHeading = styled.p`
+  color: ${({ theme }) => theme.colors.greys[6]};
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+  width: 100%;
+`
+
+export function Heading({ children, textStyle }) {
+  if (textStyle === 'bold') {
+    return <StyledHeading>{children}</StyledHeading>
+  } else {
+    return <StyledBoldHeading>{children}</StyledBoldHeading>
+  }
 }
 
 // TITLE
