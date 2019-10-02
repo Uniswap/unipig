@@ -22,7 +22,6 @@ const Line = styled.div`
   left: 4px;
   background-color: ${({ theme, team }) => (team === Team.UNI ? theme.colors[Team.PIGI] : theme.colors[Team.UNI])};
   transition: width 0.5s ease;
-  /* padding: 0.25rem; */
   text-align: right;
   padding-right: 4px;
   span {
@@ -40,7 +39,6 @@ const LineAnimated = styled(motion.div)`
   background-color: ${({ theme, team }) => theme.colors[team]};
   text-align: right;
   padding-right: 6px;
-  /* padding: 0.25rem; */
 `
 
 const StyledUpdater = styled(Updater)`

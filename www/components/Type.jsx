@@ -28,9 +28,9 @@ const StyledBoldHeading = styled.p`
 
 export function Heading({ children, textStyle }) {
   if (textStyle === 'bold') {
-    return <StyledHeading>{children}</StyledHeading>
-  } else {
     return <StyledBoldHeading>{children}</StyledBoldHeading>
+  } else {
+    return <StyledHeading>{children}</StyledHeading>
   }
 }
 
@@ -42,6 +42,7 @@ const StyledTitle = styled.h1`
   font-weight: 900;
   font-style: italic;
   color: ${({ color }) => (color ? color : 'initial')} !important;
+  mix-blend-mode: exclusion;
   @media only screen and (max-width: 480px) {
     font-size: ${({ size }) => (size ? size + 'px' : '3.5rem')};
   }
@@ -52,6 +53,7 @@ const StyledGradientTitle = styled(GradientText)`
   margin: 0;
   font-size: ${({ size }) => (size ? size + 'px' : '4rem')};
   font-weight: 700;
+  mix-blend-mode: exclusion;
   @media only screen and (max-width: 480px) {
     font-size: ${({ size }) => (size ? size + 'px' : '3.5rem')};
   }
