@@ -20,6 +20,8 @@ import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 
+import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
+
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
 
@@ -136,33 +138,41 @@ const Percentage = styled.span`
   font-size: 16px;
 `
 
+const ContainedButton = styled(Button)`
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+`
+
 const Loader = styled(motion.div)`
-  height: 1.5rem;
-  width: 1.5rem;
+  height: 84px;
+  width: 64px;
   background-color: ${({ theme }) => theme.colors.white};
-  border-radius: 100%;
+  position: absolute;
+  transform: rotate(45deg);
+  opacity: 0;
 `
 
 const StyledTitle = styled(Title)`
   font-size: 2.5rem;
 `
 
+const AniCointainer = styled.div`
+  width: 60px;
+  height: 48px;
+  display: flex;
+  place-content: center;
+  overflow: hidden;
+`
+
 const variants = {
   initial: {
     scale: 1
   },
-  loading: {
-    scale: [1, 1.5],
-    transition: {
-      yoyo: Infinity,
-      duration: 1,
-      ease: 'linear'
-    }
-  },
   finished: {
     scale: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.25,
       ease: 'easeOut'
     }
   }
@@ -454,14 +464,14 @@ function Buy({
   }, [sendState, controls])
 
   return (
-    <>
-      <Body textStyle="gradient">
-        <b>
-          Boost {Team[outputToken]} by dumping {Team[inputToken]}.
-        </b>
-      </Body>
-      <Shim size={12} />
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
       <TradeWrapper>
+        <Body textStyle="gradient">
+          <b>
+            Boost {Team[outputToken]} by dumping {Team[inputToken]}.
+          </b>
+        </Body>
+        <Shim size={20} />
         <StyledInputWrapper>
           <Input
             required
@@ -519,7 +529,7 @@ function Buy({
             </b>
           </HelperText>
         )}
-        <Button
+        <ContainedButton
           disabled={!!swapState[ERROR_MESSAGE] || !!!swapState[INPUT_AMOUNT_PARSED]}
           variant="gradient"
           stretch
@@ -561,7 +571,7 @@ function Buy({
           ) : (
             <ButtonText>Swap</ButtonText>
           )}
-        </Button>
+        </ContainedButton>
         {swapState[MARKET_RATE_PRICE_IMPACT] && (
           <PriceImpactText>
             This trade will boost the value of {Team[outputToken]} by{' '}
@@ -578,29 +588,31 @@ function Buy({
           </PriceImpactText>
         )}
       </TradeWrapper>
-    </>
+    </AnimatedFrame>
   )
 }
 
 function Confirmed({ tradeTime }) {
   return (
-    <TradeWrapper>
-      <Body>💸</Body>
-      <Shim size={1} />
-      <StyledTitle textStyle="gradient">Transaction Confirmed.</StyledTitle>
-      <Shim size={12} />
-      <Body color={'white'}>
-        <i>Yes. It was that fast.</i>
-      </Body>
-      <Heading>
-        {tradeTime}ms. No gas. <br />
-        Still decentralized.
-      </Heading>
-      <Shim size={2} />
-      <NavButton variant="gradient" href="/">
-        <ButtonText>Dope</ButtonText>
-      </NavButton>
-    </TradeWrapper>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+      <TradeWrapper>
+        <Body>💸</Body>
+        <Shim size={8} />
+        <StyledTitle textStyle="gradient">Transaction Confirmed.</StyledTitle>
+        <Shim size={16} />
+        <Body color={'white'}>
+          <i>Yes. It was that fast.</i>
+        </Body>
+        <Heading>
+          {tradeTime}ms. No gas. <br />
+          Still decentralized.
+        </Heading>
+        <Shim size={8} />
+        <NavButton variant="gradient" href="/">
+          <ButtonText>Dope</ButtonText>
+        </NavButton>
+      </TradeWrapper>
+    </AnimatedFrame>
   )
 }
 
