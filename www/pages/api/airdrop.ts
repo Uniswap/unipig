@@ -56,7 +56,9 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       faucetError = true
     }
 
-    if (!faucetError) {
+    if (faucetError) {
+      return res.status(500).send('An unknown error occurred.')
+    } else {
       await client.query(
         q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
           data: {
@@ -66,8 +68,6 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       )
 
       return res.status(200).send('')
-    } else {
-      return res.status(500).send('An unknown error occurred.')
     }
   } catch (error) {
     console.error(error)

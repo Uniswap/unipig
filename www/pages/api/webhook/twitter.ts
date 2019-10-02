@@ -1,7 +1,8 @@
 import { NowResponse, NowRequest } from '@now/node'
 import crypto from 'crypto'
 import faunadb from 'faunadb'
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
+import { getAddress } from '@ethersproject/address'
 
 import { UNIPIG_TWITTER_ID, TWITTER_BOOSTS, AddressDocument } from '../../../constants'
 import { canFaucet, getFaucetData, faucet, timeoutPromise } from '../../../utils'
@@ -13,6 +14,23 @@ const client = new faunadb.Client({
   secret: process.env.FAUNADB_SERVER_SECRET
 })
 const q = faunadb.query
+
+const creationWindow = 1000 * 60 * 60 * 24 * 4 // 4 days
+
+// define helper to update twitter errors
+async function addTwitterError(errorString: string, refID: any): Promise<void> {
+  try {
+    await client.query(
+      q.Update(q.Ref(q.Collection('addresses'), refID), {
+        data: {
+          twitterFaucetError: errorString
+        }
+      })
+    )
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 // disable body parsing to get raw req body
 export const config = {
@@ -75,55 +93,56 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
 
     // get the first tweet and parse
     const tweetObject = body.tweet_create_events[0]
-    const userHandle = tweetObject.user.screen_name
     const userId = tweetObject.user.id
+    const userHandle = tweetObject.user.screen_name
+    const accountCreated = new Date(tweetObject.user.created_at).getTime()
+    const tweetText = tweetObject.extended_tweet ? tweetObject.extended_tweet.full_text : tweetObject.text
+    const matchedAddress = tweetText.match(addressRegex) ? getAddress(tweetText.match(addressRegex)[0]) : null
 
-    // ignore non-supported tweet types
+    console.log(`Begin processing tweet '${tweetText}' from @${userHandle} (${userId}) with address ${matchedAddress}.`)
+
+    // ignore non-supported/invalid tweet types
     if (
-      userId === UNIPIG_TWITTER_ID ||
       tweetObject.retweeted_status ||
       tweetObject.in_reply_to_status_id ||
-      tweetObject.quoted_status_id
+      tweetObject.quoted_status_id ||
+      userId === UNIPIG_TWITTER_ID ||
+      !matchedAddress
     ) {
-      return res.status(200).send('')
-    }
-
-    console.log(`Begin parsing tweet '${tweetObject.extended_tweet.full_text}' by ${userHandle} (${userId}).`)
-
-    // if account is too new return error
-    const now = Date.now()
-    const creationWindow = 1000 * 60 * 60 * 24 * 2 // 2 days
-    const accountCreated = new Date(tweetObject.user.created_at).getTime()
-    if (accountCreated + creationWindow >= now) {
-      console.error('Account is too new.')
-      return res.status(200).send('')
-    }
-
-    const matchedAddress = tweetObject.extended_tweet.full_text.match(addressRegex)
-      ? tweetObject.extended_tweet.full_text.match(addressRegex)[0]
-      : null
-
-    // if there wasn't an address in the tweet return error
-    if (!matchedAddress) {
-      console.error('Tweet does not contain a valid Ethereum address.')
       return res.status(200).send('')
     }
 
     // begin DB logic
     try {
-      // ensure that the address exists in our db
+      // get the db document by address
       const addressData: any = await client.query(
         q.Map(q.Paginate(q.Match(q.Index('by-address_addresses'), matchedAddress)), (ref): any => q.Get(ref))
       )
+
+      // if the address doesn't exist, yell
       if (addressData.data.length === 0) {
-        console.error(`Address ${matchedAddress} is not recognized.`)
+        console.error(`Address does not exist in our database.`)
+        return res.status(200).send('')
+      }
+
+      // wrap our logger
+      const logErrorToDB = async (errorString: string): Promise<void> => {
+        await addTwitterError(errorString, addressData.data[0].ref.id)
+      }
+
+      // if account is too new return error
+      const now = Date.now()
+      if (accountCreated + creationWindow >= now) {
+        console.error(`Twitter account is too new.`)
+        logErrorToDB('Your Twitter account is too new.')
         return res.status(200).send('')
       }
 
       // ensure that the address hasn't used the faucet recently
       const addressDocument: AddressDocument = addressData.data[0].data
       if (!canFaucet(addressDocument)) {
-        console.error(`Address ${matchedAddress} cannot faucet yet.`)
+        console.error(`Address cannot faucet yet.`)
+        logErrorToDB('You used the faucet with this address recently.')
         return res.status(200).send('')
       }
 
@@ -135,16 +154,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         const idDocument: AddressDocument = idData.data[0].data
 
         if (!canFaucet(idDocument)) {
-          console.error(`Account ${userHandle} (${userId}) cannot faucet yet.`)
-
-          await client.query(
-            q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
-              data: {
-                twitterFaucetError: true
-              }
-            })
-          )
-
+          console.error(`Twitter account cannot faucet yet.`)
+          logErrorToDB('You used the faucet with this Twitter account recently.')
           return res.status(200).send('')
         }
       }
@@ -157,10 +168,13 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
         await timeoutPromise(faucet(matchedAddress, signature))
       } catch (error) {
         console.error(error)
-        // faucetError = true
+        faucetError = true
       }
 
-      if (!faucetError) {
+      if (faucetError) {
+        logErrorToDB('The faucet is temporarily offline. Try again soon!')
+        return res.status(500).send('An unknown error occurred.')
+      } else {
         // ensure if the twitter id was previously associated with an account, it gets removed to ensure uniqueness
         if (idData.data.length > 0) {
           await client.query(
@@ -168,7 +182,7 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
               data: {
                 twitterHandle: null,
                 twitterId: null,
-                twitterFaucetError: false
+                twitterFaucetError: null
               }
             })
           )
@@ -181,23 +195,13 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
               twitterHandle: userHandle,
               twitterId: userId,
               lastTwitterFaucet: now,
-              twitterFaucetError: false,
+              twitterFaucetError: null,
               ...(addressDocument.lastTwitterFaucet === 0 ? { boostsLeft: TWITTER_BOOSTS } : {})
             }
           })
         )
 
         return res.status(200).send('')
-      } else {
-        await client.query(
-          q.Update(q.Ref(q.Collection('addresses'), addressData.data[0].ref.id), {
-            data: {
-              twitterFaucetError: true
-            }
-          })
-        )
-
-        return res.status(500).send('An unknown error occurred.')
       }
     } catch (error) {
       console.error(error)
