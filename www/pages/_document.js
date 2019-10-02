@@ -3,10 +3,6 @@ import Document, { Html, Head, Main, NextScript } from 'next/document'
 import { ServerStyleSheet } from 'styled-components'
 import { ServerStyleSheets } from '@material-ui/styles'
 
-/* <style jsx>{`
-  @import url('https://rsms.me/inter/inter.css');
-`}</style> */
-
 // https://github.com/MarchWorks/nextjs-with-material-ui-and-styled-components
 // https://stackoverflow.com/questions/55109497/how-to-integrate-nextjs-styled-components-with-material-ui
 export default class MyDocument extends Document {
@@ -42,7 +38,17 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
+          <style jsx global>{`
+            @import url('https://rsms.me/inter/inter.css');
+            html {
+              font-family: 'Inter', sans-serif;
+            }
+            @supports (font-variation-settings: normal) {
+              html {
+                font-family: 'Inter var', sans-serif;
+              }
+            }
+          `}</style>
           <meta charSet="utf-8" />
           <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
           <meta name="theme-color" content="#FFFFFF" />

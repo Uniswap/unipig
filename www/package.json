@@ -20,16 +20,13 @@
     "check:all": "yarn lint:check && yarn pretty:check"
   },
   "dependencies": {
-    "@ethersproject/abi": "^5.0.0-beta.138",
     "@ethersproject/address": "^5.0.0-beta.129",
     "@ethersproject/wallet": "^5.0.0-beta.131",
     "@material-ui/core": "^4.4.0",
-    "@pigi/core": "0.0.6-alpha.0",
     "@pigi/wallet": "0.0.5-alpha.0",
     "@reach/dialog": "^0.2.9",
     "@uniswap/sdk": "^1.0.0-beta.4",
     "copy-to-clipboard": "^3.2.0",
-    "ethers": "^4.0.37",
     "faunadb": "^2.8.0",
     "framer-motion": "^1.6.7",
     "isomorphic-unfetch": "^3.0.0",
