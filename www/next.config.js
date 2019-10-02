@@ -11,7 +11,7 @@ module.exports = phase => ({
       config.node = { ...(config.node || {}), fs: 'empty', net: 'empty' }
     }
 
-    config.externals = [...(config.externals || []), ...['express']]
+    config.externals = [...(config.externals || []), ...['express', 'iconv-lite', 'pako', 'mime-types']]
 
     return config
   },
