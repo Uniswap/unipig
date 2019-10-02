@@ -1,7 +1,9 @@
 import styled from 'styled-components'
 import { Badge } from '@material-ui/core'
+import { formatSignificant } from '@uniswap/sdk'
 
-import { useAccountExists, useTeamExists } from '../contexts/Client'
+import { useStyledTheme } from '../hooks'
+import { useAccountExists, useTeamExists, Team } from '../contexts/Client'
 import Emoji from './Emoji'
 import Chip from './Chip'
 import NavButton from './NavButton'
@@ -11,11 +13,15 @@ import Updater from './Updater'
 import { QRIcon } from './NavIcons'
 
 const Uniswap = styled.span`
-  margin: 0;
   font-size: 1rem;
   color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
   margin: 0 0.5rem 0 0.5rem;
   text-transform: none;
+`
+
+const Back = styled.span`
+  font-size: 1.75rem;
+  color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
 `
 
 const L2Text = styled.span`
@@ -59,16 +65,39 @@ const StyledUpdater = styled(Updater)`
   margin: 0 1.5rem 0 2rem;
 `
 
-export default function Header({ team, updateTotal, showIcons, showUpdater, boostsLeft, setWalletModalIsOpen }) {
+const PriceDisplay = styled.div`
+  font-size: 12px;
+  opacity: 0.75;
+  margin-right: -15px;
+  color: ${({ color }) => color};
+`
+
+export default function Header({
+  team,
+  updateTotal,
+  marketDetails,
+  showIcons,
+  showUpdater,
+  boostsLeft,
+  setWalletModalIsOpen
+}) {
   const accountExists = useAccountExists()
   const teamExists = useTeamExists()
+
+  const theme = useStyledTheme()
 
   return (
     <>
       <HomeButton href={accountExists && teamExists ? '/' : '/welcome'} variant="text">
-        <Emoji emoji={'🦄'} label="unicorn" />
-        <Uniswap>Uniswap</Uniswap>
-        <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
+        {showUpdater ? (
+          <Back>←</Back>
+        ) : (
+          <>
+            <Emoji emoji={'🦄'} label="unicorn" />
+            <Uniswap>Uniswap</Uniswap>
+            <StyledChip variant="gradient" label={<L2Text>L2</L2Text>} />
+          </>
+        )}
       </HomeButton>
       {(showIcons || showUpdater) && (
         <ButtonWrapper>
@@ -97,7 +126,21 @@ export default function Header({ team, updateTotal, showIcons, showUpdater, boos
               </StyledBadge>
             </>
           )}
-          {showUpdater && <StyledUpdater team={team} total={updateTotal} />}
+          {showUpdater && (
+            <>
+              <PriceDisplay color={team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]}>
+                1 {Team[team]} ={' '}
+                {marketDetails && marketDetails.marketRate.rateInverted
+                  ? formatSignificant(marketDetails.marketRate.rateInverted, {
+                      significantDigits: 3,
+                      forceIntegerSignificance: true
+                    })
+                  : '...'}{' '}
+                {Team[team === Team.UNI ? Team.PIGI : Team.UNI]}
+              </PriceDisplay>
+              <StyledUpdater team={team} total={updateTotal} />
+            </>
+          )}
         </ButtonWrapper>
       )}
     </>

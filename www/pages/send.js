@@ -1,12 +1,12 @@
-import { useState, useReducer, useEffect } from 'react'
+import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, useAnimation } from 'framer-motion'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { BigNumber, formatFixedDecimals } from '@uniswap/sdk'
 import { isAddress } from '@ethersproject/address'
 
 import { DECIMALS } from '../constants'
+import { useDynamicCallback } from '../hooks'
 import { Team } from '../contexts/Client'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
@@ -15,6 +15,7 @@ import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 import { QRIcon } from '../components/NavIcons'
+import { AnimatedFrame, containerAnimation } from '../components/Animation'
 
 const QRScanModal = dynamic(() => import('../components/QRScanModal'), { ssr: false })
 
@@ -108,37 +109,9 @@ const IconButton = styled(Button)`
   padding: 0px;
 `
 
-const Loader = styled(motion.div)`
-  height: 1.5rem;
-  width: 1.5rem;
-  background-color: ${({ theme }) => theme.colors.white};
-  border-radius: 100%;
-`
-
 const StyledTitle = styled(Title)`
   font-size: 2.5rem;
 `
-
-const variants = {
-  initial: {
-    scale: 1
-  },
-  loading: {
-    scale: [1, 1.5],
-    transition: {
-      yoyo: Infinity,
-      duration: 1,
-      ease: 'linear'
-    }
-  },
-  finished: {
-    scale: 0,
-    transition: {
-      duration: 0.5,
-      ease: 'easeOut'
-    }
-  }
-}
 
 const RESTING = 'RESTING'
 const PENDING = 'PENDING'
@@ -266,12 +239,20 @@ function reducer(state, { type, payload = {} } = {}) {
 
 function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTradeTime }) {
   //// parse the props
-  const balance = OVMBalances[token] !== undefined ? new BigNumber(OVMBalances[token]) : null
+  const _balance = OVMBalances[token]
+  const balance = useMemo(() => (_balance !== undefined ? new BigNumber(_balance) : null), [_balance])
 
   // amounts
   const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
 
-  function updateValues(rawValue, parsedValue) {
+  const updateValues = useDynamicCallback((_rawValue, _parsedValue) => {
+    const rawValue = _rawValue || swapState[INPUT_AMOUNT_RAW]
+    const parsedValue = _parsedValue || swapState[INPUT_AMOUNT_PARSED]
+
+    if (!rawValue || !parsedValue) {
+      return
+    }
+
     if (parsedValue.gt(balance)) {
       dispatchSwapState({
         type: SET_INSUFFICIENT_BALANCE,
@@ -290,7 +271,11 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
         parsedInputValue: parsedValue
       }
     })
-  }
+  })
+
+  useEffect(() => {
+    updateValues()
+  }, [updateValues])
 
   function onInputAmount(event) {
     const typedValue = event.target.value
@@ -361,17 +346,13 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
 
   const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
-  const controls = useAnimation()
   const sendState = swapState[SEND_STATE]
   useEffect(() => {
-    if (sendState === PENDING) {
-      controls.start('loading')
-    } else if (sendState === SUCCESS) {
-      controls.start('finished')
-    } else {
-      controls.set('initial')
+    if (sendState === SUCCESS) {
+      confirm()
+      updateOVMBalances()
     }
-  }, [sendState, controls])
+  }, [sendState, confirm, updateOVMBalances])
 
   return (
     <>
@@ -388,81 +369,82 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
           setQRModalIsOpen(false)
         }}
       />
-      <Body textStyle="gradient">
-        <b>Send tokens to a friend.</b>
-      </Body>
-      <Shim size={12} />
-      <TradeWrapper>
-        <StyledInputWrapper>
-          <Input
-            required
-            disabled={!balance || swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
-            error={!!swapState[ERROR_MESSAGE_INPUT]}
-            type="number"
-            min="0"
-            step="0.0001"
-            placeholder="0"
-            value={swapState[INPUT_AMOUNT_RAW]}
-            onChange={onInputAmount}
-            inputColor={token}
-          />
-          <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
-            Max
-          </MaxButton>
-          <StyledEmoji
-            inputColor={token}
-            emoji={Team[token] === 'UNI' ? '🦄' : '🐷'}
-            label={Team[token] === 'UNI' ? 'unicorn' : 'pig'}
-          />
-        </StyledInputWrapper>
-        <ArrowDown>↓</ArrowDown>
-        <StyledInputWrapper>
-          <Input
-            required
-            disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
-            error={!!swapState[ERROR_MESSAGE_RECIPIENT]}
-            type="text"
-            value={swapState[RECIPIENT]}
-            onChange={onAddress}
-            placeholder="0x..."
-            inputColor={token}
-          />
-          <IconButton
-            onClick={() => {
-              setQRModalIsOpen(true)
+      <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+        <TradeWrapper>
+          <Body textStyle="gradient">
+            <b>Send tokens to a friend.</b>
+          </Body>
+          <Shim size={20} />
+          <StyledInputWrapper>
+            <Input
+              required
+              disabled={!balance || swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
+              error={!!swapState[ERROR_MESSAGE_INPUT]}
+              type="number"
+              min="0"
+              step="0.0001"
+              placeholder="0"
+              value={swapState[INPUT_AMOUNT_RAW]}
+              onChange={onInputAmount}
+              inputColor={token}
+            />
+            <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
+              Max
+            </MaxButton>
+            <StyledEmoji
+              inputColor={token}
+              emoji={Team[token] === 'UNI' ? '🦄' : '🐷'}
+              label={Team[token] === 'UNI' ? 'unicorn' : 'pig'}
+            />
+          </StyledInputWrapper>
+          <ArrowDown>↓</ArrowDown>
+          <StyledInputWrapper>
+            <Input
+              required
+              disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
+              error={!!swapState[ERROR_MESSAGE_RECIPIENT]}
+              type="text"
+              value={swapState[RECIPIENT]}
+              onChange={onAddress}
+              placeholder="0x..."
+              inputColor={token}
+            />
+            <IconButton
+              onClick={() => {
+                setQRModalIsOpen(true)
+              }}
+            >
+              <QRIcon />
+            </IconButton>
+          </StyledInputWrapper>
+          <HelperText
+            style={{
+              visibility:
+                !!swapState[ERROR_MESSAGE_INPUT] ||
+                !!swapState[ERROR_MESSAGE_RECIPIENT] ||
+                !!swapState[ERROR_MESSAGE_GENERAL]
+                  ? 'visible'
+                  : 'hidden'
             }}
+            error={true}
           >
-            <QRIcon />
-          </IconButton>
-        </StyledInputWrapper>
-        <HelperText
-          style={{
-            visibility:
+            {swapState[ERROR_MESSAGE_INPUT] ||
+              swapState[ERROR_MESSAGE_RECIPIENT] ||
+              swapState[ERROR_MESSAGE_GENERAL] ||
+              'placeholder'}
+          </HelperText>
+          <Button
+            disabled={
               !!swapState[ERROR_MESSAGE_INPUT] ||
               !!swapState[ERROR_MESSAGE_RECIPIENT] ||
-              !!swapState[ERROR_MESSAGE_GENERAL]
-                ? 'visible'
-                : 'hidden'
-          }}
-          error={true}
-        >
-          {swapState[ERROR_MESSAGE_INPUT] ||
-            swapState[ERROR_MESSAGE_RECIPIENT] ||
-            swapState[ERROR_MESSAGE_GENERAL] ||
-            'placeholder'}
-        </HelperText>
-        <Button
-          disabled={
-            !!swapState[ERROR_MESSAGE_INPUT] ||
-            !!swapState[ERROR_MESSAGE_RECIPIENT] ||
-            !!swapState[ERROR_MESSAGE_GENERAL] ||
-            !!!swapState[INPUT_AMOUNT_PARSED] ||
-            !!!swapState[RECIPIENT]
-          }
-          variant="gradient"
-          stretch
-          onClick={() => {
-            if (swapState[SEND_STATE] === RESTING) {
+              !!swapState[ERROR_MESSAGE_GENERAL] ||
+              !!!swapState[INPUT_AMOUNT_PARSED] ||
+              !!!swapState[RECIPIENT] ||
+              swapState[SEND_STATE] !== RESTING
+            }
+            variant="gradient"
+            stretch
+            onClick={() => {
               dispatchSwapState({ type: SET_PENDING })
 
               const now = Date.now()
@@ -482,55 +464,49 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
                   console.error(error)
                   dispatchSwapState({ type: SET_ERROR })
                 })
-            }
-          }}
-        >
-          {swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS ? (
-            <Loader
-              variants={variants}
-              animate={controls}
-              initial="initial"
-              onAnimationComplete={() => {
-                updateOVMBalances()
-                confirm()
-              }}
-            />
-          ) : (
-            <ButtonText>Send</ButtonText>
-          )}
-        </Button>
-      </TradeWrapper>
+            }}
+          >
+            {swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS ? (
+              <ButtonText>Sending...</ButtonText>
+            ) : (
+              <ButtonText>Send</ButtonText>
+            )}
+          </Button>
+        </TradeWrapper>
+      </AnimatedFrame>
     </>
   )
 }
 
 function Confirmed({ tradeTime }) {
   return (
-    <TradeWrapper>
-      <Body>💸</Body>
-      <Shim size={1} />
-      <StyledTitle textStyle="gradient">Transaction Confirmed.</StyledTitle>
-      <Shim size={12} />
-      <Body color={'white'}>
-        <i>Yes. It was that fast.</i>
-      </Body>
-      <Heading>
-        {tradeTime}ms. No gas. <br />
-        Still decentralized.
-      </Heading>
-      <Shim size={2} />
-      <NavButton variant="gradient" href="/">
-        <ButtonText>Dope</ButtonText>
-      </NavButton>
-    </TradeWrapper>
+    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+      <TradeWrapper>
+        <Body>💸</Body>
+        <Shim size={1} />
+        <StyledTitle textStyle="gradient">Transaction Confirmed.</StyledTitle>
+        <Shim size={12} />
+        <Body color={'white'}>
+          <i>Yes. It was that fast.</i>
+        </Body>
+        <Heading>
+          {tradeTime}ms. No gas. <br />
+          Still decentralized.
+        </Heading>
+        <Shim size={2} />
+        <NavButton variant="gradient" href="/">
+          <ButtonText>Dope</ButtonText>
+        </NavButton>
+      </TradeWrapper>
+    </AnimatedFrame>
   )
 }
 
 function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token }) {
   const [showConfirm, setShowConfirm] = useState(false)
-  function confirm() {
+  const confirm = useCallback(() => {
     setShowConfirm(true)
-  }
+  }, [])
 
   const [tradeTime, setTradeTime] = useState()
 

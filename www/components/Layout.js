@@ -87,14 +87,17 @@ export default function Layout({
   updateAddressData,
   OVMBalances,
   updateOVMBalances,
+  marketDetails,
   walletModalIsOpen,
   setWalletModalIsOpen,
   updateTotal,
   children
 }) {
   const { pathname } = useRouter()
-  const showIcons = pathname === '/'
-  const showUpdater = !showIcons && !['/welcome', '/join-team', 'confirm-wallet'].includes(pathname)
+  const onboarding = ['/welcome', '/join-team', '/confirm-wallet'].includes(pathname)
+  const home = pathname === '/'
+  const showIcons = home
+  const showUpdater = !home && !onboarding
 
   return (
     <>
@@ -110,6 +113,7 @@ export default function Layout({
         <Element header justify={showIcons || showUpdater ? 'space-between' : 'flex-start'} direction="row">
           <Header
             team={team}
+            marketDetails={marketDetails}
             updateTotal={updateTotal}
             showIcons={showIcons}
             showUpdater={showUpdater}

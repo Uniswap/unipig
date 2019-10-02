@@ -1,17 +1,10 @@
-import { useState, useReducer, useEffect } from 'react'
-import { useAnimation, motion } from 'framer-motion'
+import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
-import {
-  TRADE_EXACT,
-  BigNumber,
-  getMarketDetails,
-  getTradeDetails,
-  formatSignificant,
-  formatFixedDecimals
-} from '@uniswap/sdk'
+import { TRADE_EXACT, BigNumber, getTradeDetails, formatSignificant, formatFixedDecimals } from '@uniswap/sdk'
 
 import { DECIMALS } from '../constants'
+import { useDynamicCallback } from '../hooks'
 import { Team } from '../contexts/Client'
 import Button from '../components/Button'
 import NavButton from '../components/NavButton'
@@ -19,29 +12,10 @@ import Shim from '../components/Shim'
 import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
-
-import { AnimatedFrame, containerAnimation, childAnimation } from '../components/Animation'
+import { AnimatedFrame, containerAnimation } from '../components/Animation'
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
-
-const DUMMY_TOKEN = {
-  decimals: DECIMALS
-}
-
-const DUMMY_ETH = {
-  decimals: 18
-}
-
-const DUMMY_TOKEN_AMOUNT = amount => ({
-  token: DUMMY_TOKEN,
-  amount
-})
-
-const DUMMY_ETH_AMOUNT = amount => ({
-  token: DUMMY_ETH,
-  amount: amount
-})
 
 const TradeWrapper = styled.span`
   width: 100%;
@@ -144,39 +118,9 @@ const ContainedButton = styled(Button)`
   align-items: center;
 `
 
-const Loader = styled(motion.div)`
-  height: 84px;
-  width: 64px;
-  background-color: ${({ theme }) => theme.colors.white};
-  position: absolute;
-  transform: rotate(45deg);
-  opacity: 0;
-`
-
 const StyledTitle = styled(Title)`
   font-size: 2.5rem;
 `
-
-const AniCointainer = styled.div`
-  width: 60px;
-  height: 48px;
-  display: flex;
-  place-content: center;
-  overflow: hidden;
-`
-
-const variants = {
-  initial: {
-    scale: 1
-  },
-  finished: {
-    scale: 0,
-    transition: {
-      duration: 0.25,
-      ease: 'easeOut'
-    }
-  }
-}
 
 const RESTING = 'RESTING'
 const PENDING = 'PENDING'
@@ -310,8 +254,8 @@ function reducer(state, { type, payload = {} } = {}) {
 }
 
 function Buy({
-  OVMReserves,
   updateOVMReserves,
+  marketDetails,
   OVMBalances,
   updateOVMBalances,
   OVMSwap,
@@ -321,18 +265,10 @@ function Buy({
   setTradeTime
 }) {
   //// parse the props
-  const inputBalance = OVMBalances[inputToken] !== undefined ? new BigNumber(OVMBalances[inputToken]) : null
-  const inputReserve = OVMReserves[inputToken] !== undefined ? new BigNumber(OVMReserves[inputToken]) : null
-  const outputReserve = OVMReserves[outputToken] !== undefined ? new BigNumber(OVMReserves[outputToken]) : null
-  // fake it by pretending the input currency is ETH
-  const marketDetails =
-    inputReserve && outputReserve
-      ? getMarketDetails(undefined, {
-          token: DUMMY_TOKEN,
-          ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
-          tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
-        })
-      : null
+  const _inputBalance = OVMBalances[inputToken]
+  const inputBalance = useMemo(() => (_inputBalance !== undefined ? new BigNumber(_inputBalance) : null), [
+    _inputBalance
+  ])
 
   // amounts
   const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
@@ -351,7 +287,14 @@ function Buy({
     }
   }, [marketRatePreInverted, swapStateMarketRatePreInverted])
 
-  function updateValues(rawValue, parsedValue) {
+  const updateValues = useDynamicCallback((_rawValue, _parsedValue) => {
+    const rawValue = _rawValue || swapState[INPUT_AMOUNT_RAW]
+    const parsedValue = _parsedValue || swapState[INPUT_AMOUNT_PARSED]
+
+    if (!rawValue || !parsedValue) {
+      return
+    }
+
     let tradeDetails
     try {
       tradeDetails = getTradeDetails(TRADE_EXACT.INPUT, parsedValue.times(DUMMY_ETH_FACTOR), marketDetails)
@@ -399,7 +342,11 @@ function Buy({
         marketRatePriceImpact
       }
     })
-  }
+  })
+
+  useEffect(() => {
+    updateValues()
+  }, [marketDetails, inputBalance, updateValues])
 
   function onInputAmount(event) {
     const typedValue = event.target.value
@@ -451,17 +398,14 @@ function Buy({
     updateValues(formatFixedDecimals(inputBalance, DECIMALS), inputBalance)
   }
 
-  const controls = useAnimation()
   const sendState = swapState[SWAP_STATE]
   useEffect(() => {
-    if (sendState === PENDING) {
-      controls.start('loading')
-    } else if (sendState === SUCCESS) {
-      controls.start('finished')
-    } else {
-      controls.set('initial')
+    if (sendState === SUCCESS) {
+      confirm()
+      updateOVMReserves()
+      updateOVMBalances()
     }
-  }, [sendState, controls])
+  }, [sendState, confirm, updateOVMReserves, updateOVMBalances])
 
   return (
     <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
@@ -530,44 +474,37 @@ function Buy({
           </HelperText>
         )}
         <ContainedButton
-          disabled={!!swapState[ERROR_MESSAGE] || !!!swapState[INPUT_AMOUNT_PARSED]}
+          disabled={
+            !!swapState[ERROR_MESSAGE] || !!!swapState[INPUT_AMOUNT_PARSED] || swapState[SWAP_STATE] !== RESTING
+          }
           variant="gradient"
           stretch
           onClick={() => {
-            if (swapState[SWAP_STATE] === RESTING) {
-              dispatchSwapState({ type: SET_PENDING })
+            dispatchSwapState({ type: SET_PENDING })
 
-              const now = Date.now()
+            const now = Date.now()
 
-              Promise.all([
-                OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]).then(() => {
-                  setTradeTime(Date.now() - now)
-                }),
-                new Promise(resolve => {
-                  setTimeout(resolve, 750)
-                })
-              ])
-                .then(() => {
-                  dispatchSwapState({ type: SET_SUCCESS })
-                })
-                .catch(error => {
-                  console.error(error)
-                  dispatchSwapState({ type: SET_ERROR })
-                })
-            }
+            Promise.all([
+              OVMSwap(inputToken, swapState[INPUT_AMOUNT_PARSED]).then(() => {
+                setTradeTime(Date.now() - now)
+              }),
+              new Promise(resolve => {
+                setTimeout(() => {
+                  resolve()
+                }, 300)
+              })
+            ])
+              .then(() => {
+                dispatchSwapState({ type: SET_SUCCESS })
+              })
+              .catch(error => {
+                console.error(error)
+                dispatchSwapState({ type: SET_ERROR })
+              })
           }}
         >
           {swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS ? (
-            <Loader
-              variants={variants}
-              animate={controls}
-              initial="initial"
-              onAnimationComplete={() => {
-                updateOVMReserves()
-                updateOVMBalances()
-                confirm()
-              }}
-            />
+            <ButtonText>Swapping...</ButtonText>
           ) : (
             <ButtonText>Swap</ButtonText>
           )}
@@ -621,6 +558,7 @@ function Manager({
   team,
   OVMReserves,
   updateOVMReserves,
+  marketDetails,
   OVMBalances,
   updateOVMBalances,
   OVMSwap,
@@ -628,9 +566,9 @@ function Manager({
   outputToken
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
-  function confirm() {
+  const confirm = useCallback(() => {
     setShowConfirm(true)
-  }
+  }, [])
 
   const [tradeTime, setTradeTime] = useState()
 
@@ -640,6 +578,7 @@ function Manager({
         <Buy
           OVMReserves={OVMReserves}
           updateOVMReserves={updateOVMReserves}
+          marketDetails={marketDetails}
           OVMBalances={OVMBalances}
           updateOVMBalances={updateOVMBalances}
           OVMSwap={OVMSwap}
@@ -652,7 +591,7 @@ function Manager({
         <Confirmed tradeTime={tradeTime} />
       )}
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Your token balance" />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Token Balances" />
     </>
   )
 }

@@ -3,6 +3,9 @@ import Router from 'next/router'
 import styled from 'styled-components'
 import { useAnimation, motion } from 'framer-motion'
 
+import { useStyledTheme } from '../hooks'
+import { Team } from '../contexts/Client'
+
 const BASE_INTERVAL = 0.5 // seconds
 const MAXIMUM_DURATION = 16 // seconds
 const TIME_TO_MINIMUM = 0.2 // seconds
@@ -56,10 +59,11 @@ const Loader = styled(motion.div)`
   position: fixed;
   height: 0.2rem;
   margin-bottom: -0.2rem;
-  background-color: ${({ theme }) => theme.colors.uniswap};
+  background-color: ${({ color }) => color};
 `
 
 export default function RouteLoader() {
+  const theme = useStyledTheme()
   const controls = useAnimation()
 
   const start = useCallback(async () => {
@@ -83,5 +87,5 @@ export default function RouteLoader() {
     }
   }, [start, end])
 
-  return <Loader variants={variants} initial="start" animate={controls} />
+  return <Loader color={theme.colors[Team.UNI]} variants={variants} initial="start" animate={controls} />
 }

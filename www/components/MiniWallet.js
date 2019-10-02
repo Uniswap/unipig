@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { transparentize } from 'polished'
 import { formatFixedDecimals } from '@uniswap/sdk'
 
@@ -24,13 +24,19 @@ const StyledWallet = styled.div`
   position: relative;
   box-sizing: border-box;
 
-  :hover {
-    opacity: 1;
-    border: 1px solid
-      ${({ team, theme }) =>
-        team === Team.UNI ? transparentize(0.9, theme.colors[Team.UNI]) : transparentize(0.9, theme.colors[Team.PIGI])};
-    cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
-  }
+  ${({ onClick }) =>
+    onClick &&
+    css`
+      :hover {
+        opacity: 1;
+        border: 1px solid
+          ${({ team, theme }) =>
+            team === Team.UNI
+              ? transparentize(0.9, theme.colors[Team.UNI])
+              : transparentize(0.9, theme.colors[Team.PIGI])};
+        cursor: pointer;
+      }
+    `}
 `
 
 const Badge = styled.div`

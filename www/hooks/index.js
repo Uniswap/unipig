@@ -1,8 +1,21 @@
-import { useContext, useRef, useEffect, useState } from 'react'
+import { useContext, useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react'
 import { ThemeContext } from 'styled-components'
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export function useStyledTheme() {
   return useContext(ThemeContext)
+}
+
+// https://github.com/facebook/react/issues/16956#issuecomment-536636418
+export function useDynamicCallback(callback) {
+  const ref = useRef(callback)
+
+  useIsomorphicLayoutEffect(() => {
+    ref.current = callback
+  }, [callback])
+
+  return useCallback((...args) => ref.current(...args), [])
 }
 
 // https://usehooks.com/usePrevious/

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import App from 'next/app'
 import Head from 'next/head'
 import { UNISWAP_ADDRESS } from '@pigi/wallet'
@@ -7,7 +7,9 @@ import { createMuiTheme } from '@material-ui/core/styles'
 import { StylesProvider, ThemeProvider as MUIThemeProvider } from '@material-ui/styles'
 import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled-components'
 import { darken } from 'polished'
+import { BigNumber, getMarketDetails } from '@uniswap/sdk'
 
+import { DECIMALS } from '../constants'
 import { getCookie, getHost, swap, send } from '../utils'
 import ClientContext, {
   Team,
@@ -17,6 +19,26 @@ import ClientContext, {
   useOVMBalances
 } from '../contexts/Client'
 import Layout from '../components/Layout'
+
+const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
+
+const DUMMY_TOKEN = {
+  decimals: DECIMALS
+}
+
+const DUMMY_ETH = {
+  decimals: 18
+}
+
+const DUMMY_TOKEN_AMOUNT = amount => ({
+  token: DUMMY_TOKEN,
+  amount
+})
+
+const DUMMY_ETH_AMOUNT = amount => ({
+  token: DUMMY_ETH,
+  amount: amount
+})
 
 const BLACK = '#000000'
 const WHITE = '#FFFFFF'
@@ -83,6 +105,15 @@ const GlobalStyle = createGlobalStyle`
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+  @supports (font-variation-settings: normal) {
+    html {
+      font-family: 'Inter var', sans-serif;
+    }
   }
 `
 
@@ -162,6 +193,26 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
     await send(OVMWallet, wallet.address, to, token, amount)
   }
 
+  // get the current market rate
+  //// parse the props
+  const inputReserve =
+    OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI] !== undefined
+      ? new BigNumber(OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI])
+      : null
+  const outputReserve = OVMReserves[team] !== undefined ? new BigNumber(OVMReserves[team]) : null
+  // fake it by pretending the input currency is ETH
+  const marketDetails = useMemo(
+    () =>
+      inputReserve && outputReserve
+        ? getMarketDetails(undefined, {
+            token: DUMMY_TOKEN,
+            ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
+            tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
+          })
+        : null,
+    [inputReserve, outputReserve]
+  )
+
   return (
     <Layout
       wallet={wallet}
@@ -170,6 +221,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
       updateAddressData={updateAddressData}
       OVMBalances={OVMBalances}
       updateOVMBalances={updateOVMBalances}
+      marketDetails={marketDetails}
       walletModalIsOpen={walletModalIsOpen}
       setWalletModalIsOpen={setWalletModalIsOpen}
       updateTotal={updaterReserves + updaterBalances + updater}
@@ -182,6 +234,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
         updateAddressData={updateAddressData}
         OVMReserves={OVMReserves}
         updateOVMReserves={updateOVMReserves}
+        marketDetails={marketDetails}
         OVMBalances={OVMBalances}
         updateOVMBalances={updateOVMBalances}
         OVMSwap={OVMSwap}
