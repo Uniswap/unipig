@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import styled, { css } from 'styled-components'
 import dynamic from 'next/dynamic'
+import Head from 'next/head'
 
 import { truncateAddress } from '../utils'
 import { Team } from '../contexts/Client'
@@ -72,7 +73,7 @@ const StyledWallet = styled(Wallet)`
   background-color: rgba(255, 255, 255, 0.1);
 `
 
-function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalances, updateOVMBalances }) {
+function TwitterFaucet({ wallet, address, team, addressData, updateAddressData, OVMBalances, updateOVMBalances }) {
   const alreadyFauceted = !addressData.canFaucet
   // save the initial addressData
   const initialAddressData = useRef(addressData)
@@ -101,18 +102,33 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
     }
   }, [polling, updateAddressData])
 
+  const [showDespiteOldError, setShowDespiteOldError] = useState(false)
+  useEffect(() => {
+    if (polling && !!oldError) {
+      const timeout = setTimeout(() => {
+        setShowDespiteOldError(true)
+      }, 4000)
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  })
+
   // initialize twitter stuff
   const [twitterLoaded, setTwitterLoaded] = useState(false)
+  const [twitterLoadedError, setTwitterLoadedError] = useState(false)
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require('scriptjs')('https://platform.twitter.com/widgets.js', () => {
+    if (!window.twttr) {
+      setTwitterLoadedError(true)
+    } else {
       window.twttr.events.bind('loaded', () => {
         setTwitterLoaded(true)
       })
+
       window.twttr.events.bind('tweet', () => {
         setPolling(true)
       })
-    })
+    }
   }, [])
 
   useEffect(() => {
@@ -129,20 +145,20 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
           {justFauceted ? `The Unipig just granted you tokens.` : 'Enjoy your tokens responsibly.'}
         </StyledBody>
       )
+    } else if (twitterLoadedError) {
+      return <StyledBody textStyle="gradient">There was an error loading Twitter.</StyledBody>
     } else if (!twitterLoaded) {
-      return (
-        <>
-          <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
-        </>
-      )
+      return <StyledBody textStyle="gradient">Loading Twitter...</StyledBody>
     } else if (polling) {
       return (
         <>
           <StyledBody textStyle="gradient">
             {addressData.twitterFaucetError
               ? oldError
-                ? 'Something went wrong last time, trying again...'
-                : 'Sorry, an error occurred. Try again soon!'
+                ? showDespiteOldError
+                  ? `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
+                  : "Something went wrong last time, let's try again..."
+                : `Uh-oh, an error occurred: ${addressData.twitterFaucetError}`
               : 'Listening for your tweet...'}
           </StyledBody>
         </>
@@ -152,6 +168,9 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
 
   return (
     <>
+      <Head>
+        <script src="https://platform.twitter.com/widgets.js"></script>
+      </Head>
       <Confetti start={justFauceted} />
       <TradeWrapper>
         <Title size={32} textStyle="gradient">
@@ -168,9 +187,12 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
           <TweetPreview>
             {`༼ つ ◕_◕ ༽つ`}
             <br />
-            {`@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${
-              wallet ? truncateAddress(wallet.address, 4) : '...'
-            } https://unipig.exchange #team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
+            {`Hey @UnipigExchange it's ${truncateAddress(
+              address,
+              4
+            )}, give me some 🦄UNI and 🐷PIGI tokens on Layer 2! https://unipig.exchange #team${
+              team === Team.UNI ? 'UNI' : 'PIGI'
+            }`}
           </TweetPreview>
         )}
         <InformationContainer>
@@ -180,7 +202,7 @@ function TwitterFaucet({ wallet, team, addressData, updateAddressData, OVMBalanc
               href="https://twitter.com/intent/tweet"
               data-size="large"
               data-text={`༼ つ ◕_◕ ༽つ
-@UnipigExchange give 🦄UNI and 🐷PIGI tokens to my Layer 2 wallet: ${wallet ? wallet.address : ''}`}
+Hey @UnipigExchange it's ${address}, give me some 🦄UNI and 🐷PIGI tokens on Layer 2!`}
               data-url="https://unipig.exchange"
               data-hashtags={`team${team === Team.UNI ? 'UNI' : 'PIGI'}`}
               data-dnt="true"

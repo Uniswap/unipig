@@ -178,6 +178,7 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
     >
       <Component
         wallet={wallet}
+        address={address}
         team={team}
         addressData={updatedAddressData || addressData}
         updateAddressData={updateAddressData}
