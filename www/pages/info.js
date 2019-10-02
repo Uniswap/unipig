@@ -76,7 +76,7 @@ const Description = styled.p`
   line-height: 1.6;
 `
 
-function Stats() {
+export default function Info() {
   return (
     <StyledFAQ>
       <StatsTitle>
@@ -152,10 +152,3 @@ function Stats() {
     </StyledFAQ>
   )
 }
-
-// TODO add PG API and deal with decimals
-Stats.getInitialProps = async () => {
-  return {}
-}
-
-export default Stats

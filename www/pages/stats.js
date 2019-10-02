@@ -1,5 +1,7 @@
 import styled from 'styled-components'
 import { transparentize } from 'polished'
+import { useEffect, useState } from 'react'
+import { stats } from '../utils'
 
 const StyledWallet = styled.span`
   ${({ theme }) => theme.gradientBackground};
@@ -42,43 +44,40 @@ const Description = styled.p`
   margin: 0;
 `
 
-function Stats() {
+export default function Stats() {
+  const [transactionCount, setTransactionCount] = useState()
+  const [transactionCountError, setTransactionCountError] = useState()
+  useEffect(() => {
+    stats()
+      .then(setTransactionCount)
+      .catch(error => {
+        console.error(error)
+        setTransactionCountError(true)
+      })
+  }, [])
+
   return (
     <StyledWallet>
       <StatsTitle>
         <span>Stats</span>
-        <a href="/"> ✗</a>
       </StatsTitle>
-      <Stat>
-        <Value>1,238</Value>
-        <Description>total transactions</Description>
-      </Stat>
-      <Stat>
-        <Value>1,238</Value>
-        <Description>total transactions</Description>
-      </Stat>
-      <Stat>
-        <Value>1,238</Value>
-        <Description>total transactions</Description>
-      </Stat>
-      <Stat>
-        <Value>1,238</Value>
-        <Description>total transactions</Description>
-      </Stat>
-      <Stat>
-        <Value>1,238</Value>
-        <Description>total transactions</Description>
-      </Stat>
-      {/* <NavButton variant="gradient" stretch href="/">
-        <ButtonText>Dope</ButtonText>
-      </NavButton> */}
+      {transactionCountError && <Description>There was an error, please try again soon.</Description>}
+      {transactionCount && (
+        <>
+          <Stat>
+            <Value>{transactionCount}</Value>
+            <Description>total transactions</Description>
+          </Stat>
+          <Stat>
+            <Value>{((transactionCount * 80000 * 20) / 10 ** 9).toFixed(4)}</Value>
+            <Description>ether worth of gas saved</Description>
+          </Stat>
+          <Stat>
+            <Value>{((transactionCount * 200) / 1000 / 60).toFixed(2)}</Value>
+            <Description>minutes saved</Description>
+          </Stat>
+        </>
+      )}
     </StyledWallet>
   )
 }
-
-// TODO add PG API and deal with decimals
-Stats.getInitialProps = async () => {
-  return {}
-}
-
-export default Stats

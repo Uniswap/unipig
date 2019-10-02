@@ -96,14 +96,13 @@ export function getFaucetData(recipient: string): string {
 }
 
 export async function faucet(recipient: string, signature: string): Promise<void> {
-  const uuidv4 = uuid()
   await fetch(process.env.AGGREGATOR_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      id: uuidv4,
+      id: uuid(),
       jsonrpc: '2.0',
       method: 'requestFaucetFunds',
       params: {
@@ -119,6 +118,31 @@ export async function faucet(recipient: string, signature: string): Promise<void
       throw Error(`${response.status} Error: ${response.statusText}`)
     }
   })
+}
+
+export async function stats(): Promise<void> {
+  return await fetch(process.env.AGGREGATOR_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      id: uuid(),
+      jsonrpc: '2.0',
+      method: 'getTxCount',
+      params: {}
+    })
+  }).then(
+    async (response): Promise<any> => {
+      if (!response.ok) {
+        throw Error(`${response.status} Error: ${response.statusText}`)
+      }
+
+      const body = await response.json()
+
+      return body.result
+    }
+  )
 }
 
 // https://italonascimento.github.io/applying-a-timeout-to-your-promises/
