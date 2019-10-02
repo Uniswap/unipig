@@ -84,7 +84,7 @@ function DominancePercentage({ UNIDominance, PIGIDominance }) {
         }}
       />
       <FixedNum>
-        {UNIDominance >= 0.5 ? 'Unicorn' : 'Pig'}
+        {UNIDominance >= 0.5 ? 'UNI' : 'PIGI price'}
         <br />
         dominance {statefulX}%
       </FixedNum>
