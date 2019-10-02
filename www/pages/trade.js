@@ -47,7 +47,7 @@ const TradeWrapper = styled.span`
   width: 100%;
   height: auto;
   display: grid;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.4);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 1.5rem;

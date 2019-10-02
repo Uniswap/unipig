@@ -73,7 +73,7 @@ const TokenValue = styled.span`
   line-height: 19px;
   flex: 1 1 0;
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
-  background-color: ${({ theme }) => transparentize(0.25, theme.colors.black)};
+  background-color: ${({ theme }) => transparentize(0.6, theme.colors.black)};
   border: 1px solid
     ${({ team, theme }) => transparentize(0.75, team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])};
   padding: 0.5rem 1rem;
@@ -92,7 +92,6 @@ const OpenWalletLink = styled(GradientText)`
   color: white;
   font-weight: 500;
   font-size: 12px;
-  /* opacity: 0.6; */
   height: 24px;
   position: absolute;
   right: 24px;

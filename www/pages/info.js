@@ -1,12 +1,9 @@
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 
-const StyledWallet = styled.span`
-  background-color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
-
-  /* background-color: black; */
+const StyledFAQ = styled.span`
+  background: ${({ theme }) => theme.gradient};
   padding: 1.5rem;
-  /* color: ${({ theme }) => transparentize(0.2, theme.colors.black)}; */
   border-radius: 20px;
   width: 100%;
   display: flex;
@@ -31,35 +28,67 @@ const Stat = styled.span`
   padding: 1rem 0;
 `
 
+const Title = styled.p`
+  margin-top: 48px;
+  font-size: 24px;
+`
+
 const Question = styled.p`
-  font-size: 16px;
+  font-size: 18px;
   margin: 0;
   margin-bottom: 2px;
+  line-height: 1.4;
+  font-weight: 600;
 `
 
 const Answer = styled.p`
-  font-size: 16px;
+  font-size: 18px;
   color: #bcbcbe;
   margin: 0;
+  line-height: 1.4;
+`
+
+const Link = styled.a`
+  color: ${({ theme }) => theme.colors.uniswap};
+`
+
+const UniswapLink = styled.a`
+  background-color: ${({ theme }) => transparentize(0.2, theme.colors.uniswap)};
+  padding: 1rem;
+  border-radius: 20px;
+  margin-right: 8px;
+  text-decoration: none;
+  color: white;
+  width: 100%;
+`
+
+const PlasmaLink = styled.a`
+  background-color: ${({ theme }) => transparentize(0.2, theme.colors.plasmaGroup)};
+  padding: 1rem;
+  border-radius: 20px;
+  text-decoration: none;
+  color: white;
+  width: 100%;
 `
 
 const Description = styled.p`
-  font-size: 14px;
-  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
 `
 
 function Stats() {
   return (
-    <StyledWallet>
+    <StyledFAQ>
       <StatsTitle>
-        <span>What is this?</span>
-        <a href="/"> ✗</a>
+        <Title>What is Unipig?</Title>
       </StatsTitle>
       <Stat>
         <Description>
           A testnet demo of Uniswap running on optimistic rollup to demonstrate the UX improvements that are possible
-          with layer 2. Ethereum can scale today.
+          with layer 2.
         </Description>
+        <Description>Ethereum can scale today.</Description>
+        <Link href="https://medium.com">Read more on Medium ↗</Link>
       </Stat>
       <Stat>
         <Question>What is Optimistic Rollup?</Question>
@@ -113,7 +142,14 @@ function Stats() {
         <Question>How do I build a Dapp on Optimistic rollup?</Question>
         <Answer>Check out the docs and code on Github. Link to docs and stuff</Answer>
       </Stat>
-    </StyledWallet>
+      <Stat>
+        <Description>Built by:</Description>
+        <span>
+          <UniswapLink href="https://uniswap.io">🦄 Uniswap</UniswapLink>
+          <PlasmaLink href="https://plasma.group">🐷 Plasma Group</PlasmaLink>
+        </span>
+      </Stat>
+    </StyledFAQ>
   )
 }
 
