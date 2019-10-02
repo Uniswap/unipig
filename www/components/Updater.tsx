@@ -50,7 +50,8 @@ function Circles({ total, color }): JSX.Element {
   if (
     total > largestSoFar.current &&
     (circlesToShow.current.length === 0 ||
-      circlesToShow.current[circlesToShow.current.length - 1].time + 0.5 * 1000 < Date.now())
+      circlesToShow.current[circlesToShow.current.length - 1].time + 0.5 * 1000 < Date.now()) &&
+    circlesToShow.current.length < 6
   ) {
     circlesToShow.current = circlesToShow.current.concat([{ total, time: Date.now() }])
     largestSoFar.current = total
