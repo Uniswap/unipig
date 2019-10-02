@@ -603,7 +603,7 @@ function Confirmed({ tradeTime }) {
         <Body color={'white'}>
           <i>Yes. It was that fast.</i>
         </Body>
-        <Heading>
+        <Heading textStyle="bold">
           {tradeTime}ms. No gas. <br />
           Still decentralized.
         </Heading>
@@ -652,7 +652,7 @@ function Manager({
         <Confirmed tradeTime={tradeTime} />
       )}
       <Shim size={32} />
-      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Token Balances" />
+      <Wallet wallet={wallet} team={team} OVMBalances={OVMBalances} alternateTitle="Your token balance" />
     </>
   )
 }

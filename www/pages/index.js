@@ -60,6 +60,12 @@ const FixedNum = styled.span`
   font-variant-numeric: tabular-nums;
 `
 
+const PriceDisplay = styled.div`
+  width: 100%;
+  text-align: center;
+  opacity: 0.4;
+`
+
 function DominancePercentage({ UNIDominance, PIGIDominance }) {
   const [statefulX, setStatefulX] = useState(0)
   const x = useMotionValue(0)
@@ -184,8 +190,10 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
           />
         </AnimatedFrame>
 
+        <Shim size={24} />
+
         <AnimatedFrame variants={childAnimation}>
-          <div>
+          <PriceDisplay>
             1 {Team[team]} ={' '}
             {marketDetails && marketDetails.marketRate.rateInverted
               ? formatSignificant(marketDetails.marketRate.rateInverted, {
@@ -194,7 +202,7 @@ function Home({ wallet, team, addressData, OVMBalances, OVMReserves, setWalletMo
                 })
               : '...'}{' '}
             {Team[team === Team.UNI ? Team.PIGI : Team.UNI]}
-          </div>
+          </PriceDisplay>
         </AnimatedFrame>
       </AnimatedFrame>
     </>

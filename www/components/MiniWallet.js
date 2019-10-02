@@ -99,6 +99,11 @@ const OpenWalletLink = styled(GradientText)`
   top: 24px;
   margin-top: -4px;
   margin-bottom: 1rem;
+  @media only screen and (max-width: 480px) {
+    opacity: 0;
+    height: 0px;
+    margin: 0px;
+  }
 `
 
 const AlternateTitle = styled(GradientText)`

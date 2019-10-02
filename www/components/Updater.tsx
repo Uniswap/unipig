@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import styled from 'styled-components'
+import { transparentize } from 'polished'
 
 import { useStyledTheme } from '../hooks'
 
@@ -21,18 +22,24 @@ const variants = {
 }
 
 const UpdaterBase = styled.div`
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 8px;
+  height: 8px;
   background-color: ${({ color }): string => color};
   border-radius: 10rem;
+  z-index: -1 !important;
+  position: relative;
 `
 
 const Circle = styled(motion.div)`
   position: absolute;
+  top: -8px;
+  left: -8px;
   z-index: -1 !important;
   width: 1.5rem;
   height: 1.5rem;
-  background-color: ${({ theme, color }): string => color};
+  border: 0.5px solid ${({ theme, color }): string => color};
+
+  background-color: ${({ theme, color }): string => transparentize(0.8, color)};
   border-radius: 10rem;
 `
 

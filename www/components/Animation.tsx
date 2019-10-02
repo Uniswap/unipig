@@ -2,7 +2,9 @@ import { motion } from 'framer-motion'
 import styled from 'styled-components'
 
 export const AnimatedFrame = styled(motion.div)`
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   width: 100%;
 `
 

@@ -22,7 +22,12 @@ const Line = styled.div`
   left: 4px;
   background-color: ${({ theme, team }) => (team === Team.UNI ? theme.colors[Team.PIGI] : theme.colors[Team.UNI])};
   transition: width 0.5s ease;
-  padding: 0.25rem;
+  /* padding: 0.25rem; */
+  text-align: right;
+  padding-right: 4px;
+  span {
+    font-size: 11px;
+  }
 `
 
 const LineAnimated = styled(motion.div)`
@@ -34,20 +39,22 @@ const LineAnimated = styled(motion.div)`
   left: 4px;
   background-color: ${({ theme, team }) => theme.colors[team]};
   text-align: right;
-  padding-right: 4px;
+  padding-right: 6px;
   /* padding: 0.25rem; */
 `
 
 const StyledUpdater = styled(Updater)`
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 10px;
+  right: 14px;
 `
 
 export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominance }) {
   return (
     <StyledLine>
-      <Line team={team} percent={'100%'} />
+      <Line team={team} percent={'100%'}>
+        <Emoji emoji={team === Team.UNI ? '🐷' : '🦄'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
+      </Line>
       <LineAnimated
         team={team}
         initial={{ width: 0 }}
@@ -59,8 +66,8 @@ export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominan
           }
         }}
       >
-        <StyledUpdater team={team} total={updateTotal} />
         <Emoji emoji={team === Team.UNI ? '🦄' : '🐷'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
+        <StyledUpdater team={team} total={updateTotal} />
       </LineAnimated>
     </StyledLine>
   )
