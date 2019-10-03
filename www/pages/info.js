@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import Shim from '../components/Shim'
 
-import { darken, transparentize } from 'polished'
+import { transparentize } from 'polished'
 
 const StyledFAQ = styled.span`
   /* background: ${({ theme }) => theme.gradient}; */
@@ -98,13 +98,19 @@ export default function Info() {
           with layer 2.
         </Description>
         <Description>Ethereum can scale today.</Description>
-        <Link href="https://medium.com">Read more on Medium ↗</Link>
+        <Link href="https://medium.com" target="_blank" rel="noopener noreferrer">
+          Read more on Medium ↗
+        </Link>
       </Stat>
       <Stat>
         <Description>{'Made with <3 by:'}</Description>
         <div style={{ display: 'flex' }}>
-          <UniswapLink href="https://uniswap.io">🦄 Uniswap</UniswapLink>
-          <PlasmaLink href="https://plasma.group">🐷 Plasma Group</PlasmaLink>
+          <UniswapLink href="https://uniswap.io" target="_blank" rel="noopener noreferrer">
+            🦄 Uniswap
+          </UniswapLink>
+          <PlasmaLink href="https://plasma.group" target="_blank" rel="noopener noreferrer">
+            🐷 Plasma Group
+          </PlasmaLink>
         </div>
       </Stat>
 

@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import { transparentize } from 'polished'
 import { useEffect, useState } from 'react'
 
 import { POLL_DURATION } from '../constants'
@@ -58,7 +57,6 @@ export default function Stats() {
   const [transactionCountError, setTransactionCountError] = useState()
   useEffect(() => {
     function updateCount() {
-      console.log('updating!')
       stats()
         .then(setTransactionCount)
         .catch(error => {
@@ -75,6 +73,17 @@ export default function Stats() {
     }
   }, [])
 
+  const [showLoader, setShowLoader] = useState(false)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowLoader(true)
+    }, 500)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [])
+
   const currentTransactionCount = transactionCount || cachedTransactionCount
 
   return (
@@ -82,9 +91,11 @@ export default function Stats() {
       <StatsTitle>
         <Description textStyle={'gradient'}>OVM Stats</Description>
       </StatsTitle>
-      {!currentTransactionCount && !transactionCountError ? <Description>Loading...</Description> : null}
+      {!currentTransactionCount && !transactionCountError && showLoader ? (
+        <Description textStyle={'gradient'}>Loading...</Description>
+      ) : null}
       {transactionCountError && !currentTransactionCount ? (
-        <Description>There was an error, please try again soon.</Description>
+        <Description textStyle={'gradient'}>There was an error, please try again.</Description>
       ) : null}
       {currentTransactionCount ? (
         <>

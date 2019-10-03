@@ -86,7 +86,7 @@ function Welcome({ accountFromQuery: account, teamFromQuery: team, override, ref
       <Shim size={4} />
       <Desc>
         A gamified demo of Uniswap on Ethereum Layer 2.{' '}
-        <NavLink href="/welcome">
+        <NavLink href="/info">
           <b>Learn more ↗</b>
         </NavLink>
       </Desc>
