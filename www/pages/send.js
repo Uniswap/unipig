@@ -15,7 +15,7 @@ import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 import { QRIcon } from '../components/NavIcons'
-import { AnimatedFrame, containerAnimation, containerAnimationDown } from '../components/Animation'
+import { AnimatedFrame, containerAnimationDown } from '../components/Animation'
 
 const QRScanModal = dynamic(() => import('../components/QRScanModal'), { ssr: false })
 
@@ -369,7 +369,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
           setQRModalIsOpen(false)
         }}
       />
-      <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+      <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
         <TradeWrapper>
           <Body textStyle="gradient">
             <b>Send tokens to a friend.</b>
@@ -418,20 +418,18 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
             </IconButton>
           </StyledInputWrapper>
           <HelperText
-            style={{
-              visibility:
-                !!swapState[ERROR_MESSAGE_INPUT] ||
-                !!swapState[ERROR_MESSAGE_RECIPIENT] ||
-                !!swapState[ERROR_MESSAGE_GENERAL]
-                  ? 'visible'
-                  : 'hidden'
-            }}
-            error={true}
+            error={
+              !!swapState[ERROR_MESSAGE_INPUT] ||
+              !!swapState[ERROR_MESSAGE_RECIPIENT] ||
+              !!swapState[ERROR_MESSAGE_GENERAL]
+            }
           >
             {swapState[ERROR_MESSAGE_INPUT] ||
               swapState[ERROR_MESSAGE_RECIPIENT] ||
               swapState[ERROR_MESSAGE_GENERAL] ||
-              'placeholder'}
+              (!!!swapState[INPUT_AMOUNT_PARSED] || !!!swapState[RECIPIENT]
+                ? 'Enter an amount and a recipient'
+                : 'Looks good!')}
           </HelperText>
           <Button
             disabled={

@@ -12,7 +12,7 @@ import Shim from '../components/Shim'
 import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
-import { AnimatedFrame, containerAnimation, containerAnimationDown } from '../components/Animation'
+import { AnimatedFrame, containerAnimationDown } from '../components/Animation'
 import NavButton from '../components/NavButton'
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
@@ -416,7 +416,7 @@ function Buy({
   }, [sendState, confirm, updateOVMReserves, updateOVMBalances])
 
   return (
-    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+    <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
       <TradeWrapper>
         <Body textStyle="gradient">
           <b>
