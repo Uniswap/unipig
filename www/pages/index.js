@@ -130,8 +130,7 @@ function Home({
         ) : (
           <BoostWrapper>
             <FlexNavButton
-              style={{ transform: 'scale(1.01)' }}
-              disabled={!(OVMBalances[team === Team.UNI ? Team.PIGI : Team.UNI] > 0)}
+              style={{ transform: 'scale(1.015)' }}
               href={`/trade?buy=${team === Team.UNI ? Team[Team.UNI] : Team[Team.PIGI]}`}
               color={team === Team.UNI ? 'primary' : 'secondary'}
               variant="contained"
@@ -142,13 +141,12 @@ function Home({
             <BoostShim />
 
             <FlexNavButton
-              style={{ transform: 'scale(0.99)' }}
-              disabled={!(OVMBalances[team === Team.PIGI ? Team.PIGI : Team.UNI] > 0)}
+              style={{ transform: 'scale(0.985)' }}
               href={`/trade?buy=${team === Team.PIGI ? Team[Team.UNI] : Team[Team.PIGI]}`}
               color={team === Team.PIGI ? 'primary' : 'secondary'}
               variant={'outlined'}
             >
-              <ButtonText>Sell {team === Team.PIGI ? 'UNI' : 'PIGI'}</ButtonText>
+              <ButtonText>Buy {team === Team.UNI ? 'PIGI' : 'UNI'}</ButtonText>
             </FlexNavButton>
           </BoostWrapper>
         )}

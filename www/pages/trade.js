@@ -7,12 +7,13 @@ import { DECIMALS } from '../constants'
 import { useDynamicCallback } from '../hooks'
 import { Team } from '../contexts/Client'
 import Button from '../components/Button'
-import NavButton from '../components/NavButton'
+import NavLink from '../components/NavLink'
 import Shim from '../components/Shim'
 import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
-import { AnimatedFrame, containerAnimation, containerAnimationDown } from '../components/Animation'
+import { AnimatedFrame, containerAnimationDown } from '../components/Animation'
+import NavButton from '../components/NavButton'
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
@@ -85,11 +86,18 @@ const StyledEmoji = styled(Emoji)`
   right: 24px;
 `
 
-const ArrowDown = styled.span`
+const DownWrapper = styled.div`
+  display: flex;
   width: 100%;
+  justify-content: center;
+`
+
+const ArrowDown = styled(NavLink)`
   text-align: center;
   font-size: 16px;
-  padding: 1rem 0px;
+  padding: 1rem;
+  color: white;
+  text-decoration: none !important;
 `
 
 const HelperText = styled(Desc)`
@@ -411,7 +419,7 @@ function Buy({
   }, [sendState, confirm, updateOVMReserves, updateOVMBalances])
 
   return (
-    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+    <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
       <TradeWrapper>
         <Body size={24} textStyle="gradient">
           <b>
@@ -441,7 +449,9 @@ function Buy({
             label={Team[inputToken] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
-        <ArrowDown>↓</ArrowDown>
+        <DownWrapper>
+          <ArrowDown href={`/trade?buy=${outputToken === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>↓</ArrowDown>
+        </DownWrapper>
         <StyledInputWrapper>
           <Input
             error={!!swapState[ERROR_MESSAGE]}

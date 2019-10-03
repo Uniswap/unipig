@@ -29,8 +29,8 @@ export default function ConfirmWallet({ wallet, team, OVMBalances }) {
         <Shim size={24} />
 
         <Body textStyle="gradient">
-          Dump <b>{team === Team.UNI ? 'PIGI' : 'UNI'}</b> for <b>{team === Team.UNI ? 'UNI' : 'PIGI'}</b> to help your
-          team gain price{' '}
+          <b>Buy {team === Team.UNI ? 'UNI' : 'PIGI'}</b> with {team === Team.UNI ? 'PIGI' : 'UNI'} to help your team
+          gain price{' '}
           <b>
             <i>dominance.</i>
           </b>

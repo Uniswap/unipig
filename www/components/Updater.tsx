@@ -17,7 +17,7 @@ const variants = (scale: number): any => ({
     transition: {
       type: 'tween',
       ease: 'easeOut',
-      duration: POLL_DURATION * 1.5
+      duration: (POLL_DURATION / 1000) * 1.5
     }
   }
 })
