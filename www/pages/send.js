@@ -1,5 +1,6 @@
-import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
+import { useState, useReducer, useEffect, useCallback, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { BigNumber, formatFixedDecimals } from '@uniswap/sdk'
@@ -16,6 +17,7 @@ import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 import { QRIcon } from '../components/NavIcons'
 import { AnimatedFrame, containerAnimationDown } from '../components/Animation'
+import NavLink from '../components/NavLink'
 
 const QRScanModal = dynamic(() => import('../components/QRScanModal'), { ssr: false })
 
@@ -87,11 +89,18 @@ const StyledEmoji = styled(Emoji)`
   right: 24px;
 `
 
-const ArrowDown = styled.span`
+const DownWrapper = styled.div`
+  display: flex;
   width: 100%;
+  justify-content: center;
+`
+
+const ArrowDown = styled(NavLink)`
   text-align: center;
   font-size: 16px;
-  padding: 1rem 0px;
+  padding: 1rem;
+  color: white;
+  text-decoration: none !important;
 `
 
 const HelperText = styled(Desc)`
@@ -237,9 +246,14 @@ function reducer(state, { type, payload = {} } = {}) {
   }
 }
 
-function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTradeTime }) {
+function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }) {
+  const router = useRouter()
+
+  const token = useRef()
+  token.current = Team[router.query.token]
+
   //// parse the props
-  const _balance = OVMBalances[token]
+  const _balance = OVMBalances[token.current]
   const balance = useMemo(() => (_balance !== undefined ? new BigNumber(_balance) : null), [_balance])
 
   // amounts
@@ -275,7 +289,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
 
   useEffect(() => {
     updateValues()
-  }, [updateValues])
+  }, [updateValues, balance])
 
   function onInputAmount(event) {
     const typedValue = event.target.value
@@ -386,18 +400,22 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
               placeholder="0"
               value={swapState[INPUT_AMOUNT_RAW]}
               onChange={onInputAmount}
-              inputColor={token}
+              inputColor={token.current}
             />
-            <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
+            <MaxButton disabled={!balance} inputColor={token.current} onClick={onMaxInputValue}>
               Max
             </MaxButton>
             <StyledEmoji
-              inputColor={token}
-              emoji={Team[token] === 'UNI' ? '🦄' : '🐷'}
-              label={Team[token] === 'UNI' ? 'unicorn' : 'pig'}
+              inputColor={token.current}
+              emoji={Team[token.current] === 'UNI' ? '🦄' : '🐷'}
+              label={Team[token.current] === 'UNI' ? 'unicorn' : 'pig'}
             />
           </StyledInputWrapper>
-          <ArrowDown>↓</ArrowDown>
+          <DownWrapper>
+            <ArrowDown href={`/send?token=${token.current === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>
+              ↓
+            </ArrowDown>
+          </DownWrapper>
           <StyledInputWrapper>
             <Input
               required
@@ -407,7 +425,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
               value={swapState[RECIPIENT]}
               onChange={onAddress}
               placeholder="0x..."
-              inputColor={token}
+              inputColor={token.current}
             />
             <IconButton
               onClick={() => {
@@ -448,7 +466,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
               const now = Date.now()
 
               Promise.all([
-                OVMSend(swapState[RECIPIENT], token, swapState[INPUT_AMOUNT_PARSED]).then(() => {
+                OVMSend(swapState[RECIPIENT], token.current, swapState[INPUT_AMOUNT_PARSED]).then(() => {
                   setTradeTime(Date.now() - now)
                 }),
                 new Promise(resolve => {
@@ -500,7 +518,7 @@ function Confirmed({ tradeTime }) {
   )
 }
 
-function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token }) {
+function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const confirm = useCallback(() => {
     setShowConfirm(true)
@@ -517,7 +535,6 @@ function Manager({ wallet, team, OVMBalances, updateOVMBalances, OVMSend, token 
           OVMBalances={OVMBalances}
           updateOVMBalances={updateOVMBalances}
           OVMSend={OVMSend}
-          token={token}
           confirm={confirm}
           setTradeTime={setTradeTime}
         />
@@ -539,12 +556,9 @@ Manager.getInitialProps = async context => {
   if (!token) {
     res.writeHead(302, { Location: '/' })
     res.end()
-    return {}
   }
 
-  return {
-    token
-  }
+  return {}
 }
 
 export default Manager

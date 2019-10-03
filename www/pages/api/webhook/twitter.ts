@@ -164,8 +164,8 @@ export default async function(req: NowRequest, res: NowResponse): Promise<NowRes
       let faucetError = false
       try {
         const faucetWallet = new Wallet(process.env.FAUCET_PRIVATE_KEY)
-        const signature = await faucetWallet.signMessage(getFaucetData(matchedAddress))
-        await timeoutPromise(faucet(matchedAddress, signature))
+        const signature = await faucetWallet.signMessage(getFaucetData(matchedAddress, true))
+        await timeoutPromise(faucet(matchedAddress, signature, true))
       } catch (error) {
         console.error(error)
         faucetError = true

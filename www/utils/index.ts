@@ -91,11 +91,11 @@ export async function send(OVMWallet: any, from: string, to: string, token: Team
   await OVMWallet.send(tokenType, from, to, amount.toNumber())
 }
 
-export function getFaucetData(recipient: string): string {
-  return JSON.stringify({ sender: recipient, amount: FAUCET_AMOUNT })
+export function getFaucetData(recipient: string, initial: boolean = false): string {
+  return JSON.stringify({ sender: recipient, amount: initial ? FAUCET_AMOUNT : FAUCET_AMOUNT / 3 })
 }
 
-export async function faucet(recipient: string, signature: string): Promise<void> {
+export async function faucet(recipient: string, signature: string, initial: boolean = false): Promise<void> {
   await fetch(process.env.AGGREGATOR_URL, {
     method: 'POST',
     headers: {
@@ -109,7 +109,7 @@ export async function faucet(recipient: string, signature: string): Promise<void
         signature,
         transaction: {
           sender: recipient,
-          amount: FAUCET_AMOUNT
+          amount: initial ? FAUCET_AMOUNT : FAUCET_AMOUNT / 3
         }
       }
     })

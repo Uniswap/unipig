@@ -195,16 +195,16 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   // get the current market rate
   //// parse the props
-  const UNIReserve = OVMReserves[Team.UNI] !== undefined ? new BigNumber(OVMReserves[Team.UNI]) : null
-  const PIGIReserve = OVMReserves[Team.PIGI] !== undefined ? new BigNumber(OVMReserves[Team.PIGI]) : null
+  const UNIReserve = OVMReserves[Team.UNI] !== undefined ? OVMReserves[Team.UNI] : null
+  const PIGIReserve = OVMReserves[Team.PIGI] !== undefined ? OVMReserves[Team.PIGI] : null
   // fake it by pretending the input currency is ETH
   const UNIMarketDetails = useMemo(
     () =>
       UNIReserve && PIGIReserve
         ? getMarketDetails(undefined, {
             token: DUMMY_TOKEN,
-            ethReserve: DUMMY_ETH_AMOUNT(UNIReserve.times(DUMMY_ETH_FACTOR)),
-            tokenReserve: DUMMY_TOKEN_AMOUNT(PIGIReserve)
+            ethReserve: DUMMY_ETH_AMOUNT(new BigNumber(UNIReserve).times(DUMMY_ETH_FACTOR)),
+            tokenReserve: DUMMY_TOKEN_AMOUNT(new BigNumber(PIGIReserve))
           })
         : null,
     [UNIReserve, PIGIReserve]
@@ -214,8 +214,8 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
       PIGIReserve && UNIReserve
         ? getMarketDetails(undefined, {
             token: DUMMY_TOKEN,
-            ethReserve: DUMMY_ETH_AMOUNT(PIGIReserve.times(DUMMY_ETH_FACTOR)),
-            tokenReserve: DUMMY_TOKEN_AMOUNT(UNIReserve)
+            ethReserve: DUMMY_ETH_AMOUNT(new BigNumber(PIGIReserve).times(DUMMY_ETH_FACTOR)),
+            tokenReserve: DUMMY_TOKEN_AMOUNT(new BigNumber(UNIReserve))
           })
         : null,
     [PIGIReserve, UNIReserve]
