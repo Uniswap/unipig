@@ -53,7 +53,6 @@ export default class MyDocument extends Document {
           <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
           <meta name="theme-color" content="#FFFFFF" />
           <meta name="Description" content="Unipig Exchange" />
-          <link rel="shortcut icon" href="static/favicon.ico" />
           <link rel="stylesheet" type="text/css" href="static/@reach/dialog/styles.css" />
         </Head>
         <body>

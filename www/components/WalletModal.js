@@ -438,7 +438,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
               </StyledBadge>
             </StyledAirdrop>
             <Description>
-              Scan another player to trigger an airdrop. You will both recieve tokens from the Unipig faucet.
+              Scan another player to trigger an airdrop. You'll both receive tokens from the Unipig faucet.
             </Description>
           </>
         ) : (

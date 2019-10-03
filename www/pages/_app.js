@@ -318,6 +318,11 @@ export default class MyApp extends App {
       <>
         <Head>
           <title>Unipig Exchange</title>
+          <link
+            rel="shortcut icon"
+            href={!team || team === Team.UNI ? 'static/unifav.ico' : 'static/pigfav.ico'}
+            key="favicon"
+          />
         </Head>
         <SCThemeProvider theme={SCTheme}>
           <GlobalStyle />
