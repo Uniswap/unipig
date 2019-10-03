@@ -42,7 +42,8 @@ const FixedNum = styled.span`
 const PriceDisplay = styled.div`
   width: 100%;
   text-align: center;
-  opacity: 0.75;
+  opacity: 0.4;
+  font-weight: 600;
   color: ${({ color }) => color};
 `
 
