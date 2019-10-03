@@ -19,7 +19,6 @@ import { WalletInfo, TokenInfo } from './MiniWallet'
 import Shim from './Shim'
 import { ButtonText } from './Type'
 import NavButton from './NavButton'
-import NavLink from './NavLink'
 
 const QRScanModal = dynamic(() => import('./QRScanModal'), { ssr: false })
 const Confetti = dynamic(() => import('./Confetti'), { ssr: false })
@@ -406,7 +405,13 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         >
           <ButtonText>✗</ButtonText>
         </CloseButton>
-        <WalletInfo onClick={copyAddress} addressCopied={addressCopied} team={team} wallet={wallet} />
+        <WalletInfo
+          setCopyAddress={copyAddress}
+          showIcon={true}
+          addressCopied={addressCopied}
+          team={team}
+          wallet={wallet}
+        />
 
         {/* <Shim size={24} /> */}
         <QRCodeWrapper team={team} onClick={copyAddress}>

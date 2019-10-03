@@ -9,6 +9,7 @@ import Shim from './Shim'
 import { useState, useEffect } from 'react'
 import { useMotionValue, motion } from 'framer-motion'
 import GradientText from './GradientText'
+import { CopyIcon } from './NavIcons'
 
 const StyledWallet = styled.div`
   color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
@@ -120,12 +121,15 @@ const StyledWalletInfo = styled.span`
   flex: auto;
 `
 
-export function WalletInfo({ wallet, team, addressCopied }) {
+export function WalletInfo({ wallet, team, addressCopied, showIcon, setCopyAddress }) {
   return (
-    <StyledWalletInfo>
+    <StyledWalletInfo onClick={setCopyAddress}>
       <Badge team={team}></Badge>
       <span>
-        <WalletAddress>{wallet ? truncateAddress(wallet.address, 4) : '...'}</WalletAddress>
+        <WalletAddress>
+          {wallet ? truncateAddress(wallet.address, 4) : '...'}
+          {showIcon && <CopyIcon style={{ marginLeft: '12px' }} />}
+        </WalletAddress>
         <TeamDesc>{addressCopied ? 'Address Copied' : team === Team.UNI ? 'Team UNI' : 'Team PIGI'} </TeamDesc>
       </span>
     </StyledWalletInfo>
