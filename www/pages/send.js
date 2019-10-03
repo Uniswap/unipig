@@ -1,4 +1,4 @@
-import { useState, useReducer, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import styled from 'styled-components'
@@ -248,12 +248,12 @@ function reducer(state, { type, payload = {} } = {}) {
 
 function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }) {
   const router = useRouter()
+  const tokenQuery = router.query.token
 
-  const token = useRef()
-  token.current = Team[router.query.token]
+  const token = useMemo(() => Team[tokenQuery], [tokenQuery])
 
   //// parse the props
-  const _balance = OVMBalances[token.current]
+  const _balance = OVMBalances[token]
   const balance = useMemo(() => (_balance !== undefined ? new BigNumber(_balance) : null), [_balance])
 
   // amounts
@@ -400,21 +400,19 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
               placeholder="0"
               value={swapState[INPUT_AMOUNT_RAW]}
               onChange={onInputAmount}
-              inputColor={token.current}
+              inputColor={token}
             />
-            <MaxButton disabled={!balance} inputColor={token.current} onClick={onMaxInputValue}>
+            <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
               Max
             </MaxButton>
             <StyledEmoji
-              inputColor={token.current}
-              emoji={Team[token.current] === 'UNI' ? '🦄' : '🐷'}
-              label={Team[token.current] === 'UNI' ? 'unicorn' : 'pig'}
+              inputColor={token}
+              emoji={Team[token] === 'UNI' ? '🦄' : '🐷'}
+              label={Team[token] === 'UNI' ? 'unicorn' : 'pig'}
             />
           </StyledInputWrapper>
           <DownWrapper>
-            <ArrowDown href={`/send?token=${token.current === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>
-              ↓
-            </ArrowDown>
+            <ArrowDown href={`/send?token=${token === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>↓</ArrowDown>
           </DownWrapper>
           <StyledInputWrapper>
             <Input
@@ -425,7 +423,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
               value={swapState[RECIPIENT]}
               onChange={onAddress}
               placeholder="0x..."
-              inputColor={token.current}
+              inputColor={token}
             />
             <IconButton
               onClick={() => {
@@ -466,7 +464,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
               const now = Date.now()
 
               Promise.all([
-                OVMSend(swapState[RECIPIENT], token.current, swapState[INPUT_AMOUNT_PARSED]).then(() => {
+                OVMSend(swapState[RECIPIENT], token, swapState[INPUT_AMOUNT_PARSED]).then(() => {
                   setTradeTime(Date.now() - now)
                 }),
                 new Promise(resolve => {

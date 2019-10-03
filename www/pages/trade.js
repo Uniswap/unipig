@@ -1,4 +1,4 @@
-import { useState, useReducer, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { useRouter } from 'next/router'
@@ -276,10 +276,10 @@ function Buy({
   setTradeTime
 }) {
   const router = useRouter()
+  const buyQuery = router.query.buy
 
-  const outputToken = useRef()
-  outputToken.current = Team[router.query.buy]
-  const inputToken = outputToken.current === Team.UNI ? Team.PIGI : Team.UNI
+  const outputToken = useMemo(() => Team[buyQuery], [buyQuery])
+  const inputToken = outputToken === Team.UNI ? Team.PIGI : Team.UNI
 
   //// parse the props
   const _inputBalance = OVMBalances[inputToken]
@@ -292,11 +292,11 @@ function Buy({
 
   const marketDetails = useMemo(() => {
     return UNIMarketDetails && PIGIMarketDetails
-      ? outputToken.current === Team.UNI
+      ? outputToken === Team.UNI
         ? PIGIMarketDetails
         : UNIMarketDetails
       : null
-  }, [UNIMarketDetails, PIGIMarketDetails])
+  }, [UNIMarketDetails, PIGIMarketDetails, outputToken])
   const marketRatePreInverted = marketDetails ? marketDetails.marketRate.rateInverted : null
 
   const swapStateMarketRatePreInverted = swapState[MARKET_RATE_PRE_INVERTED]
@@ -437,7 +437,7 @@ function Buy({
       <TradeWrapper>
         <Body size={24} textStyle="gradient">
           <b>
-            Buy {Team[outputToken.current]} with {Team[inputToken]}.
+            Buy {Team[outputToken]} with {Team[inputToken]}.
           </b>
         </Body>
         <Shim size={20} />
@@ -464,9 +464,7 @@ function Buy({
           />
         </StyledInputWrapper>
         <DownWrapper>
-          <ArrowDown href={`/trade?buy=${outputToken.current === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>
-            ↓
-          </ArrowDown>
+          <ArrowDown href={`/trade?buy=${outputToken === Team.UNI ? Team[Team.PIGI] : Team[Team.UNI]}`}>↓</ArrowDown>
         </DownWrapper>
         <StyledInputWrapper>
           <Input
@@ -477,13 +475,13 @@ function Buy({
             value={swapState[OUTPUT_AMOUNT_RAW]}
             readOnly={true}
             placeholder="0"
-            inputColor={outputToken.current}
+            inputColor={outputToken}
             dim={true}
           />
           <StyledEmoji
-            inputColor={outputToken.current}
-            emoji={Team[outputToken.current] === 'UNI' ? '🦄' : '🐷'}
-            label={Team[outputToken.current] === 'UNI' ? 'unicorn' : 'pig'}
+            inputColor={outputToken}
+            emoji={Team[outputToken] === 'UNI' ? '🦄' : '🐷'}
+            label={Team[outputToken] === 'UNI' ? 'unicorn' : 'pig'}
           />
         </StyledInputWrapper>
         {!!swapState[ERROR_MESSAGE] ? (
@@ -491,7 +489,7 @@ function Buy({
         ) : (
           <HelperText error={false}>
             <b>
-              1 {Team[outputToken.current]} ={' '}
+              1 {Team[outputToken]} ={' '}
               {swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED]
                 ? formatSignificant(swapState[EXECUTION_RATE_INVERTED] || swapState[MARKET_RATE_PRE_INVERTED], {
                     significantDigits: 3,
@@ -540,8 +538,8 @@ function Buy({
         </ContainedButton>
         {swapState[MARKET_RATE_PRICE_IMPACT] && (
           <PriceImpactText>
-            {outputToken.current === Team.UNI ? 'Unicorns unite' : 'Pigs pair up'}! You're boosting the{' '}
-            {Team[outputToken.current]} price by{' '}
+            {outputToken === Team.UNI ? 'Unicorns unite' : 'Pigs pair up'}! You're boosting the {Team[outputToken]}{' '}
+            price by{' '}
             <b>
               <Percentage>
                 +
