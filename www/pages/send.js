@@ -470,7 +470,9 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
                   setTradeTime(Date.now() - now)
                 }),
                 new Promise(resolve => {
-                  setTimeout(resolve, 750)
+                  setTimeout(() => {
+                    resolve()
+                  }, 300)
                 })
               ])
                 .then(() => {
