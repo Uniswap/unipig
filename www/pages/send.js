@@ -371,7 +371,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
       />
       <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
         <TradeWrapper>
-          <Body textStyle="gradient">
+          <Body size={24} textStyle="gradient">
             <b>Send tokens to a friend.</b>
           </Body>
           <Shim size={20} />

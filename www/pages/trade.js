@@ -429,7 +429,7 @@ function Buy({
   return (
     <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
       <TradeWrapper>
-        <Body textStyle="gradient">
+        <Body size={24} textStyle="gradient">
           <b>
             {outputToken === Team.UNI ? 'Unicorns Unite' : 'Pigs Pull Together'}. Buy {Team[outputToken]} with{' '}
             {Team[inputToken]}.
