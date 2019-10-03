@@ -431,8 +431,7 @@ function Buy({
       <TradeWrapper>
         <Body size={24} textStyle="gradient">
           <b>
-            {outputToken === Team.UNI ? 'Unicorns Unite' : 'Pigs Pull Together'}. Buy {Team[outputToken]} with{' '}
-            {Team[inputToken]}.
+            Buy {Team[outputToken]} with {Team[inputToken]}.
           </b>
         </Body>
         <Shim size={20} />
@@ -533,7 +532,8 @@ function Buy({
         </ContainedButton>
         {swapState[MARKET_RATE_PRICE_IMPACT] && (
           <PriceImpactText>
-            This trade will boost the value of {Team[outputToken]} by{' '}
+            {outputToken === Team.UNI ? 'Unicorns unite' : 'Pigs pair up'}! You're boosting the {Team[outputToken]}{' '}
+            price by{' '}
             <b>
               <Percentage>
                 +
