@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { transparentize } from 'polished'
 
 import { useStyledTheme } from '../hooks'
+import { POLL_DURATION } from '../constants'
 
 const variants = (scale: number): any => ({
   from: {
@@ -16,7 +17,7 @@ const variants = (scale: number): any => ({
     transition: {
       type: 'tween',
       ease: 'easeOut',
-      duration: 10
+      duration: POLL_DURATION * 1.5
     }
   }
 })
