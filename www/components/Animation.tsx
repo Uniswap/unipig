@@ -34,6 +34,20 @@ export const containerAnimation = {
   }
 }
 
+export const containerAnimationDown = {
+  hidden: { opacity: 0, y: 0, scale: 0.9 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      delay: 0.15,
+      when: 'beforeChildren',
+      staggerChildren: 0.15
+    }
+  }
+}
+
 export const childAnimation = {
   hidden: { opacity: 0, y: 24 },
   show: {

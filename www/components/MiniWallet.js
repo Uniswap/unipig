@@ -120,13 +120,13 @@ const StyledWalletInfo = styled.span`
   flex: auto;
 `
 
-export function WalletInfo({ wallet, team }) {
+export function WalletInfo({ wallet, team, addressCopied }) {
   return (
     <StyledWalletInfo>
       <Badge team={team}></Badge>
       <span>
         <WalletAddress>{wallet ? truncateAddress(wallet.address, 4) : '...'}</WalletAddress>
-        <TeamDesc>Team {team === Team.UNI ? 'UNI' : 'PIGI'} </TeamDesc>
+        <TeamDesc>{addressCopied ? 'Address Copied' : team === Team.UNI ? 'Team UNI' : 'Team PIGI'} </TeamDesc>
       </span>
     </StyledWalletInfo>
   )

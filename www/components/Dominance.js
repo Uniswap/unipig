@@ -25,7 +25,10 @@ const Line = styled.div`
   text-align: right;
   padding-right: 4px;
   span {
-    font-size: 11px;
+    font-size: 1px;
+    position: absolute;
+    right: 5px;
+    top: 1px;
   }
 `
 

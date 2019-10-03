@@ -37,7 +37,7 @@ const TradeWrapper = styled.span`
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0);
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   padding: 1.5rem;
@@ -47,9 +47,11 @@ const TradeWrapper = styled.span`
 const TweetPreview = styled.span`
   line-height: 1.5rem;
   width: 100%;
-  background: #202124;
+  /* background: #202124; */
+  background-color: rgba(0, 0, 0, 0.4);
+
   color: #2f80ed;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 10px;
   word-wrap: all;
 `

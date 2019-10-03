@@ -15,7 +15,7 @@ import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
 import { QRIcon } from '../components/NavIcons'
-import { AnimatedFrame, containerAnimation } from '../components/Animation'
+import { AnimatedFrame, containerAnimation, containerAnimationDown } from '../components/Animation'
 
 const QRScanModal = dynamic(() => import('../components/QRScanModal'), { ssr: false })
 
@@ -104,8 +104,8 @@ const HelperText = styled(Desc)`
 
 const IconButton = styled(Button)`
   position: absolute;
-  top: -2px;
-  right: 12px;
+  top: 0px;
+  right: -4px;
   padding: 0px;
 `
 
@@ -480,7 +480,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, token, confirm, setTrad
 
 function Confirmed({ tradeTime }) {
   return (
-    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+    <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
       <TradeWrapper>
         <Body>💸</Body>
         <Shim size={1} />

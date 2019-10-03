@@ -70,13 +70,16 @@ const Element = styled.div`
     header &&
     css`
       padding: 0.75rem;
+      @media only screen and (max-width: 480px) {
+        padding: 0.75rem 0.75rem 0.75rem 0;
+      }
     `}
 
   ${({ body }) =>
     body &&
     css`
       max-width: 525px;
-      padding: 0 1.75rem 2rem 1.75rem;
+      padding: 0 1rem 2rem 1rem;
     `}
 `
 

@@ -16,8 +16,9 @@ const StyledButton = styled(FilteredButton)`
 
 const StyledGradientButton = styled(StyledButton)`
   ${({ theme }): string => theme.gradientBackground};
-  opacity: ${({ disabled }): string => (disabled ? '0.8' : '1')};
+  opacity: ${({ disabled }): string => (disabled ? '0.6' : '1')};
   color: ${({ theme }): string => theme.colors.white};
+  mix-blend-mode: ${({ disabled }): string => (disabled ? 'soft-light;' : 'none')};
 `
 
 function CustomButton({ innerRef, children, ...rest }: any): JSX.Element {

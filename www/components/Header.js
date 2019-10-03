@@ -20,7 +20,7 @@ const Uniswap = styled.span`
 `
 
 const Back = styled.span`
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: ${({ theme, white }) => (white ? theme.colors.white : theme.colors.uniswap)};
 `
 
@@ -38,7 +38,7 @@ const HeaderButton = styled(Button)`
   min-height: unset;
   padding: 0.25rem;
   font-weight: 600;
-  min-width: 48px;
+  min-width: 56px;
 `
 
 const ButtonWrapper = styled.span`

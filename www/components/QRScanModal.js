@@ -30,10 +30,12 @@ const ScanHeader = styled.span`
   display: flex;
   position: absolute;
   top: 0;
+  left: 0px;
   width: 100%;
   justify-content: space-between;
   padding: 1rem;
   font-weight: 600;
+  z-index: 2;
 `
 const StyledHeaderText = styled(Body)`
   padding-top: 1rem;

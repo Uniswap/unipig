@@ -12,7 +12,7 @@ import Shim from '../components/Shim'
 import { Body, Desc, ButtonText, Title, Heading } from '../components/Type'
 import Emoji from '../components/Emoji'
 import Wallet from '../components/MiniWallet'
-import { AnimatedFrame, containerAnimation } from '../components/Animation'
+import { AnimatedFrame, containerAnimation, containerAnimationDown } from '../components/Animation'
 
 const DECIMALS_FACTOR = new BigNumber(10 ** DECIMALS)
 const DUMMY_ETH_FACTOR = new BigNumber(10 ** (18 - DECIMALS))
@@ -531,7 +531,7 @@ function Buy({
 
 function Confirmed({ tradeTime }) {
   return (
-    <AnimatedFrame variants={containerAnimation} initial="hidden" animate="show">
+    <AnimatedFrame variants={containerAnimationDown} initial="hidden" animate="show">
       <TradeWrapper>
         <Body>💸</Body>
         <Shim size={8} />

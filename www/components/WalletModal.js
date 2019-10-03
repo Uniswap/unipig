@@ -7,7 +7,7 @@ import { DialogOverlay, DialogContent } from '@reach/dialog'
 import { useMotionValue, useAnimation, motion } from 'framer-motion'
 import copy from 'copy-to-clipboard'
 import styled from 'styled-components'
-import { transparentize } from 'polished'
+import { transparentize, lighten } from 'polished'
 
 import { getPermissionString, truncateAddress } from '../utils'
 import { useStyledTheme, usePrevious } from '../hooks'
@@ -39,6 +39,9 @@ const StyledDialogContent = styled(DialogContent)`
     margin: 0 auto 0 auto;
     max-width: 448px;
     background-color: ${({ theme }) => transparentize(1, theme.colors.white)};
+    @media only screen and (max-width: 480px) {
+      padding: 0;
+    }
   }
 `
 
@@ -46,25 +49,41 @@ const CloseButton = styled(Button)`
   min-width: unset;
   min-height: unset;
   padding: 0.5rem;
-  margin-right: -1rem;
   width: 3rem;
   height: 3rem;
+  position: absolute;
+  right: 16px;
+  top: 16px;
 `
 
 const StyledWallet = styled.span`
-  background-color: ${({ team, theme }) =>
-    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
-  padding: 1.5rem;
-  color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  background-color: ${({ theme }) => lighten(0.05, theme.colors.black)};
+  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
   border-radius: 20px;
   width: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  padding: 1rem;
+`
+
+const StyledAction = styled.span`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+`
+
+const CodeBackground = styled.span`
+  width: 100%;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background-color: ${({ team, theme }) =>
+    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
+  color: black;
 `
 
 const WalletTitle = styled.span`
   text-decoration: none;
-  color: ${({ theme }) => theme.colors.black};
   font-weight: 600;
   opacity: 1;
   height: 24px;
@@ -80,7 +99,19 @@ const QRCodeWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1rem;
+  border-radius: 20px;
+  position: relative;
+
+  canvas {
+    height: auto !important;
+    border-radius: 20px !important;
+    width: 90% !important;
+    padding: 6% !important;
+    background: rgb(250, 196, 182);
+  }
+
+  background-color: ${({ team, theme }) =>
+    team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
 `
 
 const StyledAirdrop = styled.span`
@@ -88,7 +119,19 @@ const StyledAirdrop = styled.span`
   justify-content: center;
 `
 
+const TwitterButton = styled(NavButton)`
+  color: white;
+  height: 48px;
+  border-radius: 12px;
+  min-height: unset;
+  background-color: #1da1f2;
+  :hover {
+    background-color: rgba(29, 161, 242, 0.6);
+  }
+`
+
 const StyledBadge = styled(Badge)`
+  width: 100%;
   .MuiBadge-badge {
     color: ${({ theme }) => theme.colors.white};
     background-color: ${({ theme }) => theme.colors.link};
@@ -97,20 +140,28 @@ const StyledBadge = styled(Badge)`
 
 const SendButton = styled(Button)`
   min-height: 36px;
-  background: rgba(242, 242, 242, 0.2);
-  color: black;
+  background: ${({ team, theme }) =>
+    team === Team.UNI
+      ? transparentize(0.8, theme.colors[Team.UNI])
+      : transparentize(0.8, theme.colors[Team.PIGI])} !important;
+
+  color: ${({ team, theme }) => (team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI])} !important;
 `
 
 const Description = styled.p`
-  font-weight: 500;
+  font-weight: 400;
+  font-size: 12px;
   text-align: center;
+  margin-bottom: 0px;
 `
 
 const ScanButton = styled(Button)`
   min-height: 36px;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(12, 12, 12, 1);
   color: white;
-  width: initial;
+  border-radius: 12px;
+  width: 100%;
+
   :hover {
     background: rgba(0, 0, 0, 0.7);
   }
@@ -159,7 +210,7 @@ const ProgressSVG = styled.svg`
   margin: 0.25rem;
 `
 
-const DURATION = 8
+const DURATION = 5
 function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   function statusMessage() {
     if (isError) {
@@ -170,13 +221,6 @@ function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
           <b>Boom. Airdrop complete.</b> <br /> <Shim size={8} /> You and{' '}
           {scannedAddress && truncateAddress(scannedAddress, 4)} just got tokens on the OVM. Layer two-kens, if you
           will.
-          <br />
-          <Shim size={12} />
-          <NavLink href="/welcome" target="_blank" rel="noopener noreferrer">
-            <b>
-              <span style={{ color: 'white' }}>Learn more ↗</span>
-            </b>
-          </NavLink>
         </span>
       )
     }
@@ -196,7 +240,7 @@ function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   return (
     <Snackbar
       anchorOrigin={{
-        vertical: 'top',
+        vertical: 'bottom',
         horizontal: 'center'
       }}
       open={true}
@@ -221,12 +265,12 @@ function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
         inError={isError}
         message={
           <Contents>
-            <Emoji style={{ marginRight: '.75rem' }} emoji="📦" label="airdrop" />
+            {/* <Emoji style={{ marginRight: '.75rem' }} emoji="📦" label="airdrop" /> */}
             {statusMessage()}
           </Contents>
         }
         action={
-          <>
+          <StyledAction>
             <ProgressSVG viewBox="0 0 50 50">
               <motion.path
                 fill="none"
@@ -261,15 +305,15 @@ function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
                 }}
               />
             </ProgressSVG>
-            <CloseButton
+            {/* <CloseButton
               style={{ margin: '0.25rem' }}
               onClick={() => {
                 controls.start(animateTo(0.5))
               }}
             >
               <ButtonText>✗</ButtonText>
-            </CloseButton>
-          </>
+            </CloseButton> */}
+          </StyledAction>
         }
       />
     </Snackbar>
@@ -353,47 +397,55 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
 
   return (
     <StyledWallet team={team}>
-      <WalletTitle>
-        <span>Wallet</span>
+      <CodeBackground team={team}>
         <CloseButton
+          team={team}
           onClick={() => {
             onDismiss()
           }}
         >
           <ButtonText>✗</ButtonText>
         </CloseButton>
-      </WalletTitle>
-      <WalletInfo team={team} wallet={wallet} />
+        <WalletInfo onClick={copyAddress} addressCopied={addressCopied} team={team} wallet={wallet} />
 
-      <QRCodeWrapper>
-        <QRCode
-          value={`https://unipig.exchange?referrer=${wallet.address}`}
-          ecLevel="M"
-          size={250}
-          quietZone={10}
-          bgColor={theme.colors[team]} // lighten(0.1, theme.colors[team])
-          fgColor={theme.colors.black}
-          logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
-          qrStyle="squares"
-        />
-      </QRCodeWrapper>
+        {/* <Shim size={24} /> */}
+        <QRCodeWrapper team={team} onClick={copyAddress}>
+          <QRCode
+            value={`https://unipig.exchange?referrer=${wallet.address}`}
+            ecLevel="M"
+            size={250}
+            quietZone={100}
+            bgColor={theme.colors[team]} // lighten(0.1, theme.colors[team])
+            fgColor={theme.colors.black}
+            // logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
+            qrStyle="squares"
+          />
+        </QRCodeWrapper>
 
-      <Shim size={16} />
-      {(addressData.boostsLeft || 0) !== 0 && (
-        <>
-          <StyledAirdrop>
-            <StyledBadge badgeContent={addressData.boostsLeft}>
-              <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
-                Trigger an Airdrop
-                <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
-              </ScanButton>
-            </StyledBadge>
-          </StyledAirdrop>
-          <Description>
-            Scan another player to trigger an airdrop. You will both recieve tokens from the Unipig faucet.
-          </Description>
-        </>
-      )}
+        <Shim size={16} />
+        {(addressData.boostsLeft || 0) !== 0 ? (
+          <>
+            <StyledAirdrop>
+              <StyledBadge badgeContent={addressData.boostsLeft}>
+                <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
+                  Trigger an Airdrop
+                  <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+                </ScanButton>
+              </StyledBadge>
+            </StyledAirdrop>
+            <Description>
+              Scan another player to trigger an airdrop. You will both recieve tokens from the Unipig faucet.
+            </Description>
+          </>
+        ) : (
+          <>
+            <TwitterButton href={`/twitter-faucet`} stretch>
+              Tweet to get tokens and airdrops.
+            </TwitterButton>
+            <Description>Or find other players and ask for an airdrop.</Description>
+          </>
+        )}
+      </CodeBackground>
 
       <Shim size={24} />
       <WalletTitle>
@@ -420,17 +472,18 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         <span>Manage Wallet</span>
       </WalletTitle>
       <SendWrapper>
-        <SendButton variant="text" onClick={copyAddress}>
+        <SendButton team={team} variant="text" onClick={copyAddress}>
           {addressCopied ? 'Copied' : 'Copy Address'}
         </SendButton>
         <SendShim />
-        <SendButton variant="text" onClick={copyAccount}>
+        <SendButton team={team} variant="text" onClick={copyAccount}>
           {accountCopied ? 'Copied' : 'Export Account'}
         </SendButton>
       </SendWrapper>
       <Shim size={8} />
       <SendWrapper>
         <SendButton
+          team={team}
           as={clickedChangeTeam ? NavButton : undefined}
           href={clickedChangeTeam ? '/join-team?skipConfirm=true' : undefined}
           variant="text"
@@ -445,7 +498,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
           {clickedChangeTeam ? 'Just like that?' : 'Change Teams'}
         </SendButton>
         <SendShim />
-        <SendButton variant="text" onClick={manageBurn}>
+        <SendButton team={team} variant="text" onClick={manageBurn}>
           {clickedBurnOnce ? 'Are you sure?' : 'Burn Account'}
         </SendButton>
       </SendWrapper>

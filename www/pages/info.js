@@ -1,14 +1,20 @@
 import styled from 'styled-components'
-import { transparentize } from 'polished'
+import Shim from '../components/Shim'
+
+import { darken, transparentize } from 'polished'
 
 const StyledFAQ = styled.span`
-  background: ${({ theme }) => theme.gradient};
-  padding: 1.5rem;
+  /* background: ${({ theme }) => theme.gradient}; */
+  padding: 0;
   border-radius: 20px;
   width: 100%;
   display: flex;
   flex-direction: column;
   color: white;
+  color: ${({ theme }) => theme.colors.uniswap};
+  @media only screen and (max-width: 480px) {
+        padding: 0.25rem;
+      }
 `
 
 const StatsTitle = styled.span`
@@ -31,19 +37,23 @@ const Stat = styled.span`
 const Title = styled.p`
   margin-top: 48px;
   font-size: 24px;
+  font-weight: 800;
 `
 
 const Question = styled.p`
   font-size: 18px;
   margin: 0;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
   line-height: 1.4;
   font-weight: 600;
+  color: ${({ theme }) => theme.colors.uniswap};
 `
 
 const Answer = styled.p`
   font-size: 18px;
-  color: #bcbcbe;
+  /* color: #bcbcbe; */
+  color: ${({ theme }) => theme.colors.uniswap};
+  /* font-weight: 300; */
   margin: 0;
   line-height: 1.4;
 `
@@ -54,20 +64,22 @@ const Link = styled.a`
 
 const UniswapLink = styled.a`
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.uniswap)};
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   margin-right: 8px;
   text-decoration: none;
   color: white;
+  text-align: center;
   width: 100%;
 `
 
 const PlasmaLink = styled.a`
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.plasmaGroup)};
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   text-decoration: none;
   color: white;
+  text-align: center;
   width: 100%;
 `
 
@@ -90,6 +102,19 @@ export default function Info() {
         <Description>Ethereum can scale today.</Description>
         <Link href="https://medium.com">Read more on Medium ↗</Link>
       </Stat>
+      <Stat>
+        <Description>{'Made with <3 by:'}</Description>
+        <div style={{ display: 'flex' }}>
+          <UniswapLink href="https://uniswap.io">🦄 Uniswap</UniswapLink>
+          <PlasmaLink href="https://plasma.group">🐷 Plasma Group</PlasmaLink>
+        </div>
+      </Stat>
+
+      <Shim size={24} />
+
+      <StatsTitle>
+        <Title>FAQ</Title>
+      </StatsTitle>
       <Stat>
         <Question>What is Optimistic Rollup?</Question>
         <Answer>Generalized layer 2 running on OVM.</Answer>
@@ -141,13 +166,6 @@ export default function Info() {
       <Stat>
         <Question>How do I build a Dapp on Optimistic rollup?</Question>
         <Answer>Check out the docs and code on Github. Link to docs and stuff</Answer>
-      </Stat>
-      <Stat>
-        <Description>Built by:</Description>
-        <span>
-          <UniswapLink href="https://uniswap.io">🦄 Uniswap</UniswapLink>
-          <PlasmaLink href="https://plasma.group">🐷 Plasma Group</PlasmaLink>
-        </span>
       </Stat>
     </StyledFAQ>
   )
