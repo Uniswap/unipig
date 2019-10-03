@@ -4,13 +4,10 @@ import { useEffect, useState } from 'react'
 
 import { POLL_DURATION } from '../constants'
 import { stats } from '../utils'
+import { Title, Body } from '../components/Type'
 
 const StyledWallet = styled.span`
-  ${({ theme }) => theme.gradientBackground};
-
-  /* background-color: black; */
-  padding: 1.5rem;
-  color: ${({ theme }) => transparentize(0.2, theme.colors.black)};
+  padding: 0.5rem;
   border-radius: 20px;
   width: 100%;
   display: flex;
@@ -35,14 +32,18 @@ const Stat = styled.span`
   padding: 1rem 0;
 `
 
-const Value = styled.p`
-  font-size: 48px;
-  font-weight: 700;
+const Value = styled(Title)`
+  font-size: 96px;
+  font-weight: 900;
+  font-style: italic;
   margin: 0;
+  @media only screen and (max-width: 480px) {
+    font-size: 72px;
+  }
 `
 
-const Description = styled.p`
-  font-size: 16px;
+const Description = styled(Body)`
+  font-size: 24px;
   margin: 0;
 `
 
@@ -80,7 +81,7 @@ export default function Stats() {
   return (
     <StyledWallet>
       <StatsTitle>
-        <span>Stats</span>
+        <Description textStyle={'gradient'}>OVM Stats</Description>
       </StatsTitle>
       {!currentTransactionCount && !transactionCountError ? <Description>Loading...</Description> : null}
       {transactionCountError && !currentTransactionCount ? (
@@ -89,16 +90,16 @@ export default function Stats() {
       {currentTransactionCount ? (
         <>
           <Stat>
-            <Value>{currentTransactionCount}</Value>
-            <Description>total transactions</Description>
+            <Value textStyle={'gradient'}>{currentTransactionCount}</Value>
+            <Description textStyle={'gradient'}>total transactions</Description>
           </Stat>
           <Stat>
-            <Value>{((currentTransactionCount * 80000 * 20) / 10 ** 9).toFixed(4)}</Value>
-            <Description>ether worth of gas saved</Description>
+            <Value textStyle={'gradient'}>{((currentTransactionCount * 80000 * 20) / 10 ** 9).toFixed(4)}</Value>
+            <Description textStyle={'gradient'}>ether worth of gas saved</Description>
           </Stat>
           <Stat>
-            <Value>{((currentTransactionCount * 200) / 1000 / 60).toFixed(2)}</Value>
-            <Description>minutes saved</Description>
+            <Value textStyle={'gradient'}>{((currentTransactionCount * 200) / 1000 / 60).toFixed(2)}</Value>
+            <Description textStyle={'gradient'}>minutes saved</Description>
           </Stat>
         </>
       ) : null}

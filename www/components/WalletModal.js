@@ -417,7 +417,6 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
             quietZone={100}
             bgColor={theme.colors[team]} // lighten(0.1, theme.colors[team])
             fgColor={theme.colors.black}
-            // logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
             qrStyle="squares"
           />
         </QRCodeWrapper>

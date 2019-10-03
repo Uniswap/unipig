@@ -6,7 +6,6 @@ import Button from './Button'
 
 const Wrapper = styled.div`
   width: 100vh;
-  /* height: 100vh; */
   max-width: ${({ legacyMode }) => (legacyMode ? '40%' : '100%')};
   max-height: ${({ legacyMode }) => (legacyMode ? '40%' : '100%')};
   max-width: 100%;
