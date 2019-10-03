@@ -85,7 +85,8 @@ function Home({
   addressData,
   OVMBalances,
   OVMReserves,
-  marketDetails,
+  UNIMarketDetails,
+  PIGIMarketDetails,
   setWalletModalIsOpen,
   updateTotal
 }) {
@@ -98,6 +99,8 @@ function Home({
   const theme = useStyledTheme()
 
   const showFaucet = addressData.canFaucet && OVMBalances[Team.UNI] === 0 && OVMBalances[Team.PIGI] === 0
+
+  const marketDetails = team === Team.UNI ? PIGIMarketDetails : UNIMarketDetails
 
   return (
     <>

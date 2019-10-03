@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router'
 import styled, { css } from 'styled-components'
 
+import { Team } from '../contexts/Client'
 import RouteLoader from './RouteLoader'
 import Header from './Header'
 import WalletModal from './WalletModal'
@@ -48,7 +49,8 @@ export default function Layout({
   updateAddressData,
   OVMBalances,
   updateOVMBalances,
-  marketDetails,
+  UNIMarketDetails,
+  PIGIMarketDetails,
   walletModalIsOpen,
   setWalletModalIsOpen,
   updateTotal,
@@ -69,7 +71,7 @@ export default function Layout({
         <Element header justify={showIcons || showUpdater ? 'space-between' : 'flex-start'} direction="row">
           <Header
             team={team}
-            marketDetails={marketDetails}
+            marketDetails={team === Team.UNI ? PIGIMarketDetails : UNIMarketDetails}
             updateTotal={updateTotal}
             showIcons={showIcons}
             showUpdater={showUpdater}

@@ -1,6 +1,7 @@
 import { useState, useReducer, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { transparentize } from 'polished'
+import { useRouter } from 'next/router'
 import { TRADE_EXACT, BigNumber, getTradeDetails, formatSignificant, formatFixedDecimals } from '@uniswap/sdk'
 
 import { DECIMALS } from '../constants'
@@ -266,15 +267,19 @@ function reducer(state, { type, payload = {} } = {}) {
 
 function Buy({
   updateOVMReserves,
-  marketDetails,
+  UNIMarketDetails,
+  PIGIMarketDetails,
   OVMBalances,
   updateOVMBalances,
   OVMSwap,
-  inputToken,
-  outputToken,
   confirm,
   setTradeTime
 }) {
+  const router = useRouter()
+
+  const outputToken = Team[router.query.buy]
+  const inputToken = outputToken === Team.UNI ? Team.PIGI : Team.UNI
+
   //// parse the props
   const _inputBalance = OVMBalances[inputToken]
   const inputBalance = useMemo(() => (_inputBalance !== undefined ? new BigNumber(_inputBalance) : null), [
@@ -284,7 +289,10 @@ function Buy({
   // amounts
   const [swapState, dispatchSwapState] = useReducer(reducer, undefined, init)
 
+  const marketDetails =
+    UNIMarketDetails && PIGIMarketDetails ? (outputToken === Team.UNI ? PIGIMarketDetails : UNIMarketDetails) : null
   const marketRatePreInverted = marketDetails ? marketDetails.marketRate.rateInverted : null
+
   const swapStateMarketRatePreInverted = swapState[MARKET_RATE_PRE_INVERTED]
   useEffect(() => {
     if (
@@ -423,7 +431,8 @@ function Buy({
       <TradeWrapper>
         <Body textStyle="gradient">
           <b>
-            {outputToken === Team.UNI ? 'Unicorns' : 'Pigs'} Forever. Buy {Team[outputToken]} with {Team[inputToken]}.
+            {outputToken === Team.UNI ? 'Unicorns Unite' : 'Pigs Pull Together'}. Buy {Team[outputToken]} with{' '}
+            {Team[inputToken]}.
           </b>
         </Body>
         <Shim size={20} />
@@ -571,12 +580,11 @@ function Manager({
   team,
   OVMReserves,
   updateOVMReserves,
-  marketDetails,
+  UNIMarketDetails,
+  PIGIMarketDetails,
   OVMBalances,
   updateOVMBalances,
-  OVMSwap,
-  inputToken,
-  outputToken
+  OVMSwap
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const confirm = useCallback(() => {
@@ -591,12 +599,11 @@ function Manager({
         <Buy
           OVMReserves={OVMReserves}
           updateOVMReserves={updateOVMReserves}
-          marketDetails={marketDetails}
+          UNIMarketDetails={UNIMarketDetails}
+          PIGIMarketDetails={PIGIMarketDetails}
           OVMBalances={OVMBalances}
           updateOVMBalances={updateOVMBalances}
           OVMSwap={OVMSwap}
-          inputToken={inputToken}
-          outputToken={outputToken}
           confirm={confirm}
           setTradeTime={setTradeTime}
         />
@@ -619,13 +626,9 @@ Manager.getInitialProps = async context => {
   if (!inputToken || !outputToken) {
     res.writeHead(302, { Location: '/' })
     res.end()
-    return {}
   }
 
-  return {
-    inputToken,
-    outputToken
-  }
+  return {}
 }
 
 export default Manager

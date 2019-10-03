@@ -195,22 +195,30 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   // get the current market rate
   //// parse the props
-  const inputReserve =
-    OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI] !== undefined
-      ? new BigNumber(OVMReserves[team === Team.UNI ? Team.PIGI : Team.UNI])
-      : null
-  const outputReserve = OVMReserves[team] !== undefined ? new BigNumber(OVMReserves[team]) : null
+  const UNIReserve = OVMReserves[Team.UNI] !== undefined ? new BigNumber(OVMReserves[Team.UNI]) : null
+  const PIGIReserve = OVMReserves[Team.PIGI] !== undefined ? new BigNumber(OVMReserves[Team.PIGI]) : null
   // fake it by pretending the input currency is ETH
-  const marketDetails = useMemo(
+  const UNIMarketDetails = useMemo(
     () =>
-      inputReserve && outputReserve
+      UNIReserve && PIGIReserve
         ? getMarketDetails(undefined, {
             token: DUMMY_TOKEN,
-            ethReserve: DUMMY_ETH_AMOUNT(inputReserve.times(DUMMY_ETH_FACTOR)),
-            tokenReserve: DUMMY_TOKEN_AMOUNT(outputReserve)
+            ethReserve: DUMMY_ETH_AMOUNT(UNIReserve.times(DUMMY_ETH_FACTOR)),
+            tokenReserve: DUMMY_TOKEN_AMOUNT(PIGIReserve)
           })
         : null,
-    [inputReserve, outputReserve]
+    [UNIReserve, PIGIReserve]
+  )
+  const PIGIMarketDetails = useMemo(
+    () =>
+      PIGIReserve && UNIReserve
+        ? getMarketDetails(undefined, {
+            token: DUMMY_TOKEN,
+            ethReserve: DUMMY_ETH_AMOUNT(PIGIReserve.times(DUMMY_ETH_FACTOR)),
+            tokenReserve: DUMMY_TOKEN_AMOUNT(UNIReserve)
+          })
+        : null,
+    [PIGIReserve, UNIReserve]
   )
 
   return (
@@ -221,7 +229,8 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
       updateAddressData={updateAddressData}
       OVMBalances={OVMBalances}
       updateOVMBalances={updateOVMBalances}
-      marketDetails={marketDetails}
+      UNIMarketDetails={UNIMarketDetails}
+      PIGIMarketDetails={PIGIMarketDetails}
       walletModalIsOpen={walletModalIsOpen}
       setWalletModalIsOpen={setWalletModalIsOpen}
       updateTotal={updaterReserves + updaterBalances + updater}
@@ -234,7 +243,8 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
         updateAddressData={updateAddressData}
         OVMReserves={OVMReserves}
         updateOVMReserves={updateOVMReserves}
-        marketDetails={marketDetails}
+        UNIMarketDetails={UNIMarketDetails}
+        PIGIMarketDetails={PIGIMarketDetails}
         OVMBalances={OVMBalances}
         updateOVMBalances={updateOVMBalances}
         OVMSwap={OVMSwap}
