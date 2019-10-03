@@ -33,12 +33,14 @@ const StyledInputWrapper = styled.label`
 `
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FilteredInput = ({ inputColor, error, ...rest }) => <input {...rest} />
+const FilteredInput = ({ inputColor, error, dim, ...rest }) => <input {...rest} />
 const Input = styled(FilteredInput)`
-  border: ${({ error, theme, inputColor }) =>
-    error ? `1px solid ${theme.colors.error}` : `1px solid ${theme.colors[inputColor]}`};
-  background: #202124;
-  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
+  border: ${({ error, theme, inputColor, dim }) =>
+    error
+      ? `1px solid ${dim ? transparentize(0.85, theme.colors.error) : theme.colors.error}`
+      : `1px solid ${dim ? transparentize(0.85, theme.colors[inputColor]) : theme.colors[inputColor]}`};
+  background-color: ${({ theme, dim }) => (dim ? transparentize(0.85, theme.colors.black) : theme.colors.greys[9])};
+  color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])} !important;
   box-sizing: border-box;
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.15);
   border-radius: 20px;
@@ -46,7 +48,7 @@ const Input = styled(FilteredInput)`
   font-size: 24px;
   width: 100%;
   height: 56px;
-  padding-left: 24px;
+  padding-left: 16px;
   padding-right: 24px;
 
   :hover,
@@ -104,6 +106,7 @@ const HelperText = styled(Desc)`
   max-width: 500px;
   text-align: center;
   font-size: 16px;
+  opacity: 0.6;
 `
 
 const PriceImpactText = styled(Desc)`
@@ -451,7 +454,6 @@ function Buy({
         </DownWrapper>
         <StyledInputWrapper>
           <Input
-            disabled={true}
             error={!!swapState[ERROR_MESSAGE]}
             type="number"
             min="0"
@@ -460,6 +462,7 @@ function Buy({
             readOnly={true}
             placeholder="0"
             inputColor={outputToken}
+            dim={true}
           />
           <StyledEmoji
             inputColor={outputToken}

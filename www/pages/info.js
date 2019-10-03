@@ -51,9 +51,7 @@ const Question = styled.p`
 
 const Answer = styled.p`
   font-size: 18px;
-  /* color: #bcbcbe; */
   color: ${({ theme }) => theme.colors.uniswap};
-  /* font-weight: 300; */
   margin: 0;
   line-height: 1.4;
 `

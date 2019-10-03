@@ -417,7 +417,6 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
             quietZone={100}
             bgColor={theme.colors[team]} // lighten(0.1, theme.colors[team])
             fgColor={theme.colors.black}
-            // logoImage={team === Team.UNI ? 'static/unicon.png' : 'static/pigcon.png'}
             qrStyle="squares"
           />
         </QRCodeWrapper>
@@ -454,11 +453,18 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
       <TokenInfo team={team} OVMBalances={OVMBalances} />
       <Shim size={8} />
       <SendWrapper>
-        <SendButton as={NavButton} href={`/send?token=${Team[team]}`} variant="text" disabled={OVMBalances[team] === 0}>
+        <SendButton
+          team={team}
+          as={NavButton}
+          href={`/send?token=${Team[team]}`}
+          variant="text"
+          disabled={OVMBalances[team] === 0}
+        >
           Send
         </SendButton>
         <SendShim />
         <SendButton
+          team={team === Team.UNI ? Team.PIGI : Team.UNI}
           as={NavButton}
           href={`/send?token=${Team[team === Team.UNI ? Team.PIGI : Team.UNI]}`}
           variant="text"
