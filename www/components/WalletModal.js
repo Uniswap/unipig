@@ -163,7 +163,7 @@ const DURATION = 8
 function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   function statusMessage() {
     if (isError) {
-      return <span>Sorry, there was an error.</span>
+      return <span>Oops! An error occurred, please try again.</span>
     } else {
       return (
         <span>
@@ -384,8 +384,10 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
           <StyledAirdrop>
             <StyledBadge badgeContent={addressData.boostsLeft}>
               <ScanButton variant="contained" disabled={!!scannedAddress} onClick={openQRModal} stretch>
-                Trigger an Airdrop
-                <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+                <>
+                  {!!scannedAddress ? <span>Airdropping...</span> : <span>Trigger an Airdrop</span>}
+                  <Emoji style={{ marginLeft: '0.3rem' }} emoji="📦" label="airdrop" />
+                </>
               </ScanButton>
             </StyledBadge>
           </StyledAirdrop>

@@ -40,11 +40,13 @@ const LineAnimated = styled(motion.div)`
   top: 12px;
   left: 4px;
   background-color: ${({ theme, team }) => theme.colors[team]};
-  text-align: right;
-  padding-right: 6px;
 
   span {
-    margin-right: -4px;
+    padding-right: 4px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    height: 100%;
   }
 `
 
