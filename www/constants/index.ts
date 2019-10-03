@@ -8,6 +8,8 @@ export const DECIMALS = 2
 
 export const FAUCET_AMOUNT = 50 * 10 ** DECIMALS
 
+export const POLL_DURATION = 6 * 1000
+
 export enum WalletSource {
   PAPER = 'PAPER',
   GENERATED = 'GENERATED',

@@ -1,6 +1,8 @@
 import styled from 'styled-components'
 import { transparentize } from 'polished'
 import { useEffect, useState } from 'react'
+
+import { POLL_DURATION } from '../constants'
 import { stats } from '../utils'
 
 const StyledWallet = styled.span`
@@ -44,40 +46,62 @@ const Description = styled.p`
   margin: 0;
 `
 
+let cachedTransactionCount
+
 export default function Stats() {
   const [transactionCount, setTransactionCount] = useState()
+  useEffect(() => {
+    cachedTransactionCount = transactionCount
+  }, [transactionCount])
+
   const [transactionCountError, setTransactionCountError] = useState()
   useEffect(() => {
-    stats()
-      .then(setTransactionCount)
-      .catch(error => {
-        console.error(error)
-        setTransactionCountError(true)
-      })
+    function updateCount() {
+      stats()
+        .then(setTransactionCount)
+        .catch(error => {
+          console.error(error)
+          setTransactionCountError(true)
+        })
+    }
+
+    updateCount()
+    const interval = setInterval(() => {
+      updateCount()
+    }, POLL_DURATION)
+
+    return () => {
+      clearInterval(interval)
+    }
   }, [])
+
+  const currentTransactionCount = cachedTransactionCount || transactionCount
 
   return (
     <StyledWallet>
       <StatsTitle>
         <span>Stats</span>
       </StatsTitle>
-      {transactionCountError && <Description>There was an error, please try again soon.</Description>}
-      {transactionCount && (
+      {!currentTransactionCount && !transactionCountError ? <Description>Loading...</Description> : null}
+      {transactionCountError && !currentTransactionCount ? (
+        <Description>There was an error, please try again soon.</Description>
+      ) : null}
+      {currentTransactionCount ? (
         <>
           <Stat>
-            <Value>{transactionCount}</Value>
+            <Value>{currentTransactionCount}</Value>
             <Description>total transactions</Description>
           </Stat>
           <Stat>
-            <Value>{((transactionCount * 80000 * 20) / 10 ** 9).toFixed(4)}</Value>
+            <Value>{((currentTransactionCount * 80000 * 20) / 10 ** 9).toFixed(4)}</Value>
             <Description>ether worth of gas saved</Description>
           </Stat>
           <Stat>
-            <Value>{((transactionCount * 200) / 1000 / 60).toFixed(2)}</Value>
+            <Value>{((currentTransactionCount * 200) / 1000 / 60).toFixed(2)}</Value>
             <Description>minutes saved</Description>
           </Stat>
         </>
-      )}
+      ) : null}
     </StyledWallet>
   )
 }

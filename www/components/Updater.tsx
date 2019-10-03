@@ -5,13 +5,13 @@ import { transparentize } from 'polished'
 
 import { useStyledTheme } from '../hooks'
 
-const variants = {
+const variants = (scale: number): any => ({
   from: {
-    scale: 1,
-    opacity: 0.75
+    scale: 0.5,
+    opacity: 1
   },
   to: {
-    scale: 3,
+    scale: scale,
     opacity: 0,
     transition: {
       type: 'tween',
@@ -19,11 +19,9 @@ const variants = {
       duration: 10
     }
   }
-}
+})
 
 const UpdaterBase = styled.div`
-  width: 8px;
-  height: 8px;
   background-color: ${({ color }): string => color};
   border-radius: 10rem;
   z-index: -1 !important;
@@ -32,18 +30,13 @@ const UpdaterBase = styled.div`
 
 const Circle = styled(motion.div)`
   position: absolute;
-  top: -8px;
-  left: -8px;
   z-index: -1 !important;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 0.5px solid ${({ theme, color }): string => color};
-
-  background-color: ${({ theme, color }): string => transparentize(0.8, color)};
+  border: 1px solid ${({ color }): string => color};
+  background-color: ${({ color }): string => transparentize(0.8, color)};
   border-radius: 10rem;
 `
 
-function Circles({ total, color }): JSX.Element {
+function Circles({ total, color, scale, ...rest }): JSX.Element {
   const circlesToShow = useRef([])
   const largestSoFar = useRef(total - 1)
 
@@ -64,12 +57,13 @@ function Circles({ total, color }): JSX.Element {
           <Circle
             color={color}
             key={i.total}
-            variants={variants}
+            variants={variants(scale)}
             initial="from"
             animate="to"
             onAnimationComplete={(): void => {
               circlesToShow.current = circlesToShow.current.filter((c): boolean => c.total !== i.total)
             }}
+            {...rest}
           />
         )
       )}
@@ -77,12 +71,17 @@ function Circles({ total, color }): JSX.Element {
   )
 }
 
-export default function Updater({ team, total, ...rest }): JSX.Element {
+export default function Updater({ team, total, size = 20, scale = 3, ...rest }): JSX.Element {
   const theme = useStyledTheme()
 
   return (
-    <UpdaterBase color={theme.colors[team]} {...rest}>
-      <Circles total={total} color={theme.colors[team]} />
+    <UpdaterBase style={{ width: `${size / 2}px`, height: `${size / 2}px` }} color={theme.colors[team]} {...rest}>
+      <Circles
+        style={{ width: `${size}px`, height: `${size}px`, top: `-${size / 4}px`, right: `-${size / 4}px` }}
+        total={total}
+        scale={scale}
+        color={theme.colors[team]}
+      />
     </UpdaterBase>
   )
 }

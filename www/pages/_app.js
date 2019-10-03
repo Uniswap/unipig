@@ -9,7 +9,7 @@ import { ThemeProvider as SCThemeProvider, createGlobalStyle, css } from 'styled
 import { darken } from 'polished'
 import { BigNumber, getMarketDetails } from '@uniswap/sdk'
 
-import { DECIMALS } from '../constants'
+import { DECIMALS, POLL_DURATION } from '../constants'
 import { getCookie, getHost, swap, send } from '../utils'
 import ClientContext, {
   Team,
@@ -178,11 +178,11 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
 
   const wallet = useWallet()
   const OVMWallet = useOVMWallet(wallet)
-  const [OVMReserves, updateOVMReserves, updaterReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, 6 * 1000)
+  const [OVMReserves, updateOVMReserves, updaterReserves] = useOVMBalances(OVMWallet, UNISWAP_ADDRESS, POLL_DURATION)
   const [OVMBalances, updateOVMBalances, updaterBalances] = useOVMBalances(
     OVMWallet,
     wallet && wallet.address,
-    6 * 1000
+    POLL_DURATION
   )
 
   async function OVMSwap(inputToken, inputAmount) {

@@ -24,11 +24,11 @@ const Line = styled.div`
   transition: width 0.5s ease;
   text-align: right;
   padding-right: 4px;
+
   span {
-    font-size: 1px;
-    position: absolute;
-    right: 5px;
-    top: 1px;
+    font-size: 11px;
+    display: flex;
+    justify-content: flex-end;
   }
 `
 
@@ -40,14 +40,20 @@ const LineAnimated = styled(motion.div)`
   top: 12px;
   left: 4px;
   background-color: ${({ theme, team }) => theme.colors[team]};
-  text-align: right;
-  padding-right: 6px;
+
+  span {
+    padding-right: 4px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    height: 100%;
+  }
 `
 
 const StyledUpdater = styled(Updater)`
   position: absolute;
-  top: 10px;
-  right: 14px;
+  top: 0px;
+  right: 0px;
 `
 
 export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominance }) {
@@ -67,8 +73,8 @@ export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominan
           }
         }}
       >
-        <Emoji emoji={team === Team.UNI ? '🦄' : '🐷'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
-        <StyledUpdater team={team} total={updateTotal} />
+        <Emoji emoji={team === Team.PIGI ? '🐷' : '🦄'} label={team === Team.UNI ? 'unicorn' : 'pig'} />
+        <StyledUpdater scale={1.5} size={28 * 2} team={team} total={updateTotal} />
       </LineAnimated>
     </StyledLine>
   )

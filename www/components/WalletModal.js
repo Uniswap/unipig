@@ -214,7 +214,7 @@ const DURATION = 5
 function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   function statusMessage() {
     if (isError) {
-      return <span>Sorry, there was an error.</span>
+      return <span>Oops! An error occurred, please try again.</span>
     } else {
       return (
         <span>

@@ -70,7 +70,7 @@ function DominancePercentage({ UNIDominance, PIGIDominance }) {
         }}
       />
       <FixedNum>
-        {UNIDominance >= 0.5 ? 'UNI' : 'PIGI price'}
+        {UNIDominance >= 0.5 ? 'UNI' : 'PIGI'}
         <br />
         dominance {statefulX}%
       </FixedNum>
@@ -112,10 +112,10 @@ function Home({
 
         <Body color={UNIDominance >= 0.5 ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} size={18}>
           {showFaucet ? (
-            <i>You still need to grab some tokens to play. Use the Twitter faucet below to get some.</i>
+            <i>You'll need some tokens to play the game. Use the Twitter faucet below to grab some.</i>
           ) : (
             <i>
-              Sell <b>{team === Team.UNI ? 'PIGI' : 'UNI'}</b> tokens to help your team achieve price dominance!
+              <b>Buy {team === Team.UNI ? 'UNI' : 'PIGI'}</b> tokens to help your team achieve price dominance!
             </i>
           )}
         </Body>
@@ -129,23 +129,25 @@ function Home({
         ) : (
           <BoostWrapper>
             <FlexNavButton
+              style={{ transform: 'scale(1.01)' }}
               disabled={!(OVMBalances[team === Team.UNI ? Team.PIGI : Team.UNI] > 0)}
               href={`/trade?buy=${team === Team.UNI ? Team[Team.UNI] : Team[Team.PIGI]}`}
               color={team === Team.UNI ? 'primary' : 'secondary'}
               variant="contained"
             >
-              <ButtonText>Sell {team === Team.UNI ? 'PIGI' : 'UNI'}</ButtonText>
+              <ButtonText>Buy {team === Team.UNI ? 'UNI' : 'PIGI'}</ButtonText>
             </FlexNavButton>
 
             <BoostShim />
 
             <FlexNavButton
+              style={{ transform: 'scale(0.99)' }}
               disabled={!(OVMBalances[team === Team.PIGI ? Team.PIGI : Team.UNI] > 0)}
               href={`/trade?buy=${team === Team.PIGI ? Team[Team.UNI] : Team[Team.PIGI]}`}
               color={team === Team.PIGI ? 'primary' : 'secondary'}
               variant={'outlined'}
             >
-              <ButtonText>Sell {team === Team.PIGI ? 'PIGI' : 'UNI'}</ButtonText>
+              <ButtonText>Sell {team === Team.PIGI ? 'UNI' : 'PIGI'}</ButtonText>
             </FlexNavButton>
           </BoostWrapper>
         )}
