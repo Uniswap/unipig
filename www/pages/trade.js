@@ -412,7 +412,7 @@ function Buy({
       <TradeWrapper>
         <Body textStyle="gradient">
           <b>
-            Boost {Team[outputToken]} by dumping {Team[inputToken]}.
+            {outputToken === Team.UNI ? 'Unicorns' : 'Pigs'} Forever. Buy {Team[outputToken]} with {Team[inputToken]}.
           </b>
         </Body>
         <Shim size={20} />

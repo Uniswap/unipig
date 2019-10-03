@@ -39,6 +39,7 @@ const HeaderButton = styled(Button)`
   padding: 0.25rem;
   font-weight: 600;
   min-width: 48px;
+  margin-right: 0.55rem;
 `
 
 const ButtonWrapper = styled.span`
