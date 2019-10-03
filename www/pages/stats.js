@@ -57,6 +57,7 @@ export default function Stats() {
   const [transactionCountError, setTransactionCountError] = useState()
   useEffect(() => {
     function updateCount() {
+      console.log('updating!')
       stats()
         .then(setTransactionCount)
         .catch(error => {
@@ -66,16 +67,14 @@ export default function Stats() {
     }
 
     updateCount()
-    const interval = setInterval(() => {
-      updateCount()
-    }, POLL_DURATION)
+    const interval = setInterval(updateCount, POLL_DURATION)
 
     return () => {
       clearInterval(interval)
     }
   }, [])
 
-  const currentTransactionCount = cachedTransactionCount || transactionCount
+  const currentTransactionCount = transactionCount || cachedTransactionCount
 
   return (
     <StyledWallet>
