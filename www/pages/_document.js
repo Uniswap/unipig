@@ -38,17 +38,6 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          <style jsx global>{`
-            @import url('https://rsms.me/inter/inter.css');
-            html {
-              font-family: 'Inter', sans-serif;
-            }
-            @supports (font-variation-settings: normal) {
-              html {
-                font-family: 'Inter var', sans-serif;
-              }
-            }
-          `}</style>
           <meta charSet="utf-8" />
           <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
           <meta name="theme-color" content="#FFFFFF" />

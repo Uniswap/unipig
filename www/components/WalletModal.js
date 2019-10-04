@@ -100,6 +100,7 @@ const QRCodeWrapper = styled.div`
   justify-content: center;
   border-radius: 20px;
   position: relative;
+  cursor: pointer;
 
   canvas {
     height: auto !important;
@@ -319,8 +320,25 @@ function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   )
 }
 
-function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, openQRModal }) {
+function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, showFaucet, openQRModal }) {
   const theme = useStyledTheme()
+
+  const [addressCopiedNotButton, setAddressCopiedNotButton] = useState(false)
+  useEffect(() => {
+    if (addressCopiedNotButton) {
+      const timeout = setTimeout(() => {
+        setAddressCopiedNotButton(false)
+      }, 1000)
+
+      return () => {
+        clearTimeout(timeout)
+      }
+    }
+  }, [addressCopiedNotButton])
+  function copyAddressNotButton() {
+    copy(wallet.address)
+    setAddressCopiedNotButton(true)
+  }
 
   const [addressCopied, setAddressCopied] = useState(false)
   useEffect(() => {
@@ -406,15 +424,14 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
           <ButtonText>✗</ButtonText>
         </CloseButton>
         <WalletInfo
-          setCopyAddress={copyAddress}
           showIcon={true}
-          addressCopied={addressCopied}
+          copyAddress={copyAddressNotButton}
+          addressCopied={addressCopiedNotButton}
           team={team}
           wallet={wallet}
         />
 
-        {/* <Shim size={24} /> */}
-        <QRCodeWrapper team={team} onClick={copyAddress}>
+        <QRCodeWrapper team={team} onClick={copyAddressNotButton}>
           <QRCode
             value={`https://unipig.exchange?referrer=${wallet.address}`}
             ecLevel="M"
@@ -427,7 +444,7 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
         </QRCodeWrapper>
 
         <Shim size={16} />
-        {(addressData.boostsLeft || 0) !== 0 ? (
+        {(addressData.boostsLeft || 0) !== 0 && (
           <>
             <StyledAirdrop>
               <StyledBadge badgeContent={addressData.boostsLeft}>
@@ -441,12 +458,13 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
               Scan another player to trigger an airdrop. You'll both receive tokens from the Unipig faucet.
             </Description>
           </>
-        ) : (
+        )}
+        {showFaucet && (
           <>
             <TwitterButton href={`/twitter-faucet`} stretch>
               Tweet to get tokens and airdrops.
             </TwitterButton>
-            <Description>Or find other players and ask for an airdrop.</Description>
+            <Description>Or, find another player and ask for an airdrop.</Description>
           </>
         )}
       </CodeBackground>
@@ -517,7 +535,16 @@ function Wallet({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddr
   )
 }
 
-function ViewManager({ wallet, team, addressData, OVMBalances, onDismiss, scannedAddress, setScannedAddress }) {
+function ViewManager({
+  wallet,
+  team,
+  addressData,
+  OVMBalances,
+  onDismiss,
+  showFaucet,
+  scannedAddress,
+  setScannedAddress
+}) {
   const [QRModalIsOpen, setQRModalIsOpen] = useState(false)
 
   return (
@@ -539,6 +566,7 @@ function ViewManager({ wallet, team, addressData, OVMBalances, onDismiss, scanne
         OVMBalances={OVMBalances}
         onDismiss={onDismiss}
         scannedAddress={scannedAddress}
+        showFaucet={showFaucet}
         openQRModal={() => {
           setQRModalIsOpen(true)
         }}
@@ -554,6 +582,7 @@ export default function WalletModal({
   updateAddressData,
   OVMBalances,
   updateOVMBalances,
+  showFaucet,
   isOpen,
   onDismiss
 }) {
@@ -645,6 +674,7 @@ export default function WalletModal({
               onDismiss={onDismiss}
               scannedAddress={scannedAddress}
               setScannedAddress={setScannedAddress}
+              showFaucet={showFaucet}
             />
           </AnimatedFrame>
         </StyledDialogContent>

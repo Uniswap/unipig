@@ -62,6 +62,8 @@ export default function Layout({
   const showIcons = home
   const showUpdater = !home && !onboarding
 
+  const showFaucet = addressData.canFaucet && OVMBalances[Team.UNI] === 0 && OVMBalances[Team.PIGI] === 0
+
   return (
     <>
       <Root>
@@ -88,6 +90,7 @@ export default function Layout({
           OVMBalances={OVMBalances}
           updateOVMBalances={updateOVMBalances}
           isOpen={walletModalIsOpen}
+          showFaucet={showFaucet}
           onDismiss={() => {
             setWalletModalIsOpen(false)
           }}

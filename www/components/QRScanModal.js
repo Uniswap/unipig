@@ -74,10 +74,12 @@ export default function QRScanModal({ isOpen, onDismiss, onAddress }) {
             setError(error)
           }}
         />
-        {error && !!!legacy && (
-          <p onClick={() => setLegacy(true)}>
-            Camera not working? <u>Upload an image instead</u>
+        {error && !legacy ? (
+          <p>
+            Camera not working? <u onClick={() => setLegacy(true)}>Upload an image instead</u>.
           </p>
+        ) : (
+          <p>Make sure your image is clear and well-lit.</p>
         )}
       </StyledDialogContent>
     </StyledDialogOverlay>

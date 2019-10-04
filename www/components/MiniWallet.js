@@ -121,14 +121,14 @@ const StyledWalletInfo = styled.span`
   flex: auto;
 `
 
-export function WalletInfo({ wallet, team, addressCopied, showIcon, setCopyAddress }) {
+export function WalletInfo({ wallet, team, copyAddress = () => {}, addressCopied, showIcon }) {
   return (
-    <StyledWalletInfo onClick={setCopyAddress}>
+    <StyledWalletInfo>
       <Badge team={team}></Badge>
       <span>
         <WalletAddress>
           {wallet ? truncateAddress(wallet.address, 4) : '...'}
-          {showIcon && <CopyIcon style={{ marginLeft: '12px' }} />}
+          {showIcon && <CopyIcon onClick={copyAddress} style={{ marginLeft: '12px', cursor: 'pointer' }} />}
         </WalletAddress>
         <TeamDesc>{addressCopied ? 'Address Copied' : team === Team.UNI ? 'Team UNI' : 'Team PIGI'} </TeamDesc>
       </span>
