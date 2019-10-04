@@ -38,6 +38,7 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          <link href="https://rsms.me/inter/inter.css" rel="stylesheet" type="text/css"></link>
           <meta charSet="utf-8" />
           <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
           <meta name="theme-color" content="#FFFFFF" />
