@@ -108,7 +108,7 @@ export default function Stats() {
             <Description textStyle={'gradient'}>ether saved on gas</Description>
           </Stat>
           <Stat>
-            <Value textStyle={'gradient'}>{(currentTransactionCount * 2.2).toFixed(2)}</Value>
+            <Value textStyle={'gradient'}>{Math.round(currentTransactionCount * 1.75)}</Value>
             <Description textStyle={'gradient'}>fewer minutes waiting</Description>
           </Stat>
         </>
