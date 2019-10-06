@@ -56,10 +56,6 @@ const Answer = styled.p`
   line-height: 1.4;
 `
 
-const Link = styled.a`
-  color: ${({ theme }) => theme.colors.uniswap};
-`
-
 const UniswapLink = styled.a`
   background-color: ${({ theme }) => transparentize(0.2, theme.colors.uniswap)};
   padding: 0.5rem 1rem;
@@ -98,9 +94,9 @@ export default function Info() {
           with layer 2.
         </Description>
         <Description>Ethereum can scale today.</Description>
-        <Link href="https://medium.com" target="_blank" rel="noopener noreferrer">
+        {/* <Link href="https://medium.com" target="_blank" rel="noopener noreferrer">
           Read more on Medium ↗
-        </Link>
+        </Link> */}
       </Stat>
       <Stat>
         <Description>{'Made with <3 by:'}</Description>
@@ -121,7 +117,9 @@ export default function Info() {
       </StatsTitle>
       <Stat>
         <Question>What is Optimistic Rollup?</Question>
-        <Answer>Generalized layer 2 running on OVM.</Answer>
+        <Answer>
+          A layer 2 scaling solution that allows you to run fully general solidity smart contracts. Powered by the OVM.
+        </Answer>
       </Stat>
       <Stat>
         <Question>What are the UX benefits of Optimistic rollup?</Question>
@@ -160,16 +158,19 @@ export default function Info() {
       <Stat>
         <Question>Is Optimistic Rollup secure?</Question>
         <Answer>
-          Yes. Data availability on mainnet ethereum guarantees anyone can challenge invalid transactions.
+          Yes. Data availability on mainnet Ethereum guarantees anyone can challenge invalid transactions.
         </Answer>
       </Stat>
       <Stat>
         <Question>What’s missing from this demo?</Question>
-        <Answer>Layer 2 deposits and withdrawls.</Answer>
+        <Answer>Layer 2 deposits and withdrawls. Instead, we airdrop testnet tokens to your wallet.</Answer>
       </Stat>
       <Stat>
-        <Question>How do I build a Dapp on Optimistic rollup?</Question>
-        <Answer>Check out the docs and code on Github. Link to docs and stuff</Answer>
+        <Question>How do I build a dApp on Optimistic rollup?</Question>
+        <Answer>
+          Check out the docs and code on Github. A lot of awesome functionality is still under development. If you’re
+          looking for ways to scale your project, you can contact Plasma Group to request a consultation.
+        </Answer>
       </Stat>
     </StyledFAQ>
   )
