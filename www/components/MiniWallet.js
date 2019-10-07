@@ -45,7 +45,7 @@ const Badge = styled.div`
   height: 40px;
   margin-right: 0.75rem;
   border-radius: 8px;
-  background-image: url('static/UniMoji.gif');
+  background-image: ${({ team }) => `url(static/${team === Team.UNI ? 'uni' : 'pigi'}_static.png)`};
   background-size: contain;
   background-color: ${({ team, theme }) =>
     team === Team.UNI ? theme.colors[Team.UNI] : theme.colors[Team.PIGI]} !important;
@@ -124,7 +124,7 @@ const StyledWalletInfo = styled.span`
 export function WalletInfo({ wallet, team, copyAddress = () => {}, addressCopied, showIcon }) {
   return (
     <StyledWalletInfo>
-      <Badge team={team}></Badge>
+      <Badge team={team} />
       <span>
         <WalletAddress>
           {wallet ? truncateAddress(wallet.address, 4) : '...'}
