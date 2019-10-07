@@ -2,6 +2,7 @@
   "version": 2,
   "name": "unipig",
   "alias": "unipig.exchange",
+  "regions": ["hnd1", "iad1"],
   "build": {
     "env": {
       "AGGREGATOR_URL": "@unipig_aggregator_url"
