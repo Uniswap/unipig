@@ -79,6 +79,10 @@ const MaxButton = styled(FilteredButton)`
   color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
   box-sizing: border-box;
   border-radius: 20px;
+
+  :disabled {
+    color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
+  }
 `
 
 const StyledEmoji = styled(Emoji)`
@@ -444,7 +448,7 @@ function Buy({
         <StyledInputWrapper>
           <Input
             required
-            disabled={swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS}
+            disabled={swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS || !marketDetails}
             error={!!swapState[ERROR_MESSAGE]}
             type="number"
             min="0"
@@ -454,7 +458,11 @@ function Buy({
             onChange={onInputAmount}
             inputColor={inputToken}
           />
-          <MaxButton inputColor={inputToken} onClick={onMaxInputValue}>
+          <MaxButton
+            disabled={swapState[SWAP_STATE] === PENDING || swapState[SWAP_STATE] === SUCCESS || !marketDetails}
+            inputColor={inputToken}
+            onClick={onMaxInputValue}
+          >
             Max
           </MaxButton>
           <StyledEmoji

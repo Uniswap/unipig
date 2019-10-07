@@ -81,6 +81,10 @@ const MaxButton = styled(FilteredButton)`
   color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
   box-sizing: border-box;
   border-radius: 20px;
+
+  :disabled {
+    color: ${({ error, theme, inputColor }) => (error ? theme.colors.error : theme.colors[inputColor])};
+  }
 `
 
 const StyledEmoji = styled(Emoji)`
@@ -392,7 +396,7 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
           <StyledInputWrapper>
             <Input
               required
-              disabled={!balance || swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS}
+              disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS || !balance}
               error={!!swapState[ERROR_MESSAGE_INPUT]}
               type="number"
               min="0"
@@ -402,7 +406,11 @@ function Send({ OVMBalances, updateOVMBalances, OVMSend, confirm, setTradeTime }
               onChange={onInputAmount}
               inputColor={token}
             />
-            <MaxButton disabled={!balance} inputColor={token} onClick={onMaxInputValue}>
+            <MaxButton
+              disabled={swapState[SEND_STATE] === PENDING || swapState[SEND_STATE] === SUCCESS || !balance}
+              inputColor={token}
+              onClick={onMaxInputValue}
+            >
               Max
             </MaxButton>
             <StyledEmoji
