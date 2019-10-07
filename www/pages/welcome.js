@@ -104,7 +104,7 @@ function Welcome({ accountFromQuery: account, teamFromQuery: team, override, ref
           <pre> </pre>
           <Body textStyle="gradient">Scalable.</Body>
           <pre> </pre>
-          <OpacityWrapper>~2,000 tx/s</OpacityWrapper>
+          <OpacityWrapper>~200 tx/s (x10 with optimizations)</OpacityWrapper>
         </CopyWrapper>
         <CopyWrapper>
           <Emoji emoji="🔗" label="chain" />

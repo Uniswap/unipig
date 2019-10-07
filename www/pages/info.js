@@ -148,11 +148,11 @@ export default function Info() {
       <Stat>
         <Question>How many transactions per second?</Question>
         <Answer>
-          ETH 1.0 (today): ~250 tps
+          ETH 1.0 (today): ~200 tps
           <br />
-          ETH 1.0 (optimized): ~2000 tps
+          ETH 1.0 (optimized): ~2,000 tps
           <br />
-          ETH 2.0 (sharded): 2000 * # of shards
+          ETH 2.0 (sharded): 2,000 * # of shards
         </Answer>
       </Stat>
       <Stat>
