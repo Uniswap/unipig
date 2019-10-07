@@ -57,6 +57,9 @@ const StyledUpdater = styled(Updater)`
 `
 
 export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominance }) {
+  const widthTo =
+    !UNIDominance || !PIGIDominance ? 'auto' : `${(team === Team.UNI ? UNIDominance : PIGIDominance) * 100}%`
+
   return (
     <StyledLine>
       <Line team={team} percent={'100%'}>
@@ -64,9 +67,9 @@ export default function Dominance({ team, updateTotal, UNIDominance, PIGIDominan
       </Line>
       <LineAnimated
         team={team}
-        initial={{ width: 0 }}
+        initial={{ width: 'auto' }}
         animate={{
-          width: `${(team === Team.UNI ? UNIDominance : PIGIDominance) * 100}%`,
+          width: widthTo,
           transition: {
             ease: 'easeOut',
             duration: 1.5
