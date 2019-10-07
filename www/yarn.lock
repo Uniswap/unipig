@@ -958,7 +958,7 @@
     scrypt-js "2.0.4"
     uuid "2.0.1"
 
-"@ethersproject/keccak256@>=5.0.0-beta.127":
+"@ethersproject/keccak256@>=5.0.0-beta.127", "@ethersproject/keccak256@^5.0.0-beta.129":
   version "5.0.0-beta.129"
   resolved "https://registry.yarnpkg.com/@ethersproject/keccak256/-/keccak256-5.0.0-beta.129.tgz#c8c22d96aa60e6fd72cffa7bc5e5621c6ebb7e21"
   integrity sha512-kj4waDagZuRF34eMKjagRIRS/G2utQAMi1kCl8jy6BET0pCalD9/URGYZRDe5xRsUjjGPn58x+yoj+Qxw7r6cQ==

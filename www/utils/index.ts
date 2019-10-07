@@ -1,8 +1,10 @@
 import Cookies from 'js-cookie'
 import nextCookies from 'next-cookies'
 import { verifyMessage } from '@ethersproject/wallet'
+import { keccak256 } from '@ethersproject/keccak256'
 import fetch from 'isomorphic-unfetch'
 import { BigNumber } from '@uniswap/sdk'
+import { serializeObjectAsHexString } from '@pigi/core'
 import { UNI_TOKEN_TYPE, PIGI_TOKEN_TYPE } from '@pigi/wallet'
 import uuid from 'uuid/v4'
 
@@ -81,18 +83,22 @@ export function canFaucet(document: AddressDocument): boolean {
   return document.lastTwitterFaucet + FAUCET_TIMEOUT < Date.now()
 }
 
-export async function swap(OVMWallet: any, address: string, inputToken: Team, inputAmount: BigNumber): Promise<void> {
+export async function swap(OVMWallet: any, inputToken: Team, inputAmount: BigNumber): Promise<void> {
   const tokenType = inputToken === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE
-  await OVMWallet.swap(tokenType, address, inputAmount.toNumber(), 0, Date.now() + 10000)
+  await OVMWallet.swap(tokenType, inputAmount.toNumber(), 0, Date.now() + 10000)
 }
 
-export async function send(OVMWallet: any, from: string, to: string, token: Team, amount: BigNumber): Promise<void> {
+export async function send(OVMWallet: any, to: string, token: Team, amount: BigNumber): Promise<void> {
   const tokenType = token === Team.UNI ? UNI_TOKEN_TYPE : PIGI_TOKEN_TYPE
-  await OVMWallet.send(tokenType, from, to, amount.toNumber())
+  console.log(OVMWallet)
+  await OVMWallet.send(tokenType, to, amount.toNumber())
 }
 
-export function getFaucetData(recipient: string, initial: boolean = false): string {
-  return JSON.stringify({ sender: recipient, amount: initial ? FAUCET_AMOUNT : FAUCET_AMOUNT / 3 })
+export function getFaucetData(recipient: string, initial: boolean = false): Buffer {
+  const message = serializeObjectAsHexString({ sender: recipient, amount: initial ? FAUCET_AMOUNT : FAUCET_AMOUNT / 3 })
+  const messageAsBuffer = Buffer.from(message.slice(2), 'hex')
+  const messageHash = keccak256(messageAsBuffer)
+  return Buffer.from(messageHash.slice(2), 'hex')
 }
 
 export async function faucet(recipient: string, signature: string, initial: boolean = false): Promise<void> {

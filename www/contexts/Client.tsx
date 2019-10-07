@@ -1,7 +1,7 @@
 import { Context, createContext, useContext, useReducer, useState, useMemo, useCallback, useEffect } from 'react'
 import Cookies from 'js-cookie'
 import { Wallet } from '@ethersproject/wallet'
-import { newInMemoryDB, SignedByDB, SignedByDecider, SimpleClient } from '@pigi/core'
+import { newInMemoryDB, SignedByDB, SignedByDecider, DefaultSignatureProvider, SimpleClient } from '@pigi/core'
 import {
   UNI_TOKEN_TYPE,
   PIGI_TOKEN_TYPE,
@@ -217,10 +217,10 @@ export function useOVMWallet(wallet: undefined | Wallet | null): undefined | any
         newInMemoryDB(),
         rollupStateSolver,
         rollupClient,
-        undefined,
-        undefined,
-        oldWallet
+        new DefaultSignatureProvider(oldWallet),
+        '0x970DfC92096BC15ccA54097946d6509dCdc7A858'
       )
+
       // Connect to the mock aggregator
       rollupClient.connect(new SimpleClient(process.env.AGGREGATOR_URL))
 

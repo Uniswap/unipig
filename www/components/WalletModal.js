@@ -210,7 +210,7 @@ const ProgressSVG = styled.svg`
   margin: 0.25rem;
 `
 
-const DURATION = 5
+const DURATION = 9
 function AirdropSnackbar({ isError, scannedAddress, onCompletion }) {
   function statusMessage() {
     if (isError) {

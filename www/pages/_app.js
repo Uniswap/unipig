@@ -186,11 +186,11 @@ function AppStateWrapper({ address, permission, team, addressData, Component, pa
   )
 
   async function OVMSwap(inputToken, inputAmount) {
-    await swap(OVMWallet, wallet.address, inputToken, inputAmount)
+    await swap(OVMWallet, inputToken, inputAmount)
   }
 
   async function OVMSend(to, token, amount) {
-    await send(OVMWallet, wallet.address, to, token, amount)
+    await send(OVMWallet, to, token, amount)
   }
 
   // get the current market rate
