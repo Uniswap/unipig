@@ -212,7 +212,7 @@ export function useOVMWallet(wallet: undefined | Wallet | null): undefined | any
       const signedByDB = new SignedByDB(signatureDB)
       const signedByDecider = new SignedByDecider(signedByDB, Buffer.from(oldWallet.address))
       const rollupStateSolver = new DefaultRollupStateSolver(signedByDB, signedByDecider)
-      const rollupClient = new RollupClient(newInMemoryDB())
+      const rollupClient = new RollupClient(newInMemoryDB(), '0x970DfC92096BC15ccA54097946d6509dCdc7A858')
       const unipigWallet = new UnipigTransitioner(
         newInMemoryDB(),
         rollupStateSolver,

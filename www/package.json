@@ -23,7 +23,7 @@
     "@ethersproject/address": "^5.0.0-beta.129",
     "@ethersproject/wallet": "^5.0.0-beta.131",
     "@material-ui/core": "^4.4.0",
-    "@pigi/wallet": "0.0.5-alpha.0",
+    "@pigi/wallet": "0.0.7-alpha.0",
     "@reach/dialog": "^0.2.9",
     "@uniswap/sdk": "^1.0.0-beta.4",
     "copy-to-clipboard": "^3.2.0",
