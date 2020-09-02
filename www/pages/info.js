@@ -163,7 +163,7 @@ export default function Info() {
       </Stat>
       <Stat>
         <Question>What’s missing from this demo?</Question>
-        <Answer>Layer 2 deposits and withdrawls. Instead, we airdrop testnet tokens to your wallet.</Answer>
+        <Answer>Layer 2 deposits and withdrawals. Instead, we airdrop testnet tokens to your wallet.</Answer>
       </Stat>
       <Stat>
         <Question>How do I build a dApp on Optimistic rollup?</Question>
